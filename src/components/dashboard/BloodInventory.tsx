@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const bloodTypes = [
   { type: "A+", available: 24, total: 30, color: "bg-blood" },
@@ -40,8 +41,11 @@ export function BloodInventory() {
               </div>
               <Progress
                 value={(blood.available / blood.total) * 100}
-                className={`h-2 ${(blood.available / blood.total) < 0.3 ? "bg-gray-200" : ""}`}
-                indicatorClassName={blood.color}
+                className={cn("h-2", (blood.available / blood.total) < 0.3 ? "bg-gray-200" : "")}
+                // Using style to set the indicator color since indicatorClassName is not supported
+                style={{ 
+                  "--indicator-color": `var(--${blood.color.replace('bg-', '')})` 
+                } as React.CSSProperties}
               />
             </div>
           ))}

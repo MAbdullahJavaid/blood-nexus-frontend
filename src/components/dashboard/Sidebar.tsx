@@ -14,7 +14,7 @@ import {
   FileInputIcon,
   FileTextIcon,
   ReceiptIcon,
-  BloodIcon,
+  ActivityIcon,
   HistoryIcon,
   CheckIcon,
   GroupIcon
@@ -145,7 +145,7 @@ export function Sidebar() {
                   </AccordionTrigger>
                   <AccordionContent className="pl-4">
                     <div className="flex flex-col gap-1">
-                      <SidebarItem icon={BloodIcon} label="Blood Bleeded Record" />
+                      <SidebarItem icon={DropletIcon} label="Blood Bleeded Record" />
                       <SidebarItem icon={GroupIcon} label="Record Group Wise" />
                       <SidebarItem icon={TestTubeIcon} label="Test Positive Report" />
                       <SidebarItem icon={CheckIcon} label="Donor Screening" />
@@ -161,7 +161,7 @@ export function Sidebar() {
                   </AccordionTrigger>
                   <AccordionContent className="pl-4">
                     <div className="flex flex-col gap-1">
-                      <SidebarItem icon={BloodIcon} label="Blood Issue Record" />
+                      <SidebarItem icon={DropletIcon} label="Blood Issue Record" />
                       <SidebarItem icon={TestTubeIcon} label="Test Report Detail" />
                       <SidebarItem icon={FileTextIcon} label="Product Wise Blood Issue" />
                       <SidebarItem icon={ReceiptIcon} label="Patient Wise Blood Issue" />
