@@ -2,12 +2,11 @@
 import { 
   PlusIcon, 
   PenIcon, 
-  RefreshCwIcon, 
-  TrashIcon, 
-  SearchIcon, 
   SaveIcon, 
   PrinterIcon, 
-  XIcon
+  XIcon,
+  SearchIcon,
+  TrashIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +34,11 @@ export function CrudBar() {
     )}>
       <CrudButton icon={PlusIcon} label="Add" />
       <CrudButton icon={PenIcon} label="Edit" />
-      <CrudButton icon={RefreshCwIcon} label="Update" />
-      <CrudButton icon={TrashIcon} label="Delete" />
       <CrudButton icon={SearchIcon} label="Retrieve" />
-      <CrudButton icon={SaveIcon} label="Save" />
-      <CrudButton icon={PrinterIcon} label="Print" />
       <CrudButton icon={PlusIcon} label="Add Item" />
       <CrudButton icon={TrashIcon} label="Delete Item" />
+      <CrudButton icon={SaveIcon} label="Save" />
+      <CrudButton icon={PrinterIcon} label="Print" />
       <CrudButton icon={XIcon} label="Close" />
     </div>
   );
