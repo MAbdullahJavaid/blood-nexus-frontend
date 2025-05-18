@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 interface BleedingFormProps {
   isSearchEnabled?: boolean;
+  isEditable?: boolean;
 }
 
-const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
+const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         <div>
           <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
           <div className="flex items-center gap-2">
-            <Input id="bagNo" className="h-9" />
+            <Input id="bagNo" className="h-9" disabled={!isEditable} />
             {isSearchEnabled && (
               <button 
                 onClick={() => setIsSearchModalOpen(true)}
@@ -33,7 +34,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         </div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" />
+          <Input id="date" className="h-9" type="date" disabled={!isEditable} />
         </div>
         <div></div>
       </div>
@@ -41,15 +42,15 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="donorId" className="mb-1 block">Donor ID:</Label>
-          <Input id="donorId" className="h-9" />
+          <Input id="donorId" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="name" className="mb-1 block">Name:</Label>
-          <Input id="name" className="h-9" />
+          <Input id="name" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="age" className="mb-1 block">Age:</Label>
-          <Input id="age" className="h-9" type="number" />
+          <Input id="age" className="h-9" type="number" disabled={!isEditable} />
         </div>
       </div>
 
@@ -57,7 +58,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         <div>
           <Label htmlFor="bloodGroup" className="mb-1 block">Blood Group:</Label>
           <div className="flex gap-2">
-            <Select>
+            <Select disabled={!isEditable}>
               <SelectTrigger className="h-9 flex-1">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -69,7 +70,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
                 <SelectItem value="--">--</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select disabled={!isEditable}>
               <SelectTrigger className="h-9 flex-1">
                 <SelectValue placeholder="Rh" />
               </SelectTrigger>
@@ -83,7 +84,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         </div>
         <div>
           <Label htmlFor="bagType" className="mb-1 block">Bag Type:</Label>
-          <Select>
+          <Select disabled={!isEditable}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
@@ -100,7 +101,7 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         <div>
           <Label htmlFor="volume" className="mb-1 block">Volume:</Label>
           <div className="flex items-center">
-            <Input id="volume" className="h-9 rounded-r-none" type="number" defaultValue="450" />
+            <Input id="volume" className="h-9 rounded-r-none" type="number" defaultValue="450" disabled={!isEditable} />
             <span className="bg-gray-100 h-9 px-2 flex items-center border-y border-r rounded-r-md text-sm border-input">
               ml
             </span>
@@ -108,35 +109,35 @@ const BleedingForm = ({ isSearchEnabled = false }: BleedingFormProps) => {
         </div>
         <div>
           <Label htmlFor="expiryDate" className="mb-1 block">Expiry Date:</Label>
-          <Input id="expiryDate" className="h-9" type="date" />
+          <Input id="expiryDate" className="h-9" type="date" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="hb" className="mb-1 block">Hb:</Label>
-          <Input id="hb" className="h-9" type="text" />
+          <Input id="hb" className="h-9" type="text" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="weight" className="mb-1 block">Weight:</Label>
-          <Input id="weight" className="h-9" type="number" />
+          <Input id="weight" className="h-9" type="number" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
-          <Input id="remarks" className="h-9" />
+          <Input id="remarks" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="flex justify-end gap-4">
         <div className="flex items-center gap-2">
-          <Checkbox id="tested" />
+          <Checkbox id="tested" disabled={!isEditable} />
           <Label htmlFor="tested" className="mb-0">Tested</Label>
         </div>
         <div className="flex items-center gap-2">
-          <Checkbox id="issued" />
+          <Checkbox id="issued" disabled={!isEditable} />
           <Label htmlFor="issued" className="mb-0">Issued</Label>
         </div>
       </div>

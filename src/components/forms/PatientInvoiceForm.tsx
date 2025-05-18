@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 interface PatientInvoiceFormProps {
   isSearchEnabled?: boolean;
+  isEditable?: boolean;
 }
 
-const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps) => {
+const PatientInvoiceForm = ({ isSearchEnabled = false, isEditable = false }: PatientInvoiceFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   return (
@@ -19,7 +20,7 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
         <div>
           <Label htmlFor="invoiceNo" className="mb-1 block">Invoice No:</Label>
           <div className="flex items-center gap-2">
-            <Input id="invoiceNo" className="h-9" />
+            <Input id="invoiceNo" className="h-9" disabled={!isEditable} />
             {isSearchEnabled && (
               <button 
                 onClick={() => setIsSearchModalOpen(true)}
@@ -32,7 +33,7 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
         </div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" />
+          <Input id="date" className="h-9" type="date" disabled={!isEditable} />
         </div>
         <div></div>
       </div>
@@ -40,22 +41,22 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="patientId" className="mb-1 block">Patient ID:</Label>
-          <Input id="patientId" className="h-9" />
+          <Input id="patientId" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="name" className="mb-1 block">Patient Name:</Label>
-          <Input id="name" className="h-9" />
+          <Input id="name" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="hospital" className="mb-1 block">Hospital:</Label>
-          <Input id="hospital" className="h-9" />
+          <Input id="hospital" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="contact" className="mb-1 block">Contact No:</Label>
-          <Input id="contact" className="h-9" />
+          <Input id="contact" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
@@ -65,7 +66,7 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
           <div className="grid grid-cols-5 gap-4">
             <div className="col-span-2">
               <Label htmlFor="component" className="mb-1 block">Component</Label>
-              <Select>
+              <Select disabled={!isEditable}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -79,15 +80,15 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
             </div>
             <div>
               <Label htmlFor="quantity" className="mb-1 block">Quantity</Label>
-              <Input id="quantity" className="h-9" type="number" defaultValue="1" />
+              <Input id="quantity" className="h-9" type="number" defaultValue="1" disabled={!isEditable} />
             </div>
             <div>
               <Label htmlFor="rate" className="mb-1 block">Rate</Label>
-              <Input id="rate" className="h-9" type="number" />
+              <Input id="rate" className="h-9" type="number" disabled={!isEditable} />
             </div>
             <div>
               <Label htmlFor="amount" className="mb-1 block">Amount</Label>
-              <Input id="amount" className="h-9" type="number" readOnly />
+              <Input id="amount" className="h-9" type="number" readOnly disabled={!isEditable} />
             </div>
           </div>
           
@@ -103,18 +104,18 @@ const PatientInvoiceForm = ({ isSearchEnabled = false }: PatientInvoiceFormProps
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="discount" className="mb-1 block">Discount:</Label>
-          <Input id="discount" className="h-9" type="number" defaultValue="0" />
+          <Input id="discount" className="h-9" type="number" defaultValue="0" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="total" className="mb-1 block">Total Amount:</Label>
-          <Input id="total" className="h-9" type="number" readOnly />
+          <Input id="total" className="h-9" type="number" readOnly disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
-          <Input id="remarks" className="h-9" />
+          <Input id="remarks" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 

@@ -5,16 +5,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
 import { SearchIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DonorFormProps {
   isSearchEnabled?: boolean;
+  isEditable?: boolean;
 }
 
-const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
+const DonorForm = ({ isSearchEnabled = false, isEditable = false }: DonorFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  
+  // Get current date in YYYY-MM-DD format for default date value
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white p-4 rounded-md">
@@ -22,7 +25,7 @@ const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
         <div>
           <Label htmlFor="regNo" className="mb-1 block">Reg No</Label>
           <div className="flex items-center gap-2">
-            <Input id="regNo" className="h-9" maxLength={11} />
+            <Input id="regNo" className="h-9" maxLength={11} disabled={!isEditable} />
             {isSearchEnabled && (
               <button 
                 onClick={() => setIsSearchModalOpen(true)}
@@ -35,31 +38,31 @@ const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
         </div>
         <div className="col-span-1">
           <Label htmlFor="name" className="mb-1 block">Name</Label>
-          <Input id="name" className="h-9" />
+          <Input id="name" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date</Label>
-          <Input id="date" className="h-9" type="date" />
+          <Input id="date" className="h-9" type="date" defaultValue={today} disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <Label htmlFor="address" className="mb-1 block">Address</Label>
-          <Input id="address" className="h-9" />
+          <Input id="address" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="age" className="mb-1 block">Age</Label>
-          <Input id="age" className="h-9" type="number" />
+          <Input id="age" className="h-9" type="number" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="sex" className="mb-1 block">Sex</Label>
-          <Select>
+          <Select defaultValue="male" disabled={!isEditable}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Select" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="male">Male</SelectItem>
@@ -73,9 +76,9 @@ const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div>
           <Label htmlFor="group" className="mb-1 block">Group</Label>
-          <Select>
+          <Select defaultValue="B" disabled={!isEditable}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Select" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="A">A</SelectItem>
@@ -88,9 +91,9 @@ const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
         </div>
         <div>
           <Label htmlFor="rh" className="mb-1 block">Rh</Label>
-          <Select>
+          <Select defaultValue="+ve" disabled={!isEditable}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Select" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="+ve">+ve</SelectItem>
@@ -101,25 +104,25 @@ const DonorForm = ({ isSearchEnabled = false }: DonorFormProps) => {
         </div>
         <div>
           <Label htmlFor="phoneRes" className="mb-1 block">Phone Res</Label>
-          <Input id="phoneRes" className="h-9" />
+          <Input id="phoneRes" className="h-9" disabled={!isEditable} />
         </div>
         <div>
           <Label htmlFor="phoneOffice" className="mb-1 block">Phone Office</Label>
-          <Input id="phoneOffice" className="h-9" />
+          <Input id="phoneOffice" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <Label htmlFor="remarks" className="mb-1 block">Remarks</Label>
-          <Textarea id="remarks" className="min-h-[100px]" />
+          <Textarea id="remarks" className="min-h-[100px]" disabled={!isEditable} />
         </div>
       </div>
 
       <div className="flex justify-end">
         <div className="flex items-center gap-2">
           <Label htmlFor="status" className="mb-0">Status</Label>
-          <Checkbox id="status" />
+          <Checkbox id="status" disabled={!isEditable} />
         </div>
       </div>
 
