@@ -9,13 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface FormToolbarProps {
-  onButtonClick?: () => void;
+  onButtonClick?: (formType: string) => void;
 }
 
 export function FormToolbar({ onButtonClick }: FormToolbarProps) {
-  const handleButtonClick = () => {
+  const handleButtonClick = (formType: string) => {
     if (onButtonClick) {
-      onButtonClick();
+      onButtonClick(formType);
     }
   };
 
@@ -24,7 +24,7 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       <Button 
         variant="outline" 
         className="form-button"
-        onClick={handleButtonClick}
+        onClick={() => handleButtonClick('donor')}
       >
         <UserIcon className="h-4 w-4" />
         <span>Donor</span>
@@ -33,7 +33,7 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       <Button 
         variant="outline" 
         className="form-button"
-        onClick={handleButtonClick}
+        onClick={() => handleButtonClick('bleeding')}
       >
         <DropletIcon className="h-4 w-4" />
         <span>Bleeding</span>
@@ -42,7 +42,7 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       <Button 
         variant="outline" 
         className="form-button"
-        onClick={handleButtonClick}
+        onClick={() => handleButtonClick('crossmatch')}
       >
         <TestTubeIcon className="h-4 w-4" />
         <span>Crossmatch</span>
@@ -51,7 +51,7 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       <Button 
         variant="outline" 
         className="form-button"
-        onClick={handleButtonClick}
+        onClick={() => handleButtonClick('patient')}
       >
         <UserIcon className="h-4 w-4" />
         <span>Patient</span>
@@ -60,7 +60,7 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       <Button 
         variant="outline" 
         className="form-button"
-        onClick={handleButtonClick}
+        onClick={() => handleButtonClick('patientInvoice')}
       >
         <ReceiptIcon className="h-4 w-4" />
         <span>Patient Invoice</span>
