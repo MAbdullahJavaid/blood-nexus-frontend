@@ -2,7 +2,7 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import DonorForm from "@/components/forms/DonorForm";
 import PatientForm from "@/components/forms/PatientForm";
 import CrossmatchForm from "@/components/forms/CrossmatchForm";
@@ -11,7 +11,16 @@ import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 
+// Import necessary hooks and functions
+import { toast } from "@/hooks/use-toast";
+
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
+
+// Define a type for form refs
+interface FormRefObject {
+  handleAddItem?: () => void;
+  handleDeleteItem?: () => void;
+}
 
 const Dashboard = () => {
   const [showCrudBar, setShowCrudBar] = useState(false);
@@ -21,12 +30,18 @@ const Dashboard = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   
+  // Reference to the active form component
+  const activeFormRef = useRef<FormRefObject>({});
+  
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
     setActiveForm(formType);
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsAdding(false);
+    
+    // Reset the form ref when changing forms
+    activeFormRef.current = {};
   };
 
   const handleAddClick = () => {
@@ -41,6 +56,10 @@ const Dashboard = () => {
 
   const handleSaveClick = () => {
     // Would typically save form data here
+    toast({
+      title: "Form Saved",
+      description: `${activeForm} data has been saved successfully.`
+    });
     setIsEditing(false);
     setIsAdding(false);
     setIsSearchEnabled(false);
@@ -61,6 +80,18 @@ const Dashboard = () => {
     setIsAdding(false);
   };
 
+  const handleAddItemClick = () => {
+    if (activeFormRef.current && activeFormRef.current.handleAddItem) {
+      activeFormRef.current.handleAddItem();
+    }
+  };
+
+  const handleDeleteItemClick = () => {
+    if (activeFormRef.current && activeFormRef.current.handleDeleteItem) {
+      activeFormRef.current.handleDeleteItem();
+    }
+  };
+
   const renderActiveForm = () => {
     const isEditable = isEditing || isAdding;
     
@@ -74,7 +105,17 @@ const Dashboard = () => {
       case 'crossmatch':
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'patientInvoice':
-        return <PatientInvoiceForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return (
+          <PatientInvoiceForm 
+            isSearchEnabled={isSearchEnabled} 
+            isEditable={isEditable} 
+            ref={(formRef: any) => {
+              if (formRef) {
+                activeFormRef.current = formRef;
+              }
+            }}
+          />
+        );
       case 'category':
         return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'testInformation':
@@ -98,6 +139,8 @@ const Dashboard = () => {
             onAddClick={handleAddClick}
             onCancelClick={handleCancelClick}
             onSaveClick={handleSaveClick}
+            onAddItemClick={handleAddItemClick}
+            onDeleteItemClick={handleDeleteItemClick}
             activeForm={activeForm}
             isEditing={isEditing}
             isAdding={isAdding}

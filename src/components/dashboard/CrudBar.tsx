@@ -38,6 +38,8 @@ interface CrudBarProps {
   onAddClick?: () => void;
   onCancelClick?: () => void;
   onSaveClick?: () => void;
+  onAddItemClick?: () => void;
+  onDeleteItemClick?: () => void;
   activeForm?: string;
   isEditing: boolean;
   isAdding: boolean;
@@ -49,6 +51,8 @@ export function CrudBar({
   onAddClick,
   onCancelClick,
   onSaveClick,
+  onAddItemClick,
+  onDeleteItemClick,
   activeForm,
   isEditing,
   isAdding
@@ -59,6 +63,8 @@ export function CrudBar({
   const isPrintHidden = activeForm === 'patient' || activeForm === 'donor' || 
                         activeForm === 'category' || activeForm === 'testInformation' || 
                         activeForm === 'bleeding';
+  
+  const isPatientInvoiceForm = activeForm === 'patientInvoice';
   
   return (
     <div className={cn(
@@ -85,12 +91,14 @@ export function CrudBar({
       <CrudButton 
         icon={PlusIcon} 
         label="Add Item" 
-        disabled={isEditingOrAdding}
+        onClick={onAddItemClick}
+        disabled={!isEditingOrAdding || !isPatientInvoiceForm}
       />
       <CrudButton 
         icon={TrashIcon} 
         label="Delete Item" 
-        disabled={isEditingOrAdding}
+        onClick={onDeleteItemClick}
+        disabled={!isEditingOrAdding || !isPatientInvoiceForm}
       />
       <CrudButton 
         icon={SaveIcon} 
