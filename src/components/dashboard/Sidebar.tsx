@@ -6,18 +6,18 @@ import {
   LogOutIcon, 
   UserIcon, 
   LayoutDashboardIcon,
-  FolderIcon,
   FileIcon,
   TestTubeIcon,
   MailIcon,
-  FilePenIcon,
-  FileInputIcon,
-  FileTextIcon,
   ReceiptIcon,
   ActivityIcon,
   HistoryIcon,
   CheckIcon,
-  GroupIcon
+  GroupIcon,
+  SettingsIcon,
+  ListTodoIcon,
+  BarChartIcon,
+  FileTextIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,16 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activePage, setActivePage] = useState("dashboard");
+  
+  // State to control which main accordion item is open
+  const [openMainItem, setOpenMainItem] = useState<string | null>(null);
+  
+  // State to control which nested accordion items are open
+  const [openNestedItems, setOpenNestedItems] = useState<{
+    reception?: boolean;
+    bds?: boolean;
+    lab?: boolean;
+  }>({});
 
   const handleNavigate = (path: string) => {
     setActivePage(path);
@@ -62,6 +72,28 @@ export function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+  
+  const handleMainAccordionChange = (value: string) => {
+    setOpenMainItem(prevValue => prevValue === value ? null : value);
+  };
+  
+  const handleNestedAccordionChange = (value: string) => {
+    setOpenNestedItems(prev => {
+      // Create a new object with all values set to false
+      const newState = {
+        reception: false,
+        bds: false,
+        lab: false
+      };
+      
+      // Only set the current value to true if it's different from the previous one
+      if (prev[value as keyof typeof prev] !== true) {
+        newState[value as keyof typeof newState] = true;
+      }
+      
+      return newState;
+    });
   };
 
   return (
@@ -84,11 +116,17 @@ export function Sidebar() {
       </div>
       
       <div className="flex-1 overflow-auto px-3 py-2">
-        <Accordion type="multiple" className="w-full">
+        <Accordion 
+          type="single" 
+          value={openMainItem || ""} 
+          onValueChange={handleMainAccordionChange}
+          collapsible
+          className="w-full"
+        >
           <AccordionItem value="maintain" className="border-b-0">
             <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
               <div className="flex items-center gap-3">
-                <FolderIcon className="h-5 w-5" />
+                <SettingsIcon className="h-5 w-5" />
                 <span>Maintain</span>
               </div>
             </AccordionTrigger>
@@ -104,13 +142,13 @@ export function Sidebar() {
           <AccordionItem value="task" className="border-b-0">
             <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
               <div className="flex items-center gap-3">
-                <FilePenIcon className="h-5 w-5" />
+                <ListTodoIcon className="h-5 w-5" />
                 <span>Task</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="flex flex-col gap-1">
-                <SidebarItem icon={FileInputIcon} label="Report Data Entry" />
+                <SidebarItem icon={FileTextIcon} label="Report Data Entry" />
                 <SidebarItem icon={ReceiptIcon} label="Patient Invoice" />
                 <SidebarItem icon={DropletIcon} label="Bleeding" />
               </div>
@@ -120,54 +158,61 @@ export function Sidebar() {
           <AccordionItem value="reports" className="border-b-0">
             <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
               <div className="flex items-center gap-3">
-                <FileTextIcon className="h-5 w-5" />
+                <BarChartIcon className="h-5 w-5" />
                 <span>Reports</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="space-y-2">
-                <AccordionItem value="reception" className="border-b-0">
-                  <AccordionTrigger className="py-1">
-                    <span>Reception</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pl-4">
-                    <div className="flex flex-col gap-1">
-                      <SidebarItem icon={FileTextIcon} label="Patient Request" />
-                      <SidebarItem icon={ReceiptIcon} label="Patient Request Summary" />
-                      <SidebarItem icon={HistoryIcon} label="Patient Transfusion History" />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="bds" className="border-b-0">
-                  <AccordionTrigger className="py-1">
-                    <span>BDS</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pl-4">
-                    <div className="flex flex-col gap-1">
-                      <SidebarItem icon={DropletIcon} label="Blood Bleeded Record" />
-                      <SidebarItem icon={GroupIcon} label="Record Group Wise" />
-                      <SidebarItem icon={TestTubeIcon} label="Test Positive Report" />
-                      <SidebarItem icon={CheckIcon} label="Donor Screening" />
-                      <SidebarItem icon={ReceiptIcon} label="Donor Bleeded Summary" />
-                      <SidebarItem icon={FileTextIcon} label="Bag Bleeded Summary" />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="lab" className="border-b-0">
-                  <AccordionTrigger className="py-1">
-                    <span>LAB</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pl-4">
-                    <div className="flex flex-col gap-1">
-                      <SidebarItem icon={DropletIcon} label="Blood Issue Record" />
-                      <SidebarItem icon={TestTubeIcon} label="Test Report Detail" />
-                      <SidebarItem icon={FileTextIcon} label="Product Wise Blood Issue" />
-                      <SidebarItem icon={ReceiptIcon} label="Patient Wise Blood Issue" />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                <Accordion 
+                  type="single" 
+                  value={openNestedItems.reception ? "reception" : (openNestedItems.bds ? "bds" : (openNestedItems.lab ? "lab" : ""))}
+                  onValueChange={handleNestedAccordionChange}
+                  collapsible
+                >
+                  <AccordionItem value="reception" className="border-b-0">
+                    <AccordionTrigger className="py-1">
+                      <span>Reception</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-4">
+                      <div className="flex flex-col gap-1">
+                        <SidebarItem icon={FileTextIcon} label="Patient Request" />
+                        <SidebarItem icon={ReceiptIcon} label="Patient Request Summary" />
+                        <SidebarItem icon={HistoryIcon} label="Patient Transfusion History" />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="bds" className="border-b-0">
+                    <AccordionTrigger className="py-1">
+                      <span>BDS</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-4">
+                      <div className="flex flex-col gap-1">
+                        <SidebarItem icon={DropletIcon} label="Blood Bleeded Record" />
+                        <SidebarItem icon={GroupIcon} label="Record Group Wise" />
+                        <SidebarItem icon={TestTubeIcon} label="Test Positive Report" />
+                        <SidebarItem icon={CheckIcon} label="Donor Screening" />
+                        <SidebarItem icon={ReceiptIcon} label="Donor Bleeded Summary" />
+                        <SidebarItem icon={FileTextIcon} label="Bag Bleeded Summary" />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="lab" className="border-b-0">
+                    <AccordionTrigger className="py-1">
+                      <span>LAB</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-4">
+                      <div className="flex flex-col gap-1">
+                        <SidebarItem icon={DropletIcon} label="Blood Issue Record" />
+                        <SidebarItem icon={TestTubeIcon} label="Test Report Detail" />
+                        <SidebarItem icon={FileTextIcon} label="Product Wise Blood Issue" />
+                        <SidebarItem icon={ReceiptIcon} label="Patient Wise Blood Issue" />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             </AccordionContent>
           </AccordionItem>
