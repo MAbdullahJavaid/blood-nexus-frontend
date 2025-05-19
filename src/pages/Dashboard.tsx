@@ -8,8 +8,10 @@ import PatientForm from "@/components/forms/PatientForm";
 import CrossmatchForm from "@/components/forms/CrossmatchForm";
 import BleedingForm from "@/components/forms/BleedingForm";
 import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
+import CategoryForm from "@/components/forms/CategoryForm";
+import TestInformationForm from "@/components/forms/TestInformationForm";
 
-type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | null;
+type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
 
 const Dashboard = () => {
   const [showCrudBar, setShowCrudBar] = useState(false);
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const [isSearchEnabled, setIsSearchEnabled] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -72,6 +75,10 @@ const Dashboard = () => {
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'patientInvoice':
         return <PatientInvoiceForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+      case 'category':
+        return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+      case 'testInformation':
+        return <TestInformationForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} categories={categories} />;
       default:
         return null;
     }
@@ -79,7 +86,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar onFormOpen={handleFormButtonClick} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <FormToolbar 
           onButtonClick={(formType) => handleFormButtonClick(formType as FormType)} 

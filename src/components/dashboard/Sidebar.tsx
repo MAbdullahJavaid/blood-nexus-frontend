@@ -49,7 +49,11 @@ const SidebarItem = ({ icon: Icon, label, onClick, active }: SidebarItemProps) =
   </div>
 );
 
-export function Sidebar() {
+interface SidebarProps {
+  onFormOpen?: (formType: string) => void;
+}
+
+export function Sidebar({ onFormOpen }: SidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activePage, setActivePage] = useState("dashboard");
@@ -96,6 +100,12 @@ export function Sidebar() {
     });
   };
 
+  const handleFormClick = (formType: string) => {
+    if (onFormOpen) {
+      onFormOpen(formType);
+    }
+  };
+
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-border flex flex-col">
       <div className="p-4 flex items-center gap-3">
@@ -132,8 +142,16 @@ export function Sidebar() {
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="flex flex-col gap-1">
-                <SidebarItem icon={FileIcon} label="Category" />
-                <SidebarItem icon={TestTubeIcon} label="Test Information" />
+                <SidebarItem 
+                  icon={FileIcon} 
+                  label="Category" 
+                  onClick={() => handleFormClick('category')}
+                />
+                <SidebarItem 
+                  icon={TestTubeIcon} 
+                  label="Test Information" 
+                  onClick={() => handleFormClick('testInformation')}
+                />
                 <SidebarItem icon={MailIcon} label="Thanks Letter" />
               </div>
             </AccordionContent>
@@ -149,8 +167,16 @@ export function Sidebar() {
             <AccordionContent className="pl-8">
               <div className="flex flex-col gap-1">
                 <SidebarItem icon={FileTextIcon} label="Report Data Entry" />
-                <SidebarItem icon={ReceiptIcon} label="Patient Invoice" />
-                <SidebarItem icon={DropletIcon} label="Bleeding" />
+                <SidebarItem 
+                  icon={ReceiptIcon} 
+                  label="Patient Invoice"
+                  onClick={() => handleFormClick('patientInvoice')}
+                />
+                <SidebarItem 
+                  icon={DropletIcon} 
+                  label="Bleeding"
+                  onClick={() => handleFormClick('bleeding')}
+                />
               </div>
             </AccordionContent>
           </AccordionItem>

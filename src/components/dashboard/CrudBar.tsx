@@ -57,6 +57,8 @@ export function CrudBar({
   const isFormActive = activeForm !== null;
   const isEditingOrAdding = isEditing || isAdding;
   const isPatientOrDonorForm = activeForm === 'patient' || activeForm === 'donor';
+  const isPrintHidden = activeForm === 'patient' || activeForm === 'donor' || 
+                        activeForm === 'category' || activeForm === 'testInformation';
   
   return (
     <div className={cn(
@@ -102,11 +104,13 @@ export function CrudBar({
         onClick={onCancelClick}
         disabled={!isEditingOrAdding}
       />
-      <CrudButton 
-        icon={PrinterIcon} 
-        label="Print" 
-        disabled={isEditingOrAdding || isPatientOrDonorForm}
-      />
+      {!isPrintHidden && (
+        <CrudButton 
+          icon={PrinterIcon} 
+          label="Print" 
+          disabled={isEditingOrAdding}
+        />
+      )}
       <CrudButton 
         icon={XIcon} 
         label="Close" 
