@@ -1,27 +1,111 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface BleedingFormProps {
   isSearchEnabled?: boolean;
   isEditable?: boolean;
 }
 
+// Mock donor data for demonstration
+const mockDonors = [
+  { id: "D00001", name: "John Doe", group: "A", rh: "+ve", address: "123 Main St, City" },
+  { id: "D00002", name: "Jane Smith", group: "B", rh: "-ve", address: "456 Oak St, Town" },
+];
+
 const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [selectedDonor, setSelectedDonor] = useState<any>(null);
+  const [bagNo, setBagNo] = useState("");
+  const [bagType, setBagType] = useState("double");
+
+  const [donorPatientValues, setDonorPatientValues] = useState({
+    hepB: "",
+    hepC: "",
+    hiv: "",
+    vdrl: "",
+    hb: "",
+  });
+
+  const [results, setResults] = useState({
+    hepB: "",
+    hepC: "",
+    hiv: "",
+    vdrl: "",
+  });
+
+  // Calculate results based on donor/patient values
+  useEffect(() => {
+    const calculateResult = (value: string) => {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue)) return "";
+      if (numValue >= 1.0) return "Positive";
+      if (numValue >= 0.5) return "Border Line Positive";
+      return "Negative";
+    };
+
+    setResults({
+      hepB: calculateResult(donorPatientValues.hepB),
+      hepC: calculateResult(donorPatientValues.hepC),
+      hiv: calculateResult(donorPatientValues.hiv),
+      vdrl: calculateResult(donorPatientValues.vdrl),
+    });
+  }, [donorPatientValues]);
+
+  const [productInfo, setProductInfo] = useState({
+    WB: false,
+    PC: true,
+    FFP: true,
+    PLT: false,
+    CP: false,
+    CS: false,
+  });
+
+  // Get current date in DD/MM/YYYY format
+  const today = new Date();
+  const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${
+    (today.getMonth() + 1).toString().padStart(2, '0')}/${
+    today.getFullYear()}`;
+
+  // Handle donor selection
+  const handleDonorSelect = (donorId: string) => {
+    const donor = mockDonors.find(d => d.id === donorId);
+    setSelectedDonor(donor);
+    setIsSearchModalOpen(false);
+  };
+
+  const handleDonorPatientValueChange = (test: keyof typeof donorPatientValues, value: string) => {
+    setDonorPatientValues(prev => ({
+      ...prev,
+      [test]: value
+    }));
+  };
 
   return (
     <div className="bg-white p-4 rounded-md">
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
-          <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
+          <Label htmlFor="donorId" className="mb-1 block">Donor No:</Label>
           <div className="flex items-center gap-2">
-            <Input id="bagNo" className="h-9" disabled={!isEditable} />
+            <Select
+              disabled={!isEditable}
+              onValueChange={(value) => handleDonorSelect(value)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Select Donor" />
+              </SelectTrigger>
+              <SelectContent>
+                {mockDonors.map(donor => (
+                  <SelectItem key={donor.id} value={donor.id}>{donor.id}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {isSearchEnabled && (
               <button 
                 onClick={() => setIsSearchModalOpen(true)}
@@ -33,65 +117,69 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
           </div>
         </div>
         <div>
-          <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" disabled={!isEditable} />
+          <Label htmlFor="donorName" className="mb-1 block">Donor Name:</Label>
+          <Input 
+            id="donorName" 
+            value={selectedDonor?.name || ""} 
+            className="h-9 bg-gray-50" 
+            readOnly 
+          />
         </div>
-        <div></div>
+        <div>
+          <Label htmlFor="donorCategory" className="mb-1 block">Donor Category:</Label>
+          <Select disabled={!isEditable} defaultValue="self">
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="self">Self Donor</SelectItem>
+              <SelectItem value="call">Call Donor</SelectItem>
+              <SelectItem value="exopd">Ex/OPD</SelectItem>
+              <SelectItem value="expatient">EX/Patient</SelectItem>
+              <SelectItem value="bloodcamp">Blood Camp</SelectItem>
+              <SelectItem value="othercenter">Other Center</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
-          <Label htmlFor="donorId" className="mb-1 block">Donor ID:</Label>
-          <Input id="donorId" className="h-9" disabled={!isEditable} />
+          <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
+          <Input 
+            id="bagNo"
+            value={bagNo}
+            onChange={(e) => setBagNo(e.target.value)}
+            className="h-9" 
+            disabled={!isEditable} 
+          />
         </div>
         <div>
-          <Label htmlFor="name" className="mb-1 block">Name:</Label>
-          <Input id="name" className="h-9" disabled={!isEditable} />
-        </div>
-        <div>
-          <Label htmlFor="age" className="mb-1 block">Age:</Label>
-          <Input id="age" className="h-9" type="number" disabled={!isEditable} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <Label htmlFor="bloodGroup" className="mb-1 block">Blood Group:</Label>
-          <div className="flex gap-2">
-            <Select disabled={!isEditable}>
-              <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="O">O</SelectItem>
-                <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="--">--</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select disabled={!isEditable}>
-              <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Rh" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="+ve">+ve</SelectItem>
-                <SelectItem value="-ve">-ve</SelectItem>
-                <SelectItem value="--">--</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Label htmlFor="date" className="mb-1 block">Date:</Label>
+          <Input 
+            id="date"
+            className="h-9 bg-gray-50"
+            type="text"
+            value={formattedDate}
+            readOnly
+          />
         </div>
         <div>
           <Label htmlFor="bagType" className="mb-1 block">Bag Type:</Label>
-          <Select disabled={!isEditable}>
+          <Select
+            value={bagType}
+            onValueChange={setBagType}
+            disabled={!isEditable}
+          >
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Select" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single">Single</SelectItem>
-              <SelectItem value="double">Double</SelectItem>
-              <SelectItem value="triple">Triple</SelectItem>
+              <SelectItem value="single">Single Bag</SelectItem>
+              <SelectItem value="double">Double Bag</SelectItem>
+              <SelectItem value="triple">Triple Bag</SelectItem>
+              <SelectItem value="nonbled">Non Bled</SelectItem>
+              <SelectItem value="megaunit">Mega Unit</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -99,58 +187,238 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <Label htmlFor="volume" className="mb-1 block">Volume:</Label>
-          <div className="flex items-center">
-            <Input id="volume" className="h-9 rounded-r-none" type="number" defaultValue="450" disabled={!isEditable} />
-            <span className="bg-gray-100 h-9 px-2 flex items-center border-y border-r rounded-r-md text-sm border-input">
-              ml
-            </span>
+          <Label htmlFor="group" className="mb-1 block">Group:</Label>
+          <Input 
+            id="group" 
+            value={selectedDonor?.group || ""}
+            className="h-9 bg-gray-50"
+            readOnly
+          />
+        </div>
+        <div>
+          <Label htmlFor="rh" className="mb-1 block">Rh:</Label>
+          <Input 
+            id="rh" 
+            value={selectedDonor?.rh || ""}
+            className="h-9 bg-gray-50"
+            readOnly
+          />
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="address" className="mb-1 block">Address:</Label>
+        <Input 
+          id="address" 
+          value={selectedDonor?.address || ""}
+          className="h-9 bg-gray-50"
+          readOnly
+        />
+      </div>
+
+      <div className="mt-6 mb-2">
+        <h3 className="text-lg font-medium text-red-600">Screening Results</h3>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* HBsAg (Hepatitis B) */}
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">HBsAg (Hepatitis B)</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Label htmlFor="hepBValue" className="mb-1 block">Donor/Patient Value:</Label>
+            <Input 
+              id="hepBValue" 
+              className="h-8"
+              value={donorPatientValues.hepB}
+              onChange={(e) => handleDonorPatientValueChange("hepB", e.target.value)}
+              disabled={!isEditable} 
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Cut Off Value:</Label>
+            <Input value="1.00" className="h-8 bg-gray-50" readOnly />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Result:</Label>
+            <Input 
+              value={results.hepB} 
+              className={cn(
+                "h-8 bg-gray-50",
+                results.hepB === "Positive" ? "text-red-600 font-medium" : 
+                results.hepB === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                "text-green-600 font-medium"
+              )}
+              readOnly 
+            />
           </div>
         </div>
-        <div>
-          <Label htmlFor="expiryDate" className="mb-1 block">Expiry Date:</Label>
-          <Input id="expiryDate" className="h-9" type="date" disabled={!isEditable} />
+
+        {/* Anti - HCV (Hepatitis C) */}
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">Anti - HCV (Hepatitis C)</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Label htmlFor="hepCValue" className="mb-1 block">Donor/Patient Value:</Label>
+            <Input 
+              id="hepCValue" 
+              className="h-8"
+              value={donorPatientValues.hepC}
+              onChange={(e) => handleDonorPatientValueChange("hepC", e.target.value)}
+              disabled={!isEditable} 
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Cut Off Value:</Label>
+            <Input value="1.00" className="h-8 bg-gray-50" readOnly />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Result:</Label>
+            <Input 
+              value={results.hepC} 
+              className={cn(
+                "h-8 bg-gray-50",
+                results.hepC === "Positive" ? "text-red-600 font-medium" : 
+                results.hepC === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                "text-green-600 font-medium"
+              )}
+              readOnly 
+            />
+          </div>
+        </div>
+
+        {/* Anti - HIV */}
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">Anti - HIV</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Label htmlFor="hivValue" className="mb-1 block">Donor/Patient Value:</Label>
+            <Input 
+              id="hivValue" 
+              className="h-8"
+              value={donorPatientValues.hiv}
+              onChange={(e) => handleDonorPatientValueChange("hiv", e.target.value)}
+              disabled={!isEditable} 
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Cut Off Value:</Label>
+            <Input value="1.00" className="h-8 bg-gray-50" readOnly />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Result:</Label>
+            <Input 
+              value={results.hiv} 
+              className={cn(
+                "h-8 bg-gray-50",
+                results.hiv === "Positive" ? "text-red-600 font-medium" : 
+                results.hiv === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                "text-green-600 font-medium"
+              )}
+              readOnly 
+            />
+          </div>
+        </div>
+
+        {/* V.D.R.L (Syphilis) */}
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">V.D.R.L (Syphilis)</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Label htmlFor="vdrlValue" className="mb-1 block">Donor/Patient Value:</Label>
+            <Input 
+              id="vdrlValue" 
+              className="h-8"
+              value={donorPatientValues.vdrl}
+              onChange={(e) => handleDonorPatientValueChange("vdrl", e.target.value)}
+              disabled={!isEditable} 
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Cut Off Value:</Label>
+            <Input value="1.00" className="h-8 bg-gray-50" readOnly />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="mb-1 block">Result:</Label>
+            <Input 
+              value={results.vdrl} 
+              className={cn(
+                "h-8 bg-gray-50",
+                results.vdrl === "Positive" ? "text-red-600 font-medium" : 
+                results.vdrl === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                "text-green-600 font-medium"
+              )}
+              readOnly 
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <Label htmlFor="hb" className="mb-1 block">Hb:</Label>
-          <Input id="hb" className="h-9" type="text" disabled={!isEditable} />
+      <div className="grid grid-cols-2 gap-6 mb-4">
+        {/* HB% */}
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">HB%</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Label htmlFor="hbValue" className="mb-1 block">Donor/Patient Value:</Label>
+            <Input 
+              id="hbValue" 
+              className="h-8"
+              value={donorPatientValues.hb}
+              onChange={(e) => handleDonorPatientValueChange("hb", e.target.value)}
+              disabled={!isEditable} 
+            />
+          </div>
         </div>
-        <div>
-          <Label htmlFor="weight" className="mb-1 block">Weight:</Label>
-          <Input id="weight" className="h-9" type="number" disabled={!isEditable} />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 mb-4">
-        <div>
-          <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
-          <Input id="remarks" className="h-9" disabled={!isEditable} />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-4">
+        {/* Preparation Date */}
         <div className="flex items-center gap-2">
-          <Checkbox id="tested" disabled={!isEditable} />
-          <Label htmlFor="tested" className="mb-0">Tested</Label>
+          <Label htmlFor="prepDate" className="whitespace-nowrap">Preparation Date:</Label>
+          <Input 
+            id="prepDate" 
+            type="text" 
+            className="h-8 bg-gray-50" 
+            value={formattedDate} 
+            readOnly 
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox id="issued" disabled={!isEditable} />
-          <Label htmlFor="issued" className="mb-0">Issued</Label>
+      </div>
+
+      {/* Blood Product Information */}
+      <div className="mt-4">
+        <div className="border p-3 rounded-md">
+          <div className="text-red-600 font-medium mb-2">Blood Product Information</div>
+          <div className="grid grid-cols-6 gap-2 text-center">
+            {Object.entries(productInfo).map(([key, checked]) => (
+              <div key={key} className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white p-1 w-full">{key}</div>
+                <Checkbox 
+                  id={`product-${key}`}
+                  checked={checked} 
+                  onCheckedChange={(newValue) => 
+                    setProductInfo(prev => ({...prev, [key]: !!newValue}))}
+                  disabled={!isEditable}
+                  className="mt-2 h-5 w-5"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Search Bleeding Record</DialogTitle>
+            <DialogTitle>Search Donor</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input placeholder="Enter bag number or donor ID" />
+            <Input placeholder="Enter donor ID or name" />
             <div className="h-64 border mt-4 overflow-y-auto">
-              {/* Search results would go here */}
+              {mockDonors.map(donor => (
+                <div 
+                  key={donor.id} 
+                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleDonorSelect(donor.id)}
+                >
+                  <div className="font-medium">{donor.name}</div>
+                  <div className="text-sm text-gray-600">ID: {donor.id}, Group: {donor.group} {donor.rh}</div>
+                </div>
+              ))}
             </div>
           </div>
         </DialogContent>

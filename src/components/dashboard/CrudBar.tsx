@@ -56,9 +56,9 @@ export function CrudBar({
   // Determine which buttons should be enabled
   const isFormActive = activeForm !== null;
   const isEditingOrAdding = isEditing || isAdding;
-  const isPatientOrDonorForm = activeForm === 'patient' || activeForm === 'donor';
   const isPrintHidden = activeForm === 'patient' || activeForm === 'donor' || 
-                        activeForm === 'category' || activeForm === 'testInformation';
+                        activeForm === 'category' || activeForm === 'testInformation' || 
+                        activeForm === 'bleeding';
   
   return (
     <div className={cn(
