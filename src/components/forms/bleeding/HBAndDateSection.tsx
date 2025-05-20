@@ -1,21 +1,19 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DonorPatientValues } from "./types";
+import { useBleedingForm } from "./BleedingFormContext";
 
 interface HBAndDateSectionProps {
-  donorPatientValues: DonorPatientValues;
   isEditable: boolean;
   formattedDate: string;
-  onValueChange: (test: keyof DonorPatientValues, value: string) => void;
 }
 
 const HBAndDateSection = ({
-  donorPatientValues,
   isEditable,
   formattedDate,
-  onValueChange,
 }: HBAndDateSectionProps) => {
+  const { donorPatientValues, handleDonorPatientValueChange } = useBleedingForm();
+  
   return (
     <div className="grid grid-cols-2 gap-6 mb-4">
       {/* HB% */}
@@ -27,7 +25,7 @@ const HBAndDateSection = ({
             id="hbValue" 
             className="h-8"
             value={donorPatientValues.hb}
-            onChange={(e) => onValueChange("hb", e.target.value)}
+            onChange={(e) => handleDonorPatientValueChange("hb", e.target.value)}
             disabled={!isEditable} 
           />
         </div>
