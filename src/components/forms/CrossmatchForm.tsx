@@ -3,29 +3,84 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, PlusCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 interface CrossmatchFormProps {
   isSearchEnabled?: boolean;
   isEditable?: boolean;
 }
 
+interface DonorItem {
+  id: string;
+  bagNo: string;
+  pipeNo: string;
+  name: string;
+  product: string;
+  quantity: number;
+  unit: string;
+}
+
+const mockDonors = [
+  { id: "1", bagNo: "B001", pipeNo: "P121", name: "John Doe", bloodGroup: "A+", product: "F.W.B" },
+  { id: "2", bagNo: "B002", pipeNo: "P122", name: "Jane Smith", bloodGroup: "O-", product: "F.W.B" },
+  { id: "3", bagNo: "B003", pipeNo: "P123", name: "Robert Brown", bloodGroup: "B+", product: "F.W.B" },
+];
+
 const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: CrossmatchFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isDonorSearchModalOpen, setIsDonorSearchModalOpen] = useState(false);
+  const [donorItems, setDonorItems] = useState<DonorItem[]>([]);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+
+  const handleSearchDocClick = () => {
+    setIsSearchModalOpen(true);
+  };
+
+  const handleInvoiceSelect = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setIsSearchModalOpen(false);
+  };
+
+  const handleAddDonor = () => {
+    setIsDonorSearchModalOpen(true);
+  };
+
+  const handleDonorSelect = (donor: any) => {
+    const newDonorItem: DonorItem = {
+      id: donor.id,
+      bagNo: donor.bagNo,
+      pipeNo: donor.pipeNo || "",
+      name: donor.name,
+      product: donor.product,
+      quantity: 1.0,
+      unit: "Bag"
+    };
+    
+    setDonorItems([...donorItems, newDonorItem]);
+    setIsDonorSearchModalOpen(false);
+  };
 
   return (
     <div className="bg-white p-4 rounded-md">
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
-          <Label htmlFor="caseNo" className="mb-1 block">Case No:</Label>
+          <Label htmlFor="caseNo" className="mb-1 block">Crossmatch No:</Label>
           <div className="flex items-center gap-2">
-            <Input id="caseNo" className="h-9" disabled={!isEditable} />
-            {isSearchEnabled && (
+            <Input 
+              id="caseNo" 
+              className="h-9" 
+              disabled={!isEditable} 
+              value={selectedInvoice?.documentNo || ""}
+            />
+            {isEditable && (
               <button 
-                onClick={() => setIsSearchModalOpen(true)}
+                onClick={handleSearchDocClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                aria-label="Search crossmatch"
               >
                 <SearchIcon className="h-4 w-4" />
               </button>
@@ -33,23 +88,54 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
           </div>
         </div>
         <div>
-          <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" disabled={!isEditable} />
+          <Label htmlFor="quantity" className="mb-1 block">Quantity:</Label>
+          <Input id="quantity" className="h-9" type="number" defaultValue={1} disabled={!isEditable} />
         </div>
-        <div></div>
+        <div>
+          <Label htmlFor="date" className="mb-1 block">Date:</Label>
+          <Input id="date" className="h-9" type="date" defaultValue={new Date().toISOString().split('T')[0]} disabled={!isEditable} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="patientName" className="mb-1 block">Patient Name:</Label>
-          <Input id="patientName" className="h-9" disabled={!isEditable} />
+          <Input 
+            id="patientName" 
+            className="h-9" 
+            disabled={true} 
+            value={selectedInvoice?.patientName || ""}
+          />
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label htmlFor="age" className="mb-1 block">Age:</Label>
+            <Input 
+              id="age" 
+              className="h-9" 
+              disabled={true} 
+              value={selectedInvoice?.age || ""}
+            />
+          </div>
+          <div>
+            <Label htmlFor="sex" className="mb-1 block">Sex:</Label>
+            <Input 
+              id="sex" 
+              className="h-9" 
+              disabled={true} 
+              value={selectedInvoice?.gender || ""}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="patientBloodGroup" className="mb-1 block">Patient Blood Group:</Label>
           <div className="flex gap-2">
-            <Select disabled={!isEditable}>
+            <Select disabled={true} value={selectedInvoice?.bloodGroup || "A"}>
               <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Select" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="A">A</SelectItem>
@@ -59,9 +145,9 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
                 <SelectItem value="--">--</SelectItem>
               </SelectContent>
             </Select>
-            <Select disabled={!isEditable}>
+            <Select disabled={true} value={selectedInvoice?.rh || "+ve"}>
               <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Rh" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="+ve">+ve</SelectItem>
@@ -70,92 +156,197 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               </SelectContent>
             </Select>
           </div>
+        </div>
+        <div>
+          <Label htmlFor="hospital" className="mb-1 block">Hospital:</Label>
+          <Input 
+            id="hospital" 
+            className="h-9" 
+            disabled={true}
+            value={selectedInvoice?.hospital || ""}
+          />
+        </div>
+        <div>
+          <Label htmlFor="bloodCate" className="mb-1 block">Blood Cate:</Label>
+          <Input id="bloodCate" className="h-9" disabled={!isEditable} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <Label htmlFor="albumin" className="mb-1 block">Albumin:</Label>
+          <Select defaultValue="negative" disabled={!isEditable}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="positive">Positive</SelectItem>
+              <SelectItem value="negative">Negative</SelectItem>
+              <SelectItem value="nil">Nil</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="saline" className="mb-1 block">Saline:</Label>
+          <Select defaultValue="negative" disabled={!isEditable}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="positive">Positive</SelectItem>
+              <SelectItem value="negative">Negative</SelectItem>
+              <SelectItem value="nil">Nil</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="coomb" className="mb-1 block">Coomb:</Label>
+          <Select defaultValue="negative" disabled={!isEditable}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="positive">Positive</SelectItem>
+              <SelectItem value="negative">Negative</SelectItem>
+              <SelectItem value="nil">Nil</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
-          <Input id="bagNo" className="h-9" disabled={!isEditable} />
+          <Label htmlFor="result" className="mb-1 block">Result:</Label>
+          <Select defaultValue="compatible" disabled={!isEditable}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="compatible">Compatible</SelectItem>
+              <SelectItem value="incompatible">Incompatible</SelectItem>
+              <SelectItem value="not-performed">Not Performed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
-          <Label htmlFor="donorBloodGroup" className="mb-1 block">Donor Blood Group:</Label>
-          <div className="flex gap-2">
-            <Select disabled={!isEditable}>
-              <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="O">O</SelectItem>
-                <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="--">--</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select disabled={!isEditable}>
-              <SelectTrigger className="h-9 flex-1">
-                <SelectValue placeholder="Rh" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="+ve">+ve</SelectItem>
-                <SelectItem value="-ve">-ve</SelectItem>
-                <SelectItem value="--">--</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Label htmlFor="expiryDate" className="mb-1 block">Expiry Date:</Label>
+          <Input id="expiryDate" className="h-9" type="date" disabled={!isEditable} />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 mb-4">
-        <div>
-          <h3 className="font-semibold mb-2">Major</h3>
-          <div className="space-y-3">
-            <RadioGroup defaultValue="compatible" className="flex space-x-4" disabled={!isEditable}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="compatible" id="major-compatible" disabled={!isEditable} />
-                <Label htmlFor="major-compatible">Compatible</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="incompatible" id="major-incompatible" disabled={!isEditable} />
-                <Label htmlFor="major-incompatible">Incompatible</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-        <div>
-          <h3 className="font-semibold mb-2">Minor</h3>
-          <div className="space-y-3">
-            <RadioGroup defaultValue="compatible" className="flex space-x-4" disabled={!isEditable}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="compatible" id="minor-compatible" disabled={!isEditable} />
-                <Label htmlFor="minor-compatible">Compatible</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="incompatible" id="minor-incompatible" disabled={!isEditable} />
-                <Label htmlFor="minor-incompatible">Incompatible</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 mb-4">
+      <div className="grid grid-cols-1 gap-4 mb-6">
         <div>
           <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
           <Input id="remarks" className="h-9" disabled={!isEditable} />
         </div>
       </div>
 
+      <div className="border rounded-md p-3 mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium text-gray-700">Donor Information</h3>
+          {isEditable && (
+            <Button 
+              onClick={handleAddDonor}
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Donor
+            </Button>
+          )}
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">Bag No</TableHead>
+              <TableHead className="w-[80px]">Pipe No</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead className="w-[60px] text-right">Qty</TableHead>
+              <TableHead className="w-[60px]">Unit</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {donorItems.length > 0 ? (
+              donorItems.map((donor) => (
+                <TableRow key={donor.id}>
+                  <TableCell>{donor.bagNo}</TableCell>
+                  <TableCell>{donor.pipeNo}</TableCell>
+                  <TableCell>{donor.name}</TableCell>
+                  <TableCell>{donor.product}</TableCell>
+                  <TableCell className="text-right">{donor.quantity.toFixed(2)}</TableCell>
+                  <TableCell>{donor.unit}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                  No donors added yet
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Search Crossmatch Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Search Crossmatch</DialogTitle>
+            <DialogTitle>Select Invoice</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input placeholder="Enter case number" />
+            <Input placeholder="Search by document number or patient name" />
             <div className="h-64 border mt-4 overflow-y-auto">
-              {/* Search results would go here */}
+              {[
+                { documentNo: "230001", patientName: "John Smith", age: 35, gender: "Male", bloodGroup: "A", rh: "+ve", hospital: "City Hospital" },
+                { documentNo: "230002", patientName: "Sarah Johnson", age: 42, gender: "Female", bloodGroup: "O", rh: "-ve", hospital: "General Hospital" },
+                { documentNo: "230003", patientName: "Robert Brown", age: 28, gender: "Male", bloodGroup: "B", rh: "+ve", hospital: "Memorial Hospital" }
+              ].map((invoice) => (
+                <div 
+                  key={invoice.documentNo} 
+                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleInvoiceSelect(invoice)}
+                >
+                  <div className="font-medium">Doc #: {invoice.documentNo}</div>
+                  <div className="text-sm text-gray-600">
+                    Patient: {invoice.patientName}, {invoice.gender}, {invoice.age} yrs
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Blood Group: {invoice.bloodGroup}{invoice.rh}, Hospital: {invoice.hospital}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Donor Search Modal */}
+      <Dialog open={isDonorSearchModalOpen} onOpenChange={setIsDonorSearchModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Donor</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input placeholder="Search by bag number or donor name" />
+            <div className="h-64 border mt-4 overflow-y-auto">
+              {mockDonors.map((donor) => (
+                <div 
+                  key={donor.id} 
+                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleDonorSelect(donor)}
+                >
+                  <div className="font-medium">Bag #: {donor.bagNo}</div>
+                  <div className="text-sm text-gray-600">
+                    Donor: {donor.name}, Blood Group: {donor.bloodGroup}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Product: {donor.product}, Pipe #: {donor.pipeNo}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </DialogContent>
