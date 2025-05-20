@@ -17,20 +17,41 @@ interface BleedingFormProps {
 const mockDonors = [
   { id: "D00001", name: "John Doe", group: "A", rh: "+ve", address: "123 Main St, City" },
   { id: "D00002", name: "Jane Smith", group: "B", rh: "-ve", address: "456 Oak St, Town" },
+  { id: "D00003", name: "Robert Brown", group: "O", rh: "+ve", address: "789 Pine St, Village" },
+  { id: "D00004", name: "Emily Johnson", group: "AB", rh: "-ve", address: "101 Maple Ave, County" },
 ];
+
+// Generate a random bag number
+const generateBagNumber = () => {
+  const prefix = "B";
+  const randomDigits = Math.floor(10000 + Math.random() * 90000);
+  return `${prefix}${randomDigits}`;
+};
+
+// Generate random screening value between 0.01 and 0.44
+const generateRandomScreeningValue = () => {
+  return (Math.random() * 0.43 + 0.01).toFixed(2);
+};
+
+// Generate random HB value between 13.5 and 15.9
+const generateRandomHBValue = () => {
+  return (Math.random() * 2.4 + 13.5).toFixed(1);
+};
 
 const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isBagSearchModalOpen, setIsBagSearchModalOpen] = useState(false);
   const [selectedDonor, setSelectedDonor] = useState<any>(null);
-  const [bagNo, setBagNo] = useState("");
+  const [bagNo, setBagNo] = useState(generateBagNumber());
   const [bagType, setBagType] = useState("double");
 
+  // Initialize with random values
   const [donorPatientValues, setDonorPatientValues] = useState({
-    hepB: "",
-    hepC: "",
-    hiv: "",
-    vdrl: "",
-    hb: "",
+    hepB: generateRandomScreeningValue(),
+    hepC: generateRandomScreeningValue(),
+    hiv: generateRandomScreeningValue(),
+    vdrl: generateRandomScreeningValue(),
+    hb: generateRandomHBValue(),
   });
 
   const [results, setResults] = useState({
@@ -93,27 +114,20 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
         <div>
           <Label htmlFor="donorId" className="mb-1 block">Donor No:</Label>
           <div className="flex items-center gap-2">
-            <Select
-              disabled={!isEditable}
-              onValueChange={(value) => handleDonorSelect(value)}
+            <Input
+              id="donorId"
+              value={selectedDonor?.id || ""}
+              className="h-9 bg-gray-50"
+              readOnly
+              placeholder="Select donor via search"
+            />
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
+              className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+              disabled={!isEditable && !isSearchEnabled}
             >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select Donor" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockDonors.map(donor => (
-                  <SelectItem key={donor.id} value={donor.id}>{donor.id}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {isSearchEnabled && (
-              <button 
-                onClick={() => setIsSearchModalOpen(true)}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </button>
-            )}
+              <SearchIcon className="h-4 w-4" />
+            </button>
           </div>
         </div>
         <div>
@@ -146,13 +160,22 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
-          <Input 
-            id="bagNo"
-            value={bagNo}
-            onChange={(e) => setBagNo(e.target.value)}
-            className="h-9" 
-            disabled={!isEditable} 
-          />
+          <div className="flex items-center gap-2">
+            <Input 
+              id="bagNo"
+              value={bagNo}
+              className="h-9 bg-gray-50"
+              readOnly
+            />
+            {isEditable && isSearchEnabled && (
+              <button 
+                onClick={() => setIsBagSearchModalOpen(true)}
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
@@ -401,6 +424,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
         </div>
       </div>
 
+      {/* Donor Search Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -417,6 +441,33 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
                 >
                   <div className="font-medium">{donor.name}</div>
                   <div className="text-sm text-gray-600">ID: {donor.id}, Group: {donor.group} {donor.rh}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bag Search Modal */}
+      <Dialog open={isBagSearchModalOpen} onOpenChange={setIsBagSearchModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Search Bag Number</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input placeholder="Enter bag number" />
+            <div className="h-64 border mt-4 overflow-y-auto">
+              {/* Example bag numbers - in a real app, this would be populated from backend */}
+              {['B12345', 'B23456', 'B34567', 'B45678'].map(bagId => (
+                <div 
+                  key={bagId} 
+                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setBagNo(bagId);
+                    setIsBagSearchModalOpen(false);
+                  }}
+                >
+                  <div className="font-medium">Bag ID: {bagId}</div>
                 </div>
               ))}
             </div>
