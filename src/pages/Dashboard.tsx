@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -7,7 +6,7 @@ import DonorForm from "@/components/forms/DonorForm";
 import PatientForm from "@/components/forms/PatientForm";
 import CrossmatchForm from "@/components/forms/CrossmatchForm";
 import BleedingForm from "@/components/forms/BleedingForm";
-import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
+import PatientInvoiceForm, { FormRefObject } from "@/components/forms/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 
@@ -105,17 +104,11 @@ const Dashboard = () => {
       case 'crossmatch':
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'patientInvoice':
-        return (
-          <PatientInvoiceForm 
-            isSearchEnabled={isSearchEnabled} 
-            isEditable={isEditable} 
-            ref={(formRef: any) => {
-              if (formRef) {
-                activeFormRef.current = formRef;
-              }
-            }}
-          />
-        );
+        return <PatientInvoiceForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable} 
+                 ref={activeFormRef}
+               />;
       case 'category':
         return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'testInformation':
