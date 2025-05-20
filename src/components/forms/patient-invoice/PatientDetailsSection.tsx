@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,11 +41,23 @@ export function PatientDetailsSection({
         <div>
           <Label htmlFor="patientId" className="mb-1 block">Patient ID:</Label>
           <div className="flex items-center gap-2">
-            <Input id="patientId" className="h-9" value={selectedPatient?.id || ""} maxLength={patientType === "opd" ? 11 : undefined} disabled={!isEditable} />
-            {/* Show search icon when adding a patient (both regular and OPD) */}
-            {isEditable && isAdding && <button onClick={onSearchPatientClick} className="bg-gray-200 p-1 rounded hover:bg-gray-300" aria-label="Search patient">
+            <Input 
+              id="patientId" 
+              className="h-9" 
+              value={selectedPatient?.id || ""} 
+              maxLength={patientType === "opd" ? 11 : undefined} 
+              disabled={!isEditable || (isEditable && patientType === "regular")} 
+            />
+            {/* Show search icon only for regular patients when adding */}
+            {isEditable && patientType === "regular" && 
+              <button 
+                onClick={onSearchPatientClick} 
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300" 
+                aria-label="Search patient"
+              >
                 <SearchIcon className="h-4 w-4" />
-              </button>}
+              </button>
+            }
           </div>
         </div>
         <div>
@@ -52,7 +65,15 @@ export function PatientDetailsSection({
           <div className="flex items-center gap-2">
             <Input id="documentNo" className="h-9" value={documentNo} disabled={true} />
             {/* Don't show search icon for Document No when adding (only show when editing) */}
-            {isEditable && !isAdding}
+            {isEditable && !isAdding && 
+              <button 
+                onClick={onSearchDocumentClick} 
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300" 
+                aria-label="Search document"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -60,7 +81,12 @@ export function PatientDetailsSection({
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="name" className="mb-1 block">Patient Name:</Label>
-          <Input id="name" className="h-9" value={selectedPatient?.name || ""} disabled={!isEditable} />
+          <Input 
+            id="name" 
+            className="h-9" 
+            value={selectedPatient?.name || ""} 
+            disabled={!isEditable || (isEditable && patientType === "regular")} 
+          />
         </div>
         <div>
           <Label htmlFor="documentDate" className="mb-1 block">Document Date:</Label>
