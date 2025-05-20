@@ -7,4 +7,7 @@ export type Donor = {
   address?: string;
   phone?: string;
   email?: string;
+  gender?: string;
+  date_of_birth?: string | null;
+  last_donation_date?: string | null;
 };

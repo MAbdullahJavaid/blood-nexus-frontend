@@ -29,3 +29,13 @@ export type ProductInfo = {
   CP: boolean;
   CS: boolean;
 };
+
+export type BagData = {
+  id: string;
+  bag_id: string;
+  donor_id: string;
+  bleeding_date: string;
+  expiry_date?: string;
+  technician?: string;
+  remarks?: string;
+};

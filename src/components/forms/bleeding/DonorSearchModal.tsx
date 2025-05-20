@@ -20,7 +20,7 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
   const [searchResults, setSearchResults] = useState<Donor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load donors when component mounts
+  // Load donors when component mounts or modal opens
   useEffect(() => {
     if (isOpen) {
       fetchDonors();
@@ -33,7 +33,7 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
       setIsLoading(true);
       const { data, error } = await supabase
         .from('donors')
-        .select('id, donor_id, name, blood_group, address, phone, email');
+        .select('id, donor_id, name, blood_group, address, phone, email, gender, date_of_birth, last_donation_date');
       
       if (error) throw error;
       
@@ -87,6 +87,11 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
             />
             <Button 
               onClick={handleSearch} 

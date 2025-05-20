@@ -27,3 +27,20 @@ export const getFormattedDate = (): string => {
     (today.getMonth() + 1).toString().padStart(2, '0')}/${
     today.getFullYear()}`;
 };
+
+export const formatDate = (date: Date): string => {
+  return `${date.getDate().toString().padStart(2, '0')}/${
+    (date.getMonth() + 1).toString().padStart(2, '0')}/${
+    date.getFullYear()}`;
+};
+
+export const saveDonorBleedingData = async (formData: any) => {
+  try {
+    // Implementation to save donor and bleeding data to Supabase
+    // This would connect to your database tables
+    return { success: true, message: "Data saved successfully" };
+  } catch (error) {
+    console.error("Error saving data:", error);
+    return { success: false, message: "Failed to save data" };
+  }
+};

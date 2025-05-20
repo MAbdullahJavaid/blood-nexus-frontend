@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { SearchIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { 
   generateBagNumber, 
   generateRandomScreeningValue,
@@ -18,20 +18,25 @@ import {
   BleedingFormProps, 
   DonorPatientValues, 
   TestResults, 
-  ProductInfo 
+  ProductInfo,
+  BagData
 } from "./bleeding/types";
+import { supabase } from "@/integrations/supabase/client";
 import DonorSearchModal from "./bleeding/DonorSearchModal";
 import BagSearchModal from "./bleeding/BagSearchModal";
 import ScreeningResultsPanel from "./bleeding/ScreeningResultsPanel";
 import HBAndDateSection from "./bleeding/HBAndDateSection";
 import ProductInfoSection from "./bleeding/ProductInfoSection";
 
-const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingFormProps) => {
+const BleedingForm = ({ isSearchEnabled = true, isEditable = true }: BleedingFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isBagSearchModalOpen, setIsBagSearchModalOpen] = useState(false);
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState(generateBagNumber());
   const [bagType, setBagType] = useState("double");
+  const [isLoading, setIsLoading] = useState(false);
+  const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const formattedDate = getFormattedDate();
 
   // Initialize with random values
@@ -72,6 +77,10 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
   // Handle donor selection
   const handleDonorSelect = (donor: Donor) => {
     setSelectedDonor(donor);
+    toast({
+      title: "Donor Selected",
+      description: `Selected donor: ${donor.name}`,
+    });
   };
 
   const handleDonorPatientValueChange = (test: keyof DonorPatientValues, value: string) => {
@@ -88,8 +97,59 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedDonor) {
+      toast({
+        title: "Error",
+        description: "Please select a donor first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Format the date for database storage (YYYY-MM-DD)
+      const dateArr = bleedingDate.split('/');
+      const formattedBleedingDate = `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}`;
+      
+      // Save to bleeding_records table
+      const { data, error } = await supabase
+        .from('bleeding_records')
+        .insert({
+          bag_id: bagNo,
+          donor_id: selectedDonor.id,
+          bleeding_date: formattedBleedingDate,
+          technician: "Current User", // You might want to get this from user context
+          remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Bleeding record saved successfully",
+      });
+      
+      // Reset form or redirect user as needed
+      setBagNo(generateBagNumber());
+    } catch (error) {
+      console.error("Error saving bleeding record:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save bleeding record. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="bg-white p-4 rounded-md">
+    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-md">
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="donorId" className="mb-1 block">Donor No:</Label>
@@ -102,6 +162,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
               placeholder="Select donor via search"
             />
             <button 
+              type="button"
               onClick={() => setIsSearchModalOpen(true)}
               className="bg-gray-200 p-1 rounded hover:bg-gray-300"
               disabled={!isEditable && !isSearchEnabled}
@@ -144,11 +205,13 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
             <Input 
               id="bagNo"
               value={bagNo}
+              onChange={(e) => setBagNo(e.target.value)}
               className="h-9 bg-gray-50"
-              readOnly
+              readOnly={!isEditable}
             />
             {isEditable && isSearchEnabled && (
               <button 
+                type="button"
                 onClick={() => setIsBagSearchModalOpen(true)}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300"
               >
@@ -163,8 +226,9 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
             id="date"
             className="h-9 bg-gray-50"
             type="text"
-            value={formattedDate}
-            readOnly
+            value={bleedingDate}
+            onChange={(e) => setBleedingDate(e.target.value)}
+            readOnly={!isEditable}
           />
         </div>
         <div>
@@ -243,6 +307,18 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
         onProductInfoChange={handleProductInfoChange}
       />
 
+      {isEditable && (
+        <div className="mt-6 flex justify-end">
+          <Button 
+            type="submit" 
+            className="bg-red-600 hover:bg-red-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : "Save"}
+          </Button>
+        </div>
+      )}
+
       {/* Donor Search Modal */}
       <DonorSearchModal 
         isOpen={isSearchModalOpen} 
@@ -256,7 +332,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
         onClose={() => setIsBagSearchModalOpen(false)}
         onSelect={(bagId) => setBagNo(bagId)}
       />
-    </div>
+    </form>
   );
 };
 
