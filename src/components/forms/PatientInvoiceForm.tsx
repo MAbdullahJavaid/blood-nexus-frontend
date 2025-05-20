@@ -153,6 +153,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setIsTestSearchModalOpen(true);
     };
 
+    const handleSearchPatient = () => {
+      setIsSearchModalOpen(true);
+    };
+
     return (
       <div className="bg-white p-4 rounded-md">
         <PatientDetailsSection
@@ -162,7 +166,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isEditable={isEditable}
           isAdding={isAdding}
           onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={() => setIsSearchModalOpen(true)}
+          onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
         />
 
