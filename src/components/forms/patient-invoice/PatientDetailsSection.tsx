@@ -55,8 +55,8 @@ export function PatientDetailsSection({
               maxLength={patientType === "opd" ? 11 : undefined} 
               disabled={!isEditable} 
             />
-            {/* Show search icon when adding a regular patient */}
-            {isEditable && isAdding && patientType === "regular" && (
+            {/* Show search icon when adding a patient (both regular and OPD) */}
+            {isEditable && isAdding && (
               <button 
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300"
@@ -76,7 +76,7 @@ export function PatientDetailsSection({
               value={documentNo} 
               disabled={true} 
             />
-            {/* Show search icon when editing (not adding) */}
+            {/* Don't show search icon for Document No when adding (only show when editing) */}
             {isEditable && !isAdding && (
               <button 
                 onClick={onSearchDocumentClick}
