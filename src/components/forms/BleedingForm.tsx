@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +20,12 @@ const mockDonors = [
   { id: "D00004", name: "Emily Johnson", group: "AB", rh: "-ve", address: "101 Maple Ave, County" },
 ];
 
-// Generate a random bag number
+// Generate a bag number starting from 10001
+let currentBagNumber = 10001;
 const generateBagNumber = () => {
   const prefix = "B";
-  const randomDigits = Math.floor(10000 + Math.random() * 90000);
-  return `${prefix}${randomDigits}`;
+  const bagNum = currentBagNumber++;
+  return `${prefix}${bagNum}`;
 };
 
 // Generate random screening value between 0.01 and 0.44
@@ -66,9 +66,9 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
     const calculateResult = (value: string) => {
       const numValue = parseFloat(value);
       if (isNaN(numValue)) return "";
-      if (numValue >= 1.0) return "Positive";
-      if (numValue >= 0.5) return "Border Line Positive";
-      return "Negative";
+      if (numValue >= 1.0) return "REACTIVE";
+      if (numValue >= 0.5) return "Border Line REACTIVE";
+      return "NON REACTIVE";
     };
 
     setResults({
@@ -267,8 +267,8 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
               value={results.hepB} 
               className={cn(
                 "h-8 bg-gray-50",
-                results.hepB === "Positive" ? "text-red-600 font-medium" : 
-                results.hepB === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                results.hepB === "REACTIVE" ? "text-red-600 font-medium" : 
+                results.hepB === "Border Line REACTIVE" ? "text-orange-500 font-medium" : 
                 "text-green-600 font-medium"
               )}
               readOnly 
@@ -299,8 +299,8 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
               value={results.hepC} 
               className={cn(
                 "h-8 bg-gray-50",
-                results.hepC === "Positive" ? "text-red-600 font-medium" : 
-                results.hepC === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                results.hepC === "REACTIVE" ? "text-red-600 font-medium" : 
+                results.hepC === "Border Line REACTIVE" ? "text-orange-500 font-medium" : 
                 "text-green-600 font-medium"
               )}
               readOnly 
@@ -331,8 +331,8 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
               value={results.hiv} 
               className={cn(
                 "h-8 bg-gray-50",
-                results.hiv === "Positive" ? "text-red-600 font-medium" : 
-                results.hiv === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                results.hiv === "REACTIVE" ? "text-red-600 font-medium" : 
+                results.hiv === "Border Line REACTIVE" ? "text-orange-500 font-medium" : 
                 "text-green-600 font-medium"
               )}
               readOnly 
@@ -363,8 +363,8 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
               value={results.vdrl} 
               className={cn(
                 "h-8 bg-gray-50",
-                results.vdrl === "Positive" ? "text-red-600 font-medium" : 
-                results.vdrl === "Border Line Positive" ? "text-orange-500 font-medium" : 
+                results.vdrl === "REACTIVE" ? "text-red-600 font-medium" : 
+                results.vdrl === "Border Line REACTIVE" ? "text-orange-500 font-medium" : 
                 "text-green-600 font-medium"
               )}
               readOnly 

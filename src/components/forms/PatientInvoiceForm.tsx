@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,9 +19,25 @@ export interface FormRefObject {
   handleDeleteItem?: () => void;
 }
 
+// Mock patients data for demonstration
+const mockPatients = [
+  { id: "P0001", name: "John Smith", hospital: "General Hospital", gender: "male", phoneNo: "555-1234", age: 45 },
+  { id: "P0002", name: "Jane Doe", hospital: "City Medical", gender: "female", phoneNo: "555-5678", age: 32 },
+  { id: "P0003", name: "Robert Johnson", hospital: "County Healthcare", gender: "male", phoneNo: "555-9012", age: 58 },
+];
+
+// Mock tests data for demonstration
+const mockTests = [
+  { id: "T001", name: "Complete Blood Count", rate: 100 },
+  { id: "T002", name: "Blood Glucose", rate: 75 },
+  { id: "T003", name: "Lipid Profile", rate: 150 },
+  { id: "T004", name: "Liver Function", rate: 200 },
+];
+
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+    const [isTestSearchModalOpen, setIsTestSearchModalOpen] = useState(false);
     const [patientType, setPatientType] = useState<string>("regular");
     const [documentNo, setDocumentNo] = useState<string>("");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
@@ -30,6 +47,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [receivedAmount, setReceivedAmount] = useState<number>(0);
     const [totalAmount, setTotalAmount] = useState<number>(0);
     const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+    const [currentTestIndex, setCurrentTestIndex] = useState<number | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
     interface InvoiceItem {
       id: string;
@@ -69,23 +88,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const handlePatientTypeChange = (value: string) => {
       setPatientType(value);
+      setSelectedPatient(null);
       // Reset patient data if type changes
     };
 
     const handleAddItem = () => {
-      // In a real application, this would open a dialog to select a test
-      // For this example, we'll just add a dummy item
+      // Add an empty row with a unique temporary ID
+      const tempId = `temp-${items.length}`;
       const newItem: InvoiceItem = {
-        id: `item-${items.length + 1}`,
-        testId: `T${items.length + 1}`,
-        testName: `Test Item ${items.length + 1}`,
+        id: tempId,
+        testId: "",
+        testName: "",
         qty: 1,
-        rate: 100,
-        amount: 100
+        rate: 0,
+        amount: 0
       };
       
       setItems([...items, newItem]);
-      calculateTotal([...items, newItem]);
+      setSelectedItemIndex(items.length);
+      setCurrentTestIndex(items.length);
     };
 
     const handleDeleteItem = () => {
@@ -118,6 +139,32 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setSelectedItemIndex(index);
     };
 
+    const handleTestSelect = (testId: string) => {
+      const test = mockTests.find(t => t.id === testId);
+      
+      if (test && currentTestIndex !== null) {
+        const updatedItems = [...items];
+        updatedItems[currentTestIndex] = {
+          ...updatedItems[currentTestIndex],
+          testId: test.id,
+          testName: test.name,
+          rate: test.rate,
+          amount: test.rate * updatedItems[currentTestIndex].qty
+        };
+        
+        setItems(updatedItems);
+        calculateTotal(updatedItems);
+        setIsTestSearchModalOpen(false);
+        setCurrentTestIndex(null);
+      }
+    };
+
+    const handlePatientSelect = (patientId: string) => {
+      const patient = mockPatients.find(p => p.id === patientId);
+      setSelectedPatient(patient);
+      setIsSearchModalOpen(false);
+    };
+
     return (
       <div className="bg-white p-4 rounded-md">
         <div className="grid grid-cols-3 gap-4 mb-4">
@@ -143,6 +190,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               <Input 
                 id="patientId" 
                 className="h-9" 
+                value={selectedPatient?.id || ""}
                 maxLength={patientType === "opd" ? 11 : undefined} 
                 disabled={!isEditable} 
               />
@@ -165,7 +213,12 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <Label htmlFor="name" className="mb-1 block">Patient Name:</Label>
-            <Input id="name" className="h-9" disabled={!isEditable} />
+            <Input 
+              id="name" 
+              className="h-9" 
+              value={selectedPatient?.name || ""}
+              disabled={!isEditable} 
+            />
           </div>
           <div>
             <Label htmlFor="documentDate" className="mb-1 block">Document Date:</Label>
@@ -176,11 +229,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="hospital" className="mb-1 block">Hospital Name:</Label>
-            <Input id="hospital" className="h-9" disabled={!isEditable} />
+            <Input 
+              id="hospital" 
+              className="h-9" 
+              value={selectedPatient?.hospital || ""}
+              disabled={!isEditable} 
+            />
           </div>
           <div>
             <Label htmlFor="gender" className="mb-1 block">Gender:</Label>
-            <Select defaultValue="male" disabled={!isEditable}>
+            <Select defaultValue={selectedPatient?.gender || "male"} disabled={!isEditable}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -199,11 +257,22 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div>
             <Label htmlFor="phoneNo" className="mb-1 block">Phone No:</Label>
-            <Input id="phoneNo" className="h-9" disabled={!isEditable} />
+            <Input 
+              id="phoneNo" 
+              className="h-9" 
+              value={selectedPatient?.phoneNo || ""}
+              disabled={!isEditable} 
+            />
           </div>
           <div>
             <Label htmlFor="age" className="mb-1 block">Age:</Label>
-            <Input id="age" className="h-9" type="number" disabled={!isEditable} />
+            <Input 
+              id="age" 
+              className="h-9" 
+              type="number" 
+              value={selectedPatient?.age || ""}
+              disabled={!isEditable} 
+            />
           </div>
           <div>
             <Label htmlFor="dob" className="mb-1 block">DOB:</Label>
@@ -286,6 +355,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
                   <TableHead className="w-[80px]">Qty</TableHead>
                   <TableHead className="w-[100px]">Test Rate</TableHead>
                   <TableHead className="w-[100px]">Amount</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -301,11 +371,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
                       <TableCell>{item.qty}</TableCell>
                       <TableCell>{item.rate.toFixed(2)}</TableCell>
                       <TableCell>{item.amount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        {!item.testId && isEditable && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentTestIndex(index);
+                              setIsTestSearchModalOpen(true);
+                            }}
+                            className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                          >
+                            <SearchIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-gray-500 h-24">
+                    <TableCell colSpan={6} className="text-center text-gray-500 h-24">
                       No items added yet
                     </TableCell>
                   </TableRow>
@@ -354,13 +438,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mb-4">
-          <div>
-            <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
-            <Input id="remarks" className="h-9" disabled={!isEditable} />
-          </div>
-        </div>
-
+        {/* Patient Search Modal */}
         <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
           <DialogContent>
             <DialogHeader>
@@ -369,7 +447,44 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             <div className="py-4">
               <Input placeholder="Enter patient ID or name" />
               <div className="h-64 border mt-4 overflow-y-auto">
-                {/* Search results would go here */}
+                {mockPatients.map(patient => (
+                  <div 
+                    key={patient.id} 
+                    className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handlePatientSelect(patient.id)}
+                  >
+                    <div className="font-medium">{patient.name}</div>
+                    <div className="text-sm text-gray-600">
+                      ID: {patient.id}, Hospital: {patient.hospital}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Test Search Modal */}
+        <Dialog open={isTestSearchModalOpen} onOpenChange={setIsTestSearchModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select Test</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input placeholder="Search tests by name or ID" />
+              <div className="h-64 border mt-4 overflow-y-auto">
+                {mockTests.map(test => (
+                  <div 
+                    key={test.id} 
+                    className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleTestSelect(test.id)}
+                  >
+                    <div className="font-medium">{test.name}</div>
+                    <div className="text-sm text-gray-600">
+                      ID: {test.id}, Rate: ${test.rate.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </DialogContent>
