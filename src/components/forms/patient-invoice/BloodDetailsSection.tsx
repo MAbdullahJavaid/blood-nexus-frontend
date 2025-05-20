@@ -22,7 +22,7 @@ export function BloodDetailsSection({
     <div className="grid grid-cols-4 gap-4 mb-4">
       <div>
         <Label htmlFor="bloodGroup" className="mb-1 block">Blood Group:</Label>
-        <Select defaultValue="A" disabled={!isEditable}>
+        <Select defaultValue="--" disabled={!isEditable}>
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
@@ -31,18 +31,20 @@ export function BloodDetailsSection({
             <SelectItem value="B">B</SelectItem>
             <SelectItem value="AB">AB</SelectItem>
             <SelectItem value="O">O</SelectItem>
+            <SelectItem value="--">--</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div>
         <Label htmlFor="rh" className="mb-1 block">RH:</Label>
-        <Select defaultValue="+ve" disabled={!isEditable}>
+        <Select defaultValue="--" disabled={!isEditable}>
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="+ve">+ve</SelectItem>
             <SelectItem value="-ve">-ve</SelectItem>
+            <SelectItem value="--">--</SelectItem>
           </SelectContent>
         </Select>
       </div>
