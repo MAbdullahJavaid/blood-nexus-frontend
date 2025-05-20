@@ -79,6 +79,17 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     try {
       setIsSubmitting(true);
       
+      // Convert blood group format to match expected format in database
+      let bloodGroupValue;
+      
+      if (donorData.group === "--" || donorData.rh === "--") {
+        bloodGroupValue = null;
+      } else {
+        // Map the rh value to the proper format
+        const rhValue = donorData.rh === "+ve" ? "+" : "-";
+        bloodGroupValue = `${donorData.group}${rhValue}`;
+      }
+      
       const { error } = await supabase
         .from('donors')
         .insert({
@@ -86,7 +97,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           name: donorData.name,
           address: donorData.address,
           gender: donorData.sex,
-          blood_group: `${donorData.group}${donorData.rh === '+ve' ? '+' : '-'}`,
+          blood_group: bloodGroupValue,
           phone: donorData.phoneRes,
           email: "",
           date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
