@@ -6,7 +6,7 @@ import DonorForm from "@/components/forms/DonorForm";
 import PatientForm from "@/components/forms/PatientForm";
 import CrossmatchForm from "@/components/forms/CrossmatchForm";
 import BleedingForm from "@/components/forms/BleedingForm";
-import PatientInvoiceForm, { FormRefObject } from "@/components/forms/PatientInvoiceForm";
+import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 
@@ -15,8 +15,8 @@ import { toast } from "@/hooks/use-toast";
 
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
 
-// Define a type for form refs
-interface FormRefObject {
+// Use the FormRefObject interface from PatientInvoiceForm
+interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
 }
@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<string[]>([]);
   
   // Reference to the active form component
-  const activeFormRef = useRef<FormRefObject>({});
+  const activeFormRef = useRef<FormRef>({});
   
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
