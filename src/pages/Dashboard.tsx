@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -16,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
 
-// Define the FormRef interface
+// Use the FormRefObject interface from PatientInvoiceForm
 interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
@@ -98,18 +97,8 @@ const Dashboard = () => {
     switch(activeForm) {
       case 'donor':
         return <DonorForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
-      case 'patient': {
-        const patientFormRef = (formRef: FormRef) => {
-          activeFormRef.current = formRef;
-        };
-        return (
-          <PatientForm 
-            isSearchEnabled={isSearchEnabled} 
-            isEditable={isEditable} 
-            ref={patientFormRef}
-          />
-        );
-      }
+      case 'patient':
+        return <PatientForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'bleeding':
         return <BleedingForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'crossmatch':
