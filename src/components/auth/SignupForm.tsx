@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { DropletIcon } from "lucide-react";
 
 export function SignupForm() {
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +33,7 @@ export function SignupForm() {
     setIsLoading(true);
     
     try {
-      const success = await signup(username, password);
+      const success = await signup(email, password, username);
       if (success) {
         navigate("/dashboard");
       }
@@ -55,6 +56,17 @@ export function SignupForm() {
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -93,9 +105,9 @@ export function SignupForm() {
             <Button 
               type="submit" 
               className="w-full bg-blood hover:bg-blood-dark" 
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading || authLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </div>
         </form>

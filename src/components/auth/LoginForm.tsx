@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { DropletIcon } from "lucide-react";
 
 export function LoginForm() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      const success = await login(username, password);
+      const success = await login(email, password);
       if (success) {
         navigate("/dashboard");
       }
@@ -44,12 +44,13 @@ export function LoginForm() {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -67,9 +68,9 @@ export function LoginForm() {
             <Button 
               type="submit" 
               className="w-full bg-blood hover:bg-blood-dark" 
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading || authLoading ? "Signing in..." : "Sign In"}
             </Button>
           </div>
         </form>
@@ -80,9 +81,6 @@ export function LoginForm() {
           <Button variant="link" className="p-0" onClick={() => navigate("/signup")}>
             Sign up
           </Button>
-        </div>
-        <div className="text-xs text-muted-foreground mt-4 text-center">
-          Demo credentials: username "admin", password "admin123"
         </div>
       </CardFooter>
     </Card>
