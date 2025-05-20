@@ -26,6 +26,13 @@ const mockPatients = [
   { id: "P0003", name: "Robert Johnson", hospital: "County Healthcare", gender: "male", phoneNo: "555-9012", age: 58 },
 ];
 
+// Mock invoices data for demonstration
+const mockInvoices = [
+  { documentNo: "2505001", patientId: "P0001", patientName: "John Smith", date: "2025-05-15", amount: 275 },
+  { documentNo: "2505002", patientId: "P0002", patientName: "Jane Doe", date: "2025-05-16", amount: 150 },
+  { documentNo: "2505003", patientId: "P0003", patientName: "Robert Johnson", date: "2025-05-17", amount: 350 },
+];
+
 // Mock tests data for demonstration
 const mockTests = [
   { id: "T001", name: "Complete Blood Count", rate: 100 },
@@ -38,6 +45,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
     const [isTestSearchModalOpen, setIsTestSearchModalOpen] = useState(false);
+    const [isDocumentSearchModalOpen, setIsDocumentSearchModalOpen] = useState(false);
     const [patientType, setPatientType] = useState<string>("regular");
     const [documentNo, setDocumentNo] = useState<string>("");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
@@ -71,11 +79,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     // Generate document number on component mount
     useEffect(() => {
-      if (isEditable) {
+      if (isEditable && isAdding) {
         generateDocumentNo();
       }
     }, [isEditable]);
 
+    const isAdding = !documentNo;
+    
     const generateDocumentNo = () => {
       const date = new Date();
       const year = date.getFullYear().toString().slice(-2);
@@ -165,6 +175,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setIsSearchModalOpen(false);
     };
 
+    const handleDocumentSelect = (docNum: string) => {
+      const invoice = mockInvoices.find(inv => inv.documentNo === docNum);
+      if (invoice) {
+        setDocumentNo(invoice.documentNo);
+        // In a real application, you would load the full invoice data here
+        const patient = mockPatients.find(p => p.id === invoice.patientId);
+        setSelectedPatient(patient);
+      }
+      setIsDocumentSearchModalOpen(false);
+    };
+
     return (
       <div className="bg-white p-4 rounded-md">
         <div className="grid grid-cols-3 gap-4 mb-4">
@@ -194,7 +215,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
                 maxLength={patientType === "opd" ? 11 : undefined} 
                 disabled={!isEditable} 
               />
-              {isSearchEnabled && patientType === "regular" && (
+              {isEditable && isAdding && patientType === "regular" && (
                 <button 
                   onClick={() => setIsSearchModalOpen(true)}
                   className="bg-gray-200 p-1 rounded hover:bg-gray-300"
@@ -206,7 +227,22 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           </div>
           <div>
             <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
-            <Input id="documentNo" className="h-9" value={documentNo} disabled={true} />
+            <div className="flex items-center gap-2">
+              <Input 
+                id="documentNo" 
+                className="h-9" 
+                value={documentNo} 
+                disabled={true} 
+              />
+              {isEditable && !isAdding && (
+                <button 
+                  onClick={() => setIsDocumentSearchModalOpen(true)}
+                  className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                >
+                  <SearchIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -482,6 +518,35 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
                     <div className="font-medium">{test.name}</div>
                     <div className="text-sm text-gray-600">
                       ID: {test.id}, Rate: ${test.rate.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Document Search Modal */}
+        <Dialog open={isDocumentSearchModalOpen} onOpenChange={setIsDocumentSearchModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select Invoice</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input placeholder="Search by document number or patient name" />
+              <div className="h-64 border mt-4 overflow-y-auto">
+                {mockInvoices.map(invoice => (
+                  <div 
+                    key={invoice.documentNo} 
+                    className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleDocumentSelect(invoice.documentNo)}
+                  >
+                    <div className="font-medium">Doc #: {invoice.documentNo}</div>
+                    <div className="text-sm text-gray-600">
+                      Patient: {invoice.patientName}, Amount: ${invoice.amount.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Date: {invoice.date}
                     </div>
                   </div>
                 ))}
