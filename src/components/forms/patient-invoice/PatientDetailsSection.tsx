@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchIcon } from "lucide-react";
 import { Patient } from "./types";
+
 interface PatientDetailsSectionProps {
   patientType: string;
   documentNo: string;
@@ -14,6 +15,7 @@ interface PatientDetailsSectionProps {
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
 }
+
 export function PatientDetailsSection({
   patientType,
   documentNo,
@@ -64,7 +66,7 @@ export function PatientDetailsSection({
           <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
           <div className="flex items-center gap-2">
             <Input id="documentNo" className="h-9" value={documentNo} disabled={true} />
-            {/* Don't show search icon for Document No when adding (only show when editing) */}
+            {/* Only show search icon for Document No when editing (not when adding) */}
             {isEditable && !isAdding && 
               <button 
                 onClick={onSearchDocumentClick} 
