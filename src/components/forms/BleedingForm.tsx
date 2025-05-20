@@ -6,6 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SearchIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface BleedingFormProps {
   isSearchEnabled?: boolean;
@@ -38,12 +41,26 @@ const generateRandomHBValue = () => {
   return (Math.random() * 2.4 + 13.5).toFixed(1);
 };
 
+type Donor = {
+  id: string;
+  donor_id: string;
+  name: string;
+  blood_group: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+};
+
 const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isBagSearchModalOpen, setIsBagSearchModalOpen] = useState(false);
-  const [selectedDonor, setSelectedDonor] = useState<any>(null);
+  const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState(generateBagNumber());
   const [bagType, setBagType] = useState("double");
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Donor[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize with random values
   const [donorPatientValues, setDonorPatientValues] = useState({
@@ -60,6 +77,54 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
     hiv: "",
     vdrl: "",
   });
+
+  // Load donors when component mounts
+  useEffect(() => {
+    if (isSearchEnabled) {
+      fetchDonors();
+    }
+  }, [isSearchEnabled]);
+
+  // Fetch donors from Supabase
+  const fetchDonors = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('donors')
+        .select('id, donor_id, name, blood_group, address, phone, email');
+      
+      if (error) throw error;
+      
+      if (data) {
+        setDonors(data);
+      }
+    } catch (error) {
+      console.error('Error fetching donors:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load donors. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Search donors
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(donors);
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    const filtered = donors.filter(donor => 
+      donor.donor_id.toLowerCase().includes(query) || 
+      donor.name.toLowerCase().includes(query)
+    );
+    
+    setSearchResults(filtered);
+  };
 
   // Calculate results based on donor/patient values
   useEffect(() => {
@@ -95,8 +160,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
     today.getFullYear()}`;
 
   // Handle donor selection
-  const handleDonorSelect = (donorId: string) => {
-    const donor = mockDonors.find(d => d.id === donorId);
+  const handleDonorSelect = (donor: Donor) => {
     setSelectedDonor(donor);
     setIsSearchModalOpen(false);
   };
@@ -108,6 +172,13 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
     }));
   };
 
+  // Open search modal and load fresh data
+  const openSearchModal = () => {
+    setSearchQuery("");
+    setSearchResults(donors);
+    setIsSearchModalOpen(true);
+  };
+
   return (
     <div className="bg-white p-4 rounded-md">
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -116,13 +187,13 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
           <div className="flex items-center gap-2">
             <Input
               id="donorId"
-              value={selectedDonor?.id || ""}
+              value={selectedDonor?.donor_id || ""}
               className="h-9 bg-gray-50"
               readOnly
               placeholder="Select donor via search"
             />
             <button 
-              onClick={() => setIsSearchModalOpen(true)}
+              onClick={openSearchModal}
               className="bg-gray-200 p-1 rounded hover:bg-gray-300"
               disabled={!isEditable && !isSearchEnabled}
             >
@@ -213,7 +284,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
           <Label htmlFor="group" className="mb-1 block">Group:</Label>
           <Input 
             id="group" 
-            value={selectedDonor?.group || ""}
+            value={selectedDonor?.blood_group || ""}
             className="h-9 bg-gray-50"
             readOnly
           />
@@ -222,7 +293,7 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
           <Label htmlFor="rh" className="mb-1 block">Rh:</Label>
           <Input 
             id="rh" 
-            value={selectedDonor?.rh || ""}
+            value={selectedDonor?.blood_group?.includes('+') ? '+ve' : selectedDonor?.blood_group?.includes('-') ? '-ve' : ""}
             className="h-9 bg-gray-50"
             readOnly
           />
@@ -424,26 +495,59 @@ const BleedingForm = ({ isSearchEnabled = false, isEditable = false }: BleedingF
         </div>
       </div>
 
-      {/* Donor Search Modal */}
+      {/* Updated Donor Search Modal with real search functionality */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Search Donor</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input placeholder="Enter donor ID or name" />
-            <div className="h-64 border mt-4 overflow-y-auto">
-              {mockDonors.map(donor => (
-                <div 
-                  key={donor.id} 
-                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleDonorSelect(donor.id)}
-                >
-                  <div className="font-medium">{donor.name}</div>
-                  <div className="text-sm text-gray-600">ID: {donor.id}, Group: {donor.group} {donor.rh}</div>
-                </div>
-              ))}
+            <div className="flex items-center space-x-2">
+              <Input 
+                placeholder="Enter donor ID or name" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSearch} 
+                variant="outline" 
+                size="sm"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </Button>
             </div>
+            
+            {isLoading && (
+              <div className="h-64 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blood"></div>
+              </div>
+            )}
+            
+            {!isLoading && (
+              <div className="h-64 border mt-4 overflow-y-auto">
+                {searchResults.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    {searchQuery ? "No donors found matching your search." : "Enter a search term to find donors."}
+                  </div>
+                ) : (
+                  searchResults.map(donor => (
+                    <div 
+                      key={donor.id} 
+                      className="p-3 border-b hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleDonorSelect(donor)}
+                    >
+                      <div className="font-medium">{donor.name}</div>
+                      <div className="text-sm text-gray-600 flex justify-between">
+                        <span>ID: {donor.donor_id}</span>
+                        <span>Group: {donor.blood_group}</span>
+                      </div>
+                      {donor.phone && <div className="text-sm text-gray-600">Phone: {donor.phone}</div>}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
