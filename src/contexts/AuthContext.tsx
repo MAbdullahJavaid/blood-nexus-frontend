@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, AuthError } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 
 type UserProfile = {
   id: string;
@@ -12,6 +12,7 @@ type UserProfile = {
 
 type AuthContextType = {
   user: UserProfile | null;
+  session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, username: string) => Promise<boolean>;
@@ -23,79 +24,75 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for existing Supabase session
-    const checkSession = async () => {
-      setIsLoading(true);
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error checking session:', error);
-          return;
-        }
-        
-        if (session) {
-          await setUserFromSession(session);
-        }
-      } catch (error) {
-        console.error('Unexpected error checking session:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Listen for auth state changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session) {
-          await setUserFromSession(session);
+      (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          // Get user profile data
+          setTimeout(async () => {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('id, username, role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (data) {
+              setUser({
+                id: data.id,
+                username: data.username,
+                role: data.role
+              });
+            } else if (error) {
+              console.error('Error fetching user profile:', error);
+            }
+          }, 0);
         } else {
           setUser(null);
         }
+        
         setIsLoading(false);
       }
     );
 
-    checkSession();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        // Get user profile data
+        supabase
+          .from('profiles')
+          .select('id, username, role')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (data) {
+              setUser({
+                id: data.id,
+                username: data.username,
+                role: data.role
+              });
+            } else if (error) {
+              console.error('Error fetching user profile:', error);
+            }
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+      }
+    });
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  const setUserFromSession = async (session: Session) => {
-    if (!session.user) return;
-    
-    try {
-      // Get user profile data from profiles table
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, role')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-      
-      if (data) {
-        setUser({
-          id: data.id,
-          username: data.username,
-          role: data.role
-        });
-      }
-    } catch (error) {
-      console.error('Unexpected error fetching user profile:', error);
-    }
-  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -120,11 +117,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome back!`,
       });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error during login:', error);
       toast({
         title: "Login failed",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       return false;
@@ -157,18 +154,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      // The profile is created automatically via database trigger
-      
       toast({
         title: "Account created",
         description: "Your account has been created successfully!",
       });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error during signup:', error);
       toast({
         title: "Signup failed",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       return false;
@@ -194,12 +189,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setUser(null);
+      setSession(null);
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error during logout:', error);
+      toast({
+        title: "Logout failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -209,11 +210,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider 
       value={{ 
         user, 
+        session,
         isLoading,
         login, 
         signup, 
         logout, 
-        isAuthenticated: !!user 
+        isAuthenticated: !!session 
       }}
     >
       {children}

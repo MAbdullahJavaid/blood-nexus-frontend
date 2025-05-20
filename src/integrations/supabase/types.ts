@@ -9,6 +9,345 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bleeding_records: {
+        Row: {
+          bag_id: string
+          bleeding_date: string
+          created_at: string | null
+          created_by: string | null
+          donor_id: string
+          id: string
+          remarks: string | null
+          technician: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bag_id: string
+          bleeding_date: string
+          created_at?: string | null
+          created_by?: string | null
+          donor_id: string
+          id?: string
+          remarks?: string | null
+          technician?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bag_id?: string
+          bleeding_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          donor_id?: string
+          id?: string
+          remarks?: string | null
+          technician?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bleeding_records_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "blood_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bleeding_records_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blood_inventory: {
+        Row: {
+          bag_id: string
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          collection_date: string
+          created_at: string | null
+          created_by: string | null
+          donor_id: string | null
+          expiry_date: string
+          id: string
+          status: Database["public"]["Enums"]["blood_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bag_id: string
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          collection_date: string
+          created_at?: string | null
+          created_by?: string | null
+          donor_id?: string | null
+          expiry_date: string
+          id?: string
+          status?: Database["public"]["Enums"]["blood_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bag_id?: string
+          blood_group?: Database["public"]["Enums"]["blood_group"]
+          collection_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          donor_id?: string | null
+          expiry_date?: string
+          id?: string
+          status?: Database["public"]["Enums"]["blood_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blood_inventory_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crossmatch: {
+        Row: {
+          bag_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          patient_id: string
+          remarks: string | null
+          result: string
+          technician: string | null
+          test_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          bag_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          patient_id: string
+          remarks?: string | null
+          result: string
+          technician?: string | null
+          test_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          bag_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          patient_id?: string
+          remarks?: string | null
+          result?: string
+          technician?: string | null
+          test_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crossmatch_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "blood_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crossmatch_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donors: {
+        Row: {
+          address: string | null
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          created_at: string | null
+          created_by: string | null
+          date_of_birth: string | null
+          donor_id: string
+          email: string | null
+          gender: string | null
+          id: string
+          last_donation_date: string | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          donor_id: string
+          email?: string | null
+          gender?: string | null
+          id?: string
+          last_donation_date?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          blood_group?: Database["public"]["Enums"]["blood_group"]
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          donor_id?: string
+          email?: string | null
+          gender?: string | null
+          id?: string
+          last_donation_date?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          invoice_id: string
+          item_id: string
+          item_type: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          item_id: string
+          item_type: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          item_id?: string
+          item_type?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "patient_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_invoices: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          patient_id: string
+          remarks: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          patient_id: string
+          remarks?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          patient_id?: string
+          remarks?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_invoices_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          address: string | null
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          created_at: string | null
+          created_by: string | null
+          date_of_birth: string | null
+          email: string | null
+          gender: string | null
+          id: string
+          name: string
+          patient_id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          blood_group: Database["public"]["Enums"]["blood_group"]
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string
+          name: string
+          patient_id: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          blood_group?: Database["public"]["Enums"]["blood_group"]
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string
+          name?: string
+          patient_id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -30,6 +369,74 @@ export type Database = {
         }
         Relationships: []
       }
+      test_categories: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      test_information: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_information_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "test_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -38,7 +445,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
+      blood_status: "Available" | "Reserved" | "Used" | "Expired" | "Discarded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -153,6 +561,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      blood_group: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      blood_status: ["Available", "Reserved", "Used", "Expired", "Discarded"],
+    },
   },
 } as const
