@@ -45,22 +45,22 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
     if (error) {
       console.error('Error fetching tests:', error);
     } else if (data) {
-      setTests(data as unknown as TestInformation[]);
+      // Map the database 'price' field to 'test_rate' for UI compatibility
+      const mappedData = data.map(item => ({
+        ...item,
+        test_rate: item.price // Add test_rate which maps to price
+      }));
+      
+      setTests(mappedData as unknown as TestInformation[]);
       
       // For each test, fetch its sequential ID
       const ids: {[key: string]: number} = {};
       const promises = data.map(async (test) => {
         const { data: idData, error: idError } = await supabase
-          .from('test_information')
-          .select('id')
-          .order('created_at', { ascending: true });
+          .rpc('get_test_id_by_uuid', { test_uuid: test.id });
         
         if (!idError && idData) {
-          // Find the position of this test in the ordered list
-          const index = idData.findIndex(item => item.id === test.id);
-          if (index !== -1) {
-            ids[test.id] = index + 1;
-          }
+          ids[test.id] = idData;
         }
       });
       

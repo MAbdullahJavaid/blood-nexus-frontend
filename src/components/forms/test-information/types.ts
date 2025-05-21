@@ -13,7 +13,8 @@ export interface TestInformation {
   measuring_unit?: string;
   value_remarks?: string;
   remarks?: string;
-  test_rate: number;
+  price: number; // This should be price in the database
+  test_rate: number; // For UI compatibility (maps to price)
   is_active: boolean;
   male_low_value: number;
   male_high_value: number;

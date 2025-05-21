@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -108,7 +109,7 @@ const TestInformationForm = ({
         value_remarks: formValues.valueRemarks,
         remarks: formValues.remarks,
         measuring_unit: formValues.measuringUnit,
-        test_rate: formValues.testRate,
+        price: formValues.testRate, // Map test_rate to price for database compatibility
         is_active: formValues.active,
         male_low_value: formValues.male.lowValue,
         male_high_value: formValues.male.highValue,
@@ -182,6 +183,7 @@ const TestInformationForm = ({
     
     fetchTestId();
     
+    // Map the price field from database to test_rate in our form
     setFormValues({
       testName: test.name,
       valueRemarks: test.value_remarks || '',
