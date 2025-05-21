@@ -53,9 +53,7 @@ const TestInformationForm = ({
   
   useEffect(() => {
     fetchCategories();
-    if (!testId) {
-      fetchNextTestId();
-    }
+    fetchNextTestId();
   }, []);
 
   const fetchCategories = async () => {
@@ -72,17 +70,21 @@ const TestInformationForm = ({
   };
 
   const fetchNextTestId = async () => {
-    const { data, error } = await supabase
-      .from('test_information')
-      .select('test_id')
-      .order('test_id', { ascending: false })
-      .limit(1);
-    
-    if (error) {
-      console.error('Error fetching next test ID:', error);
-    } else {
-      const nextId = data && data.length > 0 ? data[0].test_id + 1 : 1;
-      setTestId(nextId);
+    try {
+      // Get the max test_id from the test_information table using a count query
+      const { count, error } = await supabase
+        .from('test_information')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error('Error fetching test count:', error);
+        return;
+      }
+      
+      // Set the next test ID to count + 1 or 1 if no tests exist
+      setTestId((count || 0) + 1);
+    } catch (error) {
+      console.error('Error calculating next test ID:', error);
     }
   };
 
@@ -133,10 +135,7 @@ const TestInformationForm = ({
       else {
         const { error } = await supabase
           .from('test_information')
-          .insert({
-            ...testData,
-            test_id: testId
-          });
+          .insert(testData);
 
         if (error) {
           throw error;
@@ -163,7 +162,26 @@ const TestInformationForm = ({
 
   const handleTestSelect = (test: TestInformation) => {
     setCurrentTestId(test.id);
-    setTestId(test.test_id);
+    
+    // We need to manually set the testId for display purposes
+    // We'll fetch it separately since it's not in our type
+    const fetchTestId = async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc('get_test_id_by_uuid', { test_uuid: test.id });
+        
+        if (error) {
+          console.error('Error fetching test ID:', error);
+        } else if (data) {
+          setTestId(data);
+        }
+      } catch (error) {
+        console.error('Error fetching test ID:', error);
+      }
+    };
+    
+    fetchTestId();
+    
     setFormValues({
       testName: test.name,
       valueRemarks: test.value_remarks || '',

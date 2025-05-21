@@ -7,7 +7,6 @@ export interface TestCategory {
 
 export interface TestInformation {
   id: string;
-  test_id: number;
   name: string;
   category_id: string;
   category?: TestCategory;

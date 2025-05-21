@@ -18,6 +18,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
   const [searchTerm, setSearchTerm] = useState('');
   const [tests, setTests] = useState<TestInformation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [testIds, setTestIds] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +46,26 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
       console.error('Error fetching tests:', error);
     } else if (data) {
       setTests(data as unknown as TestInformation[]);
+      
+      // For each test, fetch its sequential ID
+      const ids: {[key: string]: number} = {};
+      const promises = data.map(async (test) => {
+        const { data: idData, error: idError } = await supabase
+          .from('test_information')
+          .select('id')
+          .order('created_at', { ascending: true });
+        
+        if (!idError && idData) {
+          // Find the position of this test in the ordered list
+          const index = idData.findIndex(item => item.id === test.id);
+          if (index !== -1) {
+            ids[test.id] = index + 1;
+          }
+        }
+      });
+      
+      await Promise.all(promises);
+      setTestIds(ids);
     }
     
     setLoading(false);
@@ -99,7 +120,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                     className="cursor-pointer hover:bg-muted" 
                     onClick={() => onSelect(test)}
                   >
-                    <TableCell>{test.test_id}</TableCell>
+                    <TableCell>{testIds[test.id] || '-'}</TableCell>
                     <TableCell>{test.name}</TableCell>
                     <TableCell>{test.category?.name || 'N/A'}</TableCell>
                     <TableCell>{test.test_rate}</TableCell>
