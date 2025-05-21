@@ -5,6 +5,8 @@ import {
   TestTubeIcon, 
   FileInputIcon, 
   ReceiptIcon,
+  BeakerIcon,
+  ListIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -64,6 +66,24 @@ export function FormToolbar({ onButtonClick }: FormToolbarProps) {
       >
         <ReceiptIcon className="h-4 w-4" />
         <span>Patient Invoice</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        className="form-button"
+        onClick={() => handleButtonClick('testInformation')}
+      >
+        <BeakerIcon className="h-4 w-4" />
+        <span>Test Info</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        className="form-button"
+        onClick={() => handleButtonClick('category')}
+      >
+        <ListIcon className="h-4 w-4" />
+        <span>Categories</span>
       </Button>
     </div>
   );
