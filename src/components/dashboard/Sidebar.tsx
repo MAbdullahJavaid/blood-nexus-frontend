@@ -251,7 +251,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             <UserIcon className="h-5 w-5 text-gray-500" />
           </div>
           <div>
-            <p className="font-medium">{user?.username || 'User'}</p>
+            <p className="font-medium">{user?.username }</p>
             <p className="text-xs text-muted-foreground">Staff</p>
           </div>
         </div>
