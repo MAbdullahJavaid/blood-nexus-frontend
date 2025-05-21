@@ -442,7 +442,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_test_id_by_uuid: {
+        Args: { test_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
