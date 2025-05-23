@@ -50,8 +50,7 @@ export function BloodDetailsSection({
       </div>
       <div>
         <Label htmlFor="bloodCategory" className="mb-1 block">Blood Category:</Label>
-        <Select defaultValue="N/A" disabled={!isEditable}>
-        <Select value={bloodCategory} onValueChange={onBloodCategoryChange} disabled={!isEditable}>
+        <Select value={bloodCategory} defaultValue="N/A" onValueChange={onBloodCategoryChange} disabled={!isEditable}>
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
@@ -68,10 +67,9 @@ export function BloodDetailsSection({
       </div>
       <div>
         <Label htmlFor="bottleRequired" className="mb-1 block">Bottle Required:</Label>
-        <Select defaultValue="N/A" disabled={!isEditable}>
         <div className="flex items-center gap-2">
           <Input id="bottleRequired" className="h-9" type="number" defaultValue="1" disabled={!isEditable} />
-          <Select value={bottleUnitType} onValueChange={onBottleUnitTypeChange} disabled={!isEditable}>
+          <Select value={bottleUnitType} defaultValue="N/A" onValueChange={onBottleUnitTypeChange} disabled={!isEditable}>
             <SelectTrigger className="h-9 w-20">
               <SelectValue />
             </SelectTrigger>
