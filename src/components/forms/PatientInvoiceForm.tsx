@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { mockPatients, mockTests, mockInvoices } from "./patient-invoice/mock-data";
@@ -11,6 +10,8 @@ import { PatientInfoSection } from "./patient-invoice/PatientInfoSection";
 import { BloodDetailsSection } from "./patient-invoice/BloodDetailsSection";
 import { TestsSection } from "./patient-invoice/TestsSection";
 import { TotalSection } from "./patient-invoice/TotalSection";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
@@ -28,6 +29,18 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
     const [currentTestIndex, setCurrentTestIndex] = useState<number | null>(null);
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [documentDate, setDocumentDate] = useState<string>(
+      new Date().toISOString().split('T')[0]
+    );
+    const [loading, setLoading] = useState(false);
+    const [patientName, setPatientName] = useState("");
+    const [phoneNo, setPhoneNo] = useState("");
+    const [age, setAge] = useState<number | null>(null);
+    const [dob, setDob] = useState<string>("");
+    const [references, setReferences] = useState("");
+    const [hospital, setHospital] = useState("");
+    const [gender, setGender] = useState("male");
+    const [exDonor, setExDonor] = useState("");
 
     // Expose methods to parent component via ref
     useImperativeHandle(ref, () => ({
@@ -36,6 +49,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       },
       handleDeleteItem: () => {
         handleDeleteItem();
+      },
+      handleSave: async () => {
+        return await handleSave();
       }
     }));
 
@@ -47,6 +63,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     }, [isEditable]);
 
     const isAdding = !documentNo;
+
+    // Enable editing based on patient type
+    const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
     const generateDocumentNo = () => {
       const date = new Date();
@@ -157,6 +176,87 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setIsSearchModalOpen(true);
     };
 
+    const handleDobChange = (date: string) => {
+      setDob(date);
+      if (date) {
+        const dobDate = new Date(date);
+        const today = new Date();
+        let age = today.getFullYear() - dobDate.getFullYear();
+        const monthDiff = today.getMonth() - dobDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        setAge(age);
+      } else {
+        setAge(null);
+      }
+    };
+
+    const handleAgeChange = (ageValue: number | null) => {
+      setAge(ageValue);
+      if (ageValue !== null) {
+        const today = new Date();
+        const birthYear = today.getFullYear() - ageValue;
+        const birthDate = new Date(birthYear, today.getMonth(), today.getDate());
+        setDob(birthDate.toISOString().split('T')[0]);
+      } else {
+        setDob("");
+      }
+    };
+
+    const handleQuantityChange = (index: number, value: number) => {
+      const updatedItems = [...items];
+      updatedItems[index].qty = value;
+      updatedItems[index].amount = value * updatedItems[index].rate;
+      setItems(updatedItems);
+      calculateTotal(updatedItems);
+    };
+    
+    const handleRateChange = (index: number, value: number) => {
+      const updatedItems = [...items];
+      updatedItems[index].rate = value;
+      updatedItems[index].amount = value * updatedItems[index].qty;
+      setItems(updatedItems);
+      calculateTotal(updatedItems);
+    };
+
+    const handleSave = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("invoices")
+          .insert({
+            document_no: documentNo,
+            patient_id: selectedPatient?.id,
+            patient_name: patientName,
+            document_date: documentDate,
+            hospital: hospital,
+            gender: gender,
+            ex_donor: exDonor,
+            discount: discount,
+            total_amount: totalAmount,
+            received_amount: receivedAmount,
+            items: items.map(item => ({
+              test_id: item.testId,
+              test_name: item.testName,
+              qty: item.qty,
+              rate: item.rate,
+              amount: item.amount
+            }))
+          });
+
+        if (data) {
+          toast.success("Invoice saved successfully!");
+        } else {
+          toast.error("Failed to save invoice.");
+        }
+      } catch (error) {
+        toast.error("An error occurred while saving the invoice.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
       <div className="bg-white p-4 rounded-md">
         <PatientDetailsSection
@@ -166,18 +266,39 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isEditable={isEditable}
           isAdding={isAdding}
           onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={handleSearchPatient}
+          onSearchPatientClick={() => setIsSearchModalOpen(true)}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
+          patientName={patientName}
+          setPatientName={setPatientName}
+          documentDate={documentDate}
+          setDocumentDate={setDocumentDate}
+          shouldEnableEditing={shouldEnableEditing}
         />
 
         <HospitalDetailsSection
           selectedPatient={selectedPatient}
           isEditable={isEditable}
+          hospital={hospital}
+          setHospital={setHospital}
+          gender={gender}
+          setGender={setGender}
+          exDonor={exDonor}
+          setExDonor={setExDonor}
+          shouldEnableEditing={shouldEnableEditing}
         />
 
         <PatientInfoSection
           selectedPatient={selectedPatient}
           isEditable={isEditable}
+          phoneNo={phoneNo}
+          setPhoneNo={setPhoneNo}
+          age={age}
+          setAge={handleAgeChange}
+          dob={dob}
+          setDob={handleDobChange}
+          references={references}
+          setReferences={setReferences}
+          shouldEnableEditing={shouldEnableEditing}
         />
 
         <BloodDetailsSection
@@ -194,6 +315,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isEditable={isEditable}
           onSelectRow={handleSelectRow}
           onSearchTest={handleSearchTest}
+          onQuantityChange={handleQuantityChange}
+          onRateChange={handleRateChange}
         />
 
         <TotalSection
