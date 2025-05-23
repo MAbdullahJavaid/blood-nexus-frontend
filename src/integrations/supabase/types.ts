@@ -446,6 +446,10 @@ export type Database = {
         Args: { test_uuid: string }
         Returns: number
       }
+      is_test_active: {
+        Args: { test_description: string }
+        Returns: boolean
+      }
     }
     Enums: {
       blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"

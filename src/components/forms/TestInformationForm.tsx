@@ -103,24 +103,26 @@ const TestInformationForm = ({
     setLoading(true);
 
     try {
+      // Prepare the metadata to store in the description JSON field
+      const metadata = {
+        type: testType,
+        value_remarks: formValues.valueRemarks,
+        remarks: formValues.remarks,
+        measuring_unit: formValues.measuringUnit,
+        male_low_value: formValues.male.lowValue,
+        male_high_value: formValues.male.highValue,
+        female_low_value: formValues.female.lowValue,
+        female_high_value: formValues.female.highValue,
+        other_low_value: formValues.other.lowValue,
+        other_high_value: formValues.other.highValue,
+        is_active: formValues.active // Store active status in the metadata
+      };
+
       const testData = {
         name: formValues.testName,
         category_id: formValues.categoryId,
         price: formValues.testRate, // This is the database field name
-        is_active: formValues.active,
-        // Store test type, value_remarks, remarks, etc. in a metadata field or add columns as needed
-        description: JSON.stringify({
-          type: testType,
-          value_remarks: formValues.valueRemarks,
-          remarks: formValues.remarks,
-          measuring_unit: formValues.measuringUnit,
-          male_low_value: formValues.male.lowValue,
-          male_high_value: formValues.male.highValue,
-          female_low_value: formValues.female.lowValue,
-          female_high_value: formValues.female.highValue,
-          other_low_value: formValues.other.lowValue,
-          other_high_value: formValues.other.highValue,
-        })
+        description: JSON.stringify(metadata) // Store metadata as JSON string
       };
 
       // Editing existing test
@@ -131,6 +133,8 @@ const TestInformationForm = ({
           .eq('id', currentTestId);
 
         if (error) {
+          console.error('Error updating test:', error);
+          toast.error('Failed to update test');
           throw error;
         }
         
@@ -138,11 +142,14 @@ const TestInformationForm = ({
       } 
       // Creating new test
       else {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from('test_information')
-          .insert(testData);
+          .insert(testData)
+          .select();
 
         if (error) {
+          console.error('Error creating test:', error);
+          toast.error('Failed to save test');
           throw error;
         }
         
@@ -154,7 +161,6 @@ const TestInformationForm = ({
       }
     } catch (error) {
       console.error('Error saving test:', error);
-      toast.error('Failed to save test');
     } finally {
       setLoading(false);
     }
@@ -202,14 +208,14 @@ const TestInformationForm = ({
     // Set test type from metadata or default to 'single'
     setTestType(metadata.type || 'single');
     
-    // Map the price field from database to test_rate in our form
+    // Map the database fields to our form
     setFormValues({
       testName: test.name,
       valueRemarks: metadata.value_remarks || '',
       remarks: metadata.remarks || '',
       measuringUnit: metadata.measuring_unit || '',
       testRate: test.price, // Use price from database 
-      active: test.is_active,
+      active: metadata.is_active !== false, // Consider active if not explicitly false
       categoryId: test.category_id,
       male: { 
         lowValue: metadata.male_low_value || 0, 
