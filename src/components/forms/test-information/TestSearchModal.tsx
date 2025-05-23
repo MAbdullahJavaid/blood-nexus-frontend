@@ -34,7 +34,8 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
       .select(`
         *,
         category:test_categories(id, name)
-      `);
+      `)
+      .eq('is_active', true); // Only fetch active tests
     
     if (search) {
       query = query.ilike('name', `%${search}%`);
@@ -110,6 +111,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="w-[100px]">Rate</TableHead>
+                <TableHead className="w-[80px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,12 +125,13 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                     <TableCell>{testIds[test.id] || '-'}</TableCell>
                     <TableCell>{test.name}</TableCell>
                     <TableCell>{test.category?.name || 'N/A'}</TableCell>
-                    <TableCell>{test.test_rate}</TableCell>
+                    <TableCell>{test.price}</TableCell>
+                    <TableCell>{test.is_active ? 'Active' : 'Inactive'}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     {loading ? 'Loading...' : 'No tests found'}
                   </TableCell>
                 </TableRow>

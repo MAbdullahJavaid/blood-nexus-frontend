@@ -30,7 +30,7 @@ const TestInformationForm = ({
   isSearchEnabled = false
 }: TestInformationFormProps) => {
   const [testId, setTestId] = useState<number | null>(null);
-  const [testType, setTestType] = useState<'single' | 'full'>('single');
+  const [testType, setTestType] = useState<'single' | 'full' | 'other'>('single');
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -106,17 +106,21 @@ const TestInformationForm = ({
       const testData = {
         name: formValues.testName,
         category_id: formValues.categoryId,
-        value_remarks: formValues.valueRemarks,
-        remarks: formValues.remarks,
-        measuring_unit: formValues.measuringUnit,
-        price: formValues.testRate, // Map test_rate to price for database compatibility
+        price: formValues.testRate, // This is the database field name
         is_active: formValues.active,
-        male_low_value: formValues.male.lowValue,
-        male_high_value: formValues.male.highValue,
-        female_low_value: formValues.female.lowValue,
-        female_high_value: formValues.female.highValue,
-        other_low_value: formValues.other.lowValue,
-        other_high_value: formValues.other.highValue
+        // Store test type, value_remarks, remarks, etc. in a metadata field or add columns as needed
+        description: JSON.stringify({
+          type: testType,
+          value_remarks: formValues.valueRemarks,
+          remarks: formValues.remarks,
+          measuring_unit: formValues.measuringUnit,
+          male_low_value: formValues.male.lowValue,
+          male_high_value: formValues.male.highValue,
+          female_low_value: formValues.female.lowValue,
+          female_high_value: formValues.female.highValue,
+          other_low_value: formValues.other.lowValue,
+          other_high_value: formValues.other.highValue,
+        })
       };
 
       // Editing existing test
@@ -159,6 +163,7 @@ const TestInformationForm = ({
   const resetForm = () => {
     setFormValues(defaultValues);
     setCurrentTestId(null);
+    setTestType('single');
   };
 
   const handleTestSelect = (test: TestInformation) => {
@@ -183,26 +188,40 @@ const TestInformationForm = ({
     
     fetchTestId();
     
+    // Parse the description field to get the test metadata
+    let metadata: any = {};
+    try {
+      if (test.description) {
+        metadata = JSON.parse(test.description);
+      }
+    } catch (e) {
+      console.error("Error parsing test description:", e);
+      metadata = {};
+    }
+    
+    // Set test type from metadata or default to 'single'
+    setTestType(metadata.type || 'single');
+    
     // Map the price field from database to test_rate in our form
     setFormValues({
       testName: test.name,
-      valueRemarks: test.value_remarks || '',
-      remarks: test.remarks || '',
-      measuringUnit: test.measuring_unit || '',
-      testRate: test.test_rate,
+      valueRemarks: metadata.value_remarks || '',
+      remarks: metadata.remarks || '',
+      measuringUnit: metadata.measuring_unit || '',
+      testRate: test.price, // Use price from database 
       active: test.is_active,
       categoryId: test.category_id,
       male: { 
-        lowValue: test.male_low_value, 
-        highValue: test.male_high_value 
+        lowValue: metadata.male_low_value || 0, 
+        highValue: metadata.male_high_value || 0
       },
       female: { 
-        lowValue: test.female_low_value, 
-        highValue: test.female_high_value 
+        lowValue: metadata.female_low_value || 0, 
+        highValue: metadata.female_high_value || 0 
       },
       other: { 
-        lowValue: test.other_low_value, 
-        highValue: test.other_high_value 
+        lowValue: metadata.other_low_value || 0, 
+        highValue: metadata.other_high_value || 0 
       },
     });
     setSearchModalOpen(false);
@@ -292,7 +311,7 @@ const TestInformationForm = ({
               <Label htmlFor="test" className="w-12">Test:</Label>
               <Select 
                 value={testType} 
-                onValueChange={(value) => setTestType(value as 'single' | 'full')} 
+                onValueChange={(value) => setTestType(value as 'single' | 'full' | 'other')} 
                 disabled={!isEditable}
               >
                 <SelectTrigger className="w-full">
@@ -301,6 +320,7 @@ const TestInformationForm = ({
                 <SelectContent>
                   <SelectItem value="single">Single</SelectItem>
                   <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -10,16 +10,8 @@ export interface TestInformation {
   name: string;
   category_id: string;
   category?: TestCategory;
-  measuring_unit?: string;
-  value_remarks?: string;
-  remarks?: string;
-  price: number; // This should be price in the database
-  test_rate: number; // For UI compatibility (maps to price)
+  description?: string;  // JSON string containing additional test metadata
+  price: number;         // Database field name is price
+  test_rate?: number;    // UI compatibility (maps to price)
   is_active: boolean;
-  male_low_value: number;
-  male_high_value: number;
-  female_low_value: number;
-  female_high_value: number;
-  other_low_value: number;
-  other_high_value: number;
 }
