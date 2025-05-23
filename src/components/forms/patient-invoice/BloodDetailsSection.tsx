@@ -61,6 +61,7 @@ export function BloodDetailsSection({
             <SelectItem value="CP">CP</SelectItem>
             <SelectItem value="WB">WB</SelectItem>
             <SelectItem value="Mega Unit">Mega Unit</SelectItem>
+            <SelectItem value="N/A">N/A</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -75,6 +76,7 @@ export function BloodDetailsSection({
             <SelectContent>
               <SelectItem value="bag">bag</SelectItem>
               <SelectItem value="ml">ml</SelectItem>
+              <SelectItem value="N/A">N/A</SelectItem>
             </SelectContent>
           </Select>
         </div>
