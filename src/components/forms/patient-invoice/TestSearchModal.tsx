@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { mockTests } from "./mock-data";
+import { Test } from './types';
 
 interface TestSearchModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface TestSearchModalProps {
 
 export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSearchModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [tests, setTests] = useState(mockTests);
+  const [tests, setTests] = useState<Test[]>(mockTests);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,9 +35,8 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
           id,
           name,
           price,
-          is_active
-        `)
-        .eq('is_active', true); // Only fetch active tests
+          description
+        `);
       
       if (search) {
         query = query.ilike('name', `%${search}%`);
@@ -49,8 +49,22 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
         // Fallback to mock data if there's an error
         setTests(mockTests);
       } else if (data && data.length > 0) {
+        // Filter out inactive tests if description contains that info
+        const activeTests = data.filter(item => {
+          try {
+            // Check if description is a valid JSON string
+            if (item.description) {
+              const parsedDescription = JSON.parse(item.description);
+              return parsedDescription.is_active !== false; // If undefined or true, consider it active
+            }
+            return true; // If no description, consider it active
+          } catch (e) {
+            return true; // If parsing fails, consider it active
+          }
+        });
+        
         // Map the database 'price' field to 'rate' for UI compatibility
-        const mappedData = data.map(item => ({
+        const mappedData = activeTests.map(item => ({
           id: item.id,
           name: item.name,
           rate: item.price

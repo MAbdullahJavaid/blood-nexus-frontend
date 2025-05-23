@@ -34,8 +34,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
       .select(`
         *,
         category:test_categories(id, name)
-      `)
-      .eq('is_active', true); // Only fetch active tests
+      `);
     
     if (search) {
       query = query.ilike('name', `%${search}%`);
@@ -45,9 +44,24 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
     
     if (error) {
       console.error('Error fetching tests:', error);
+      setTests([]);
     } else if (data) {
+      // Filter active tests and map the database fields
+      const activeTests = data.filter(item => {
+        try {
+          // Check if description is a valid JSON string
+          if (item.description) {
+            const parsedDescription = JSON.parse(item.description);
+            return parsedDescription.is_active !== false; // If undefined or true, consider it active
+          }
+          return true; // If no description, consider it active
+        } catch (e) {
+          return true; // If parsing fails, consider it active
+        }
+      });
+      
       // Map the database 'price' field to 'test_rate' for UI compatibility
-      const mappedData = data.map(item => ({
+      const mappedData = activeTests.map(item => ({
         ...item,
         test_rate: item.price // Add test_rate which maps to price
       }));
@@ -79,6 +93,18 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const getActiveStatus = (test: TestInformation): boolean => {
+    try {
+      if (test.description) {
+        const parsedDescription = JSON.parse(test.description);
+        return parsedDescription.is_active !== false;
+      }
+      return true;
+    } catch (e) {
+      return true;
     }
   };
 
@@ -126,7 +152,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                     <TableCell>{test.name}</TableCell>
                     <TableCell>{test.category?.name || 'N/A'}</TableCell>
                     <TableCell>{test.price}</TableCell>
-                    <TableCell>{test.is_active ? 'Active' : 'Inactive'}</TableCell>
+                    <TableCell>{getActiveStatus(test) ? 'Active' : 'Inactive'}</TableCell>
                   </TableRow>
                 ))
               ) : (
