@@ -6,10 +6,10 @@ import { mockInvoices } from "./mock-data";
 interface DocumentSearchModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  // onDocumentSelect: (docNum: string) => void;
+  onDocumentSelect: (docNum: string) => void;
 }
 
-export function DocumentSearchModal({ isOpen, onOpenChange }: DocumentSearchModalProps) {
+export function DocumentSearchModal({ isOpen, onOpenChange, onDocumentSelect }: DocumentSearchModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
