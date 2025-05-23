@@ -8,6 +8,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { InvoiceItem } from "./types";
 
 interface TestsSectionProps {
@@ -16,6 +17,8 @@ interface TestsSectionProps {
   isEditable: boolean;
   onSelectRow: (index: number) => void;
   onSearchTest: (index: number) => void;
+  onQuantityChange: (index: number, value: number) => void;
+  onRateChange: (index: number, value: number) => void;
 }
 
 export function TestsSection({ 
@@ -23,7 +26,9 @@ export function TestsSection({
   selectedItemIndex, 
   isEditable, 
   onSelectRow, 
-  onSearchTest 
+  onSearchTest,
+  onQuantityChange,
+  onRateChange 
 }: TestsSectionProps) {
   return (
     <div className="border rounded-md p-4 mb-4">
@@ -50,8 +55,35 @@ export function TestsSection({
                 >
                   <TableCell>{item.testId}</TableCell>
                   <TableCell>{item.testName}</TableCell>
-                  <TableCell>{item.qty}</TableCell>
-                  <TableCell>{item.rate.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {isEditable ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        className="h-8 w-16"
+                        value={item.qty}
+                        onChange={(e) => onQuantityChange(index, parseInt(e.target.value) || 1)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      item.qty
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEditable && item.testId ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="h-8 w-24"
+                        value={item.rate}
+                        onChange={(e) => onRateChange(index, parseFloat(e.target.value) || 0)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      item.rate.toFixed(2)
+                    )}
+                  </TableCell>
                   <TableCell>{item.amount.toFixed(2)}</TableCell>
                   <TableCell>
                     {!item.testId && isEditable && (

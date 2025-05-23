@@ -14,6 +14,11 @@ interface PatientDetailsSectionProps {
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
+  patientName: string;
+  setPatientName: (value: string) => void;
+  documentDate: string;
+  setDocumentDate: (value: string) => void;
+  shouldEnableEditing: boolean;
 }
 
 export function PatientDetailsSection({
@@ -24,7 +29,12 @@ export function PatientDetailsSection({
   isAdding,
   onPatientTypeChange,
   onSearchPatientClick,
-  onSearchDocumentClick
+  onSearchDocumentClick,
+  patientName,
+  setPatientName,
+  documentDate,
+  setDocumentDate,
+  shouldEnableEditing
 }: PatientDetailsSectionProps) {
   return <>
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -46,9 +56,9 @@ export function PatientDetailsSection({
             <Input 
               id="patientId" 
               className="h-9" 
-              value={selectedPatient?.id || ""} 
+              value={selectedPatient?.id || documentNo} 
               maxLength={patientType === "opd" ? 11 : undefined} 
-              disabled={!isEditable || (isEditable && patientType === "regular")} 
+              disabled={true} 
             />
             {/* Show search icon only for regular patients when adding */}
             {isEditable && patientType === "regular" && 
@@ -66,8 +76,8 @@ export function PatientDetailsSection({
           <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
           <div className="flex items-center gap-2">
             <Input id="documentNo" className="h-9" value={documentNo} disabled={true} />
-            {/* Only show search icon for Document No when editing (not when adding) */}
-            {isEditable && !isAdding && 
+            {/* Only show search icon for Document No when editing (not when adding) and no data is available */}
+            {isEditable && !isAdding && !selectedPatient && 
               <button 
                 onClick={onSearchDocumentClick} 
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300" 
@@ -86,13 +96,21 @@ export function PatientDetailsSection({
           <Input 
             id="name" 
             className="h-9" 
-            value={selectedPatient?.name || ""} 
-            disabled={!isEditable || (isEditable && patientType === "regular")} 
+            value={patientType === "regular" ? (selectedPatient?.name || "") : patientName}
+            onChange={(e) => patientType === "opd" && setPatientName(e.target.value)}
+            disabled={!shouldEnableEditing || (patientType === "regular" && !!selectedPatient)} 
           />
         </div>
         <div>
           <Label htmlFor="documentDate" className="mb-1 block">Document Date:</Label>
-          <Input id="documentDate" className="h-9" type="date" defaultValue={new Date().toISOString().split('T')[0]} disabled={!isEditable} />
+          <Input 
+            id="documentDate" 
+            className="h-9" 
+            type="date" 
+            value={documentDate}
+            onChange={(e) => setDocumentDate(e.target.value)}
+            disabled={!isEditable} 
+          />
         </div>
       </div>
     </>;

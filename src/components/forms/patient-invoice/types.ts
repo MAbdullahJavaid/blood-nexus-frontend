@@ -9,6 +9,7 @@ export interface PatientInvoiceFormProps {
 export interface FormRefObject {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
+  handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
 }
 
 export interface Patient {

@@ -7,11 +7,25 @@ import { Patient } from "./types";
 interface HospitalDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
+  hospital: string;
+  setHospital: (value: string) => void;
+  gender: string;
+  setGender: (value: string) => void;
+  exDonor: string;
+  setExDonor: (value: string) => void;
+  shouldEnableEditing: boolean;
 }
 
 export function HospitalDetailsSection({
   selectedPatient,
-  isEditable
+  isEditable,
+  hospital,
+  setHospital,
+  gender,
+  setGender,
+  exDonor,
+  setExDonor,
+  shouldEnableEditing
 }: HospitalDetailsSectionProps) {
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
@@ -20,13 +34,18 @@ export function HospitalDetailsSection({
         <Input 
           id="hospital" 
           className="h-9" 
-          value={selectedPatient?.hospital || ""}
-          disabled={!isEditable} 
+          value={hospital}
+          onChange={(e) => setHospital(e.target.value)}
+          disabled={!shouldEnableEditing} 
         />
       </div>
       <div>
         <Label htmlFor="gender" className="mb-1 block">Gender:</Label>
-        <Select defaultValue={selectedPatient?.gender || "male"} disabled={!isEditable}>
+        <Select 
+          value={gender} 
+          onValueChange={setGender} 
+          disabled={!shouldEnableEditing}
+        >
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
@@ -38,7 +57,13 @@ export function HospitalDetailsSection({
       </div>
       <div>
         <Label htmlFor="exDonor" className="mb-1 block">EX / Donor:</Label>
-        <Input id="exDonor" className="h-9" disabled={!isEditable} />
+        <Input 
+          id="exDonor" 
+          className="h-9"
+          value={exDonor}
+          onChange={(e) => setExDonor(e.target.value)}
+          disabled={!shouldEnableEditing} 
+        />
       </div>
     </div>
   );
