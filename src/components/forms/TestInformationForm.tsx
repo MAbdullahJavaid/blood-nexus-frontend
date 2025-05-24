@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,10 +30,10 @@ const TestInformationForm = ({
 }: TestInformationFormProps) => {
   const [testId, setTestId] = useState<number | null>(null);
   const [testType, setTestType] = useState<'single' | 'full' | 'other'>('single');
-  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentTestId, setCurrentTestId] = useState<string | null>(null);
+  const [currentTestId, setCurrentTestId] = useState<number | null>(null);
   
   // Define default values for the form fields
   const defaultValues = {
@@ -44,7 +43,7 @@ const TestInformationForm = ({
     measuringUnit: '',
     testRate: 600.00,
     active: true,
-    categoryId: '',
+    categoryId: 0,
     male: { lowValue: 0.00, highValue: 0.00 },
     female: { lowValue: 0.00, highValue: 0.00 },
     other: { lowValue: 0.00, highValue: 0.00 },
@@ -264,8 +263,8 @@ const TestInformationForm = ({
           <div className="flex items-center gap-2">
             <Label htmlFor="category" className="w-20">Category:</Label>
             <Select 
-              value={formValues.categoryId} 
-              onValueChange={(value) => setFormValues({...formValues, categoryId: value})}
+              value={formValues.categoryId ? formValues.categoryId.toString() : ''} 
+              onValueChange={(value) => setFormValues({...formValues, categoryId: parseInt(value, 10)})}
               disabled={!isEditable}
             >
               <SelectTrigger className="w-full">
@@ -273,7 +272,7 @@ const TestInformationForm = ({
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
                   </SelectItem>
                 ))}

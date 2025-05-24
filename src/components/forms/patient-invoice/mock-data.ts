@@ -17,8 +17,8 @@ export const mockInvoices: Invoice[] = [
 
 // Mock tests data for demonstration
 export const mockTests: Test[] = [
-  { id: "T001", name: "Complete Blood Count", rate: 100 },
-  { id: "T002", name: "Blood Glucose", rate: 75 },
-  { id: "T003", name: "Lipid Profile", rate: 150 },
-  { id: "T004", name: "Liver Function", rate: 200 },
+  { id: 1, name: "Complete Blood Count", rate: 100 },
+  { id: 2, name: "Blood Glucose", rate: 75 },
+  { id: 3, name: "Lipid Profile", rate: 150 },
+  { id: 4, name: "Liver Function", rate: 200 },
 ];

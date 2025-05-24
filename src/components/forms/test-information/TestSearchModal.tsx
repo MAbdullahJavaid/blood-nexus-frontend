@@ -18,7 +18,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
   const [searchTerm, setSearchTerm] = useState('');
   const [tests, setTests] = useState<TestInformation[]>([]);
   const [loading, setLoading] = useState(false);
-  const [testIds, setTestIds] = useState<{[key: string]: number}>({});
+  const [testIds, setTestIds] = useState<{[key: number]: number}>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -66,20 +66,14 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
         test_rate: item.price // Add test_rate which maps to price
       }));
       
-      setTests(mappedData as unknown as TestInformation[]);
+      setTests(mappedData as TestInformation[]);
       
       // For each test, fetch its sequential ID
-      const ids: {[key: string]: number} = {};
-      const promises = data.map(async (test) => {
-        const { data: idData, error: idError } = await supabase
-          .rpc('get_test_id_by_uuid', { test_uuid: test.id });
-        
-        if (!idError && idData) {
-          ids[test.id] = idData;
-        }
-      });
+      const ids: {[key: number]: number} = {};
+      for (const test of data) {
+        ids[test.id] = test.id; // Since id is now a number, we can use it directly
+      }
       
-      await Promise.all(promises);
       setTestIds(ids);
     }
     
