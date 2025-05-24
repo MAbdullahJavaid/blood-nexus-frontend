@@ -21,7 +21,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [isDocumentSearchModalOpen, setIsDocumentSearchModalOpen] = useState(false);
     const [patientType, setPatientType] = useState<string>("regular");
     const [documentNo, setDocumentNo] = useState<string>("");
+    const [bloodGroup, setBloodGroup] = useState<string>("N/A");
+    const [rhType, setRhType] = useState<string>("N/A");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
+    const [bottleRequired, setBottleRequired] = useState<number>(1);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -269,16 +272,28 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         let patientId: string;
         
         if (patientType === "opd") {
+          // Map blood group to the format expected by the database
+          const bloodGroupMap: { [key: string]: string } = {
+            "A": "A+",
+            "B": "B+", 
+            "AB": "AB+",
+            "O": "O+",
+            "N/A": "O+"
+          };
+          
+          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
+          
           // Create a new patient for OPD
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .insert({
-              patient_id: documentNo, // Using document number as patient ID for OPD
               name: patientName,
               phone: phoneNo,
               date_of_birth: dob || null,
               gender: gender,
-              blood_group: "O+" // Default blood group for OPD patients
+              blood_group: mappedBloodGroup,
+              hospital: hospital,
+              age: age
             })
             .select('id')
             .single();
@@ -301,7 +316,21 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             invoice_date: documentDate,
             patient_id: patientId,
             total_amount: totalAmount,
-            remarks: bloodCategory + " - " + bottleUnitType + " - " + references, // Storing additional info in remarks
+            patient_type: patientType,
+            blood_group_type: bloodGroup,
+            rh_type: rhType,
+            blood_category: bloodCategory,
+            bottle_required: bottleRequired,
+            bottle_unit_type: bottleUnitType,
+            ex_donor: exDonor,
+            patient_references: references,
+            hospital_name: hospital,
+            patient_age: age,
+            patient_dob: dob || null,
+            patient_phone: phoneNo,
+            patient_gender: gender,
+            discount_amount: discount,
+            amount_received: receivedAmount,
             status: receivedAmount >= totalAmount ? "Paid" : "Pending"
           })
           .select('id')
@@ -382,10 +411,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <BloodDetailsSection
+          bloodGroup={bloodGroup}
+          rhType={rhType}
           bloodCategory={bloodCategory}
+          bottleRequired={bottleRequired}
           bottleUnitType={bottleUnitType}
           isEditable={isEditable}
+          onBloodGroupChange={setBloodGroup}
+          onRhTypeChange={setRhType}
           onBloodCategoryChange={setBloodCategory}
+          onBottleRequiredChange={setBottleRequired}
           onBottleUnitTypeChange={setBottleUnitType}
         />
 

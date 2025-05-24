@@ -265,16 +265,26 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         let patientId: string;
         
         if (patientType === "opd") {
+          // Map blood group to the format expected by the database
+          const bloodGroupMap: { [key: string]: string } = {
+            "A": "A+",
+            "B": "B+", 
+            "AB": "AB+",
+            "O": "O+",
+            "N/A": "O+"
+          };
+          
+          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
+          
           // Create a new patient for OPD
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .insert({
-              patient_id: documentNo, // Using document number as patient ID for OPD
               name: patientName,
               phone: phoneNo,
               date_of_birth: dob || null,
               gender: gender,
-              blood_group: bloodGroup === "N/A" ? "O+" : bloodGroup,
+              blood_group: mappedBloodGroup,
               hospital: hospital,
               age: age
             })
