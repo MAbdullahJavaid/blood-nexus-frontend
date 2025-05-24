@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./types";
 import { mockPatients, mockInvoices } from "./mock-data";
@@ -22,6 +23,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [documentNo, setDocumentNo] = useState<string>("");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
+    const [bottleRequired, setBottleRequired] = useState<number>(1);
+    const [bloodGroup, setBloodGroup] = useState<string>("N/A");
+    const [rhType, setRhType] = useState<string>("N/A");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
     const [receivedAmount, setReceivedAmount] = useState<number>(0);
@@ -57,24 +61,30 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     // Generate document number on component mount
     useEffect(() => {
-      if (isEditable && isAdding) {
+      if (isEditable && !documentNo) {
         generateDocumentNo();
       }
     }, [isEditable]);
 
     const isAdding = !documentNo;
 
-    // Enable editing based on patient type
+    // Enable editing based on patient type and editable state
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
-    const generateDocumentNo = () => {
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      // In a real application, you would fetch the latest sequence from backend
-      const sequence = "0001"; // This would be dynamic based on existing invoices
-      
-      setDocumentNo(`${year}${month}${sequence}`);
+    const generateDocumentNo = async () => {
+      try {
+        const { data, error } = await supabase.rpc('generate_invoice_number');
+        if (error) throw error;
+        setDocumentNo(data);
+      } catch (error) {
+        console.error('Error generating document number:', error);
+        // Fallback to manual generation
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const sequence = "0001";
+        setDocumentNo(`${year}${month}${sequence}`);
+      }
     };
 
     // Handle date of birth change and calculate age
@@ -83,12 +93,12 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       if (date) {
         const dobDate = new Date(date);
         const today = new Date();
-        let age = today.getFullYear() - dobDate.getFullYear();
+        let calculatedAge = today.getFullYear() - dobDate.getFullYear();
         const monthDiff = today.getMonth() - dobDate.getMonth();
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
-          age--;
+          calculatedAge--;
         }
-        setAge(age);
+        setAge(calculatedAge);
       } else {
         setAge(null);
       }
@@ -123,11 +133,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleAddItem = () => {
-      // Add an empty row with a unique temporary ID
       const tempId = `temp-${items.length}`;
       const newItem: InvoiceItem = {
         id: tempId,
-        testId: 0, // Use numeric ID
+        testId: 0,
         testName: "",
         qty: 1,
         rate: 0,
@@ -265,7 +274,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               phone: phoneNo,
               date_of_birth: dob || null,
               gender: gender,
-              blood_group: "O+" // Default blood group for OPD patients
+              blood_group: bloodGroup === "N/A" ? "O+" : bloodGroup,
+              hospital: hospital,
+              age: age
             })
             .select('id')
             .single();
@@ -288,7 +299,21 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             invoice_date: documentDate,
             patient_id: patientId,
             total_amount: totalAmount,
-            remarks: bloodCategory + " - " + bottleUnitType + " - " + references, // Storing additional info in remarks
+            patient_type: patientType,
+            blood_group_type: bloodGroup,
+            rh_type: rhType,
+            blood_category: bloodCategory,
+            bottle_required: bottleRequired,
+            bottle_unit_type: bottleUnitType,
+            ex_donor: exDonor,
+            patient_references: references,
+            hospital_name: hospital,
+            patient_age: age,
+            patient_dob: dob || null,
+            patient_phone: phoneNo,
+            patient_gender: gender,
+            discount_amount: discount,
+            amount_received: receivedAmount,
             status: receivedAmount >= totalAmount ? "Paid" : "Pending"
           })
           .select('id')
@@ -369,10 +394,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <BloodDetailsSection
+          bloodGroup={bloodGroup}
+          rhType={rhType}
           bloodCategory={bloodCategory}
+          bottleRequired={bottleRequired}
           bottleUnitType={bottleUnitType}
           isEditable={isEditable}
+          onBloodGroupChange={setBloodGroup}
+          onRhTypeChange={setRhType}
           onBloodCategoryChange={setBloodCategory}
+          onBottleRequiredChange={setBottleRequired}
           onBottleUnitTypeChange={setBottleUnitType}
         />
 

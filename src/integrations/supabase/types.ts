@@ -258,37 +258,82 @@ export type Database = {
       }
       patient_invoices: {
         Row: {
+          amount_received: number | null
+          blood_category: string | null
+          blood_group_type: string | null
+          bottle_required: number | null
+          bottle_unit_type: string | null
           created_at: string | null
           created_by: string | null
+          discount_amount: number | null
+          ex_donor: string | null
+          hospital_name: string | null
           id: string
           invoice_date: string
           invoice_number: string
+          patient_age: number | null
+          patient_dob: string | null
+          patient_gender: string | null
           patient_id: string
+          patient_phone: string | null
+          patient_references: string | null
+          patient_type: string | null
           remarks: string | null
+          rh_type: string | null
           status: string | null
           total_amount: number
           updated_at: string | null
         }
         Insert: {
+          amount_received?: number | null
+          blood_category?: string | null
+          blood_group_type?: string | null
+          bottle_required?: number | null
+          bottle_unit_type?: string | null
           created_at?: string | null
           created_by?: string | null
+          discount_amount?: number | null
+          ex_donor?: string | null
+          hospital_name?: string | null
           id?: string
           invoice_date: string
           invoice_number: string
+          patient_age?: number | null
+          patient_dob?: string | null
+          patient_gender?: string | null
           patient_id: string
+          patient_phone?: string | null
+          patient_references?: string | null
+          patient_type?: string | null
           remarks?: string | null
+          rh_type?: string | null
           status?: string | null
           total_amount: number
           updated_at?: string | null
         }
         Update: {
+          amount_received?: number | null
+          blood_category?: string | null
+          blood_group_type?: string | null
+          bottle_required?: number | null
+          bottle_unit_type?: string | null
           created_at?: string | null
           created_by?: string | null
+          discount_amount?: number | null
+          ex_donor?: string | null
+          hospital_name?: string | null
           id?: string
           invoice_date?: string
           invoice_number?: string
+          patient_age?: number | null
+          patient_dob?: string | null
+          patient_gender?: string | null
           patient_id?: string
+          patient_phone?: string | null
+          patient_references?: string | null
+          patient_type?: string | null
           remarks?: string | null
+          rh_type?: string | null
           status?: string | null
           total_amount?: number
           updated_at?: string | null
@@ -306,12 +351,14 @@ export type Database = {
       patients: {
         Row: {
           address: string | null
+          age: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
           created_at: string | null
           created_by: string | null
           date_of_birth: string | null
           email: string | null
           gender: string | null
+          hospital: string | null
           id: string
           name: string
           patient_id: string
@@ -320,12 +367,14 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          age?: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
           email?: string | null
           gender?: string | null
+          hospital?: string | null
           id?: string
           name: string
           patient_id: string
@@ -334,12 +383,14 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          age?: number | null
           blood_group?: Database["public"]["Enums"]["blood_group"]
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
           email?: string | null
           gender?: string | null
+          hospital?: string | null
           id?: string
           name?: string
           patient_id?: string
@@ -442,6 +493,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_test_id_by_uuid: {
         Args: { test_id: number } | { test_uuid: string }
         Returns: number

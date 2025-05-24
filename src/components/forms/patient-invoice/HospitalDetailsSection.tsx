@@ -30,7 +30,7 @@ export function HospitalDetailsSection({
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
       <div>
-        <Label htmlFor="hospital" className="mb-1 block">Hospital Name:</Label>
+        <Label htmlFor="hospital" className="mb-1 block">Hospital:</Label>
         <Input 
           id="hospital" 
           className="h-9" 
@@ -41,25 +41,22 @@ export function HospitalDetailsSection({
       </div>
       <div>
         <Label htmlFor="gender" className="mb-1 block">Gender:</Label>
-        <Select 
-          value={gender} 
-          onValueChange={setGender} 
-          disabled={!shouldEnableEditing}
-        >
+        <Select value={gender} onValueChange={setGender} disabled={!shouldEnableEditing}>
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="male">Male</SelectItem>
             <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div>
-        <Label htmlFor="exDonor" className="mb-1 block">EX / Donor:</Label>
+        <Label htmlFor="exDonor" className="mb-1 block">Ex-Donor:</Label>
         <Input 
           id="exDonor" 
-          className="h-9"
+          className="h-9" 
           value={exDonor}
           onChange={(e) => setExDonor(e.target.value)}
           disabled={!shouldEnableEditing} 
