@@ -374,7 +374,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
-          id: string
+          id: number
           name: string
           updated_at: string | null
         }
@@ -382,7 +382,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          id?: string
+          id?: number
           name: string
           updated_at?: string | null
         }
@@ -390,7 +390,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          id?: string
+          id?: number
           name?: string
           updated_at?: string | null
         }
@@ -398,31 +398,31 @@ export type Database = {
       }
       test_information: {
         Row: {
-          category_id: string
+          category_id: number | null
           created_at: string | null
           created_by: string | null
           description: string | null
-          id: string
+          id: number
           name: string
           price: number
           updated_at: string | null
         }
         Insert: {
-          category_id: string
+          category_id?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          id?: string
+          id?: number
           name: string
           price: number
           updated_at?: string | null
         }
         Update: {
-          category_id?: string
+          category_id?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          id?: string
+          id?: number
           name?: string
           price?: number
           updated_at?: string | null
@@ -443,7 +443,7 @@ export type Database = {
     }
     Functions: {
       get_test_id_by_uuid: {
-        Args: { test_uuid: string }
+        Args: { test_id: number } | { test_uuid: string }
         Returns: number
       }
       is_test_active: {

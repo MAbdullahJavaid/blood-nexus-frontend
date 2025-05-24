@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { mockPatients, mockTests, mockInvoices } from "./patient-invoice/mock-data";
@@ -97,7 +96,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       const tempId = `temp-${items.length}`;
       const newItem: InvoiceItem = {
         id: tempId,
-        testId: "",
+        testId: 0,
         testName: "",
         qty: 1,
         rate: 0,
@@ -139,7 +138,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setSelectedItemIndex(index);
     };
 
-    const handleTestSelect = async (testId: string) => {
+    const handleTestSelect = async (testId: number) => {
       try {
         const { data, error } = await supabase
           .from('test_information')
@@ -261,7 +260,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       calculateTotal(updatedItems);
     };
 
-    const handleSave = async (): Promise<{ success: boolean, invoiceId?: string, error?: any }> => {
+    const handleSave = async () => {
       try {
         setLoading(true);
         
@@ -312,7 +311,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         // Create invoice items
         const invoiceItems = items.map(item => ({
           invoice_id: invoiceData.id,
-          item_id: item.testId,
+          item_id: item.testId.toString(), // Convert to string as item_id is text in the database
           item_type: "test",
           quantity: item.qty,
           unit_price: item.rate,

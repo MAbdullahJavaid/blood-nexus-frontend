@@ -13,7 +13,7 @@ interface CategoryFormProps {
 }
 
 const CategoryForm = ({ isEditable = false, isSearchEnabled = false }: CategoryFormProps) => {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [newCategory, setNewCategory] = useState('');
   const [loading, setLoading] = useState(false);
 

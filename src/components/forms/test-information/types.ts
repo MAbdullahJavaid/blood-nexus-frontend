@@ -1,14 +1,14 @@
 
 export interface TestCategory {
-  id: string;
+  id: number;
   name: string;
   description?: string;
 }
 
 export interface TestInformation {
-  id: string;
+  id: number;
   name: string;
-  category_id: string;
+  category_id: number;
   category?: TestCategory;
   description?: string;  // JSON string containing additional test metadata including is_active status
   price: number;         // Database field name is price

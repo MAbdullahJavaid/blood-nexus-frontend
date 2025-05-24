@@ -11,7 +11,7 @@ import { Test } from './types';
 interface TestSearchModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onTestSelect: (testId: string) => void;
+  onTestSelect: (testId: number) => void;
 }
 
 export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSearchModalProps) {
