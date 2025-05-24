@@ -71,14 +71,20 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     // Enable editing based on patient type
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
-    const generateDocumentNo = () => {
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      // In a real application, you would fetch the latest sequence from backend
-      const sequence = "0001"; // This would be dynamic based on existing invoices
-      
-      setDocumentNo(`${year}${month}${sequence}`);
+    const generateDocumentNo = async () => {
+      try {
+        const { data, error } = await supabase.rpc('generate_invoice_number');
+        if (error) throw error;
+        setDocumentNo(data);
+      } catch (error) {
+        console.error('Error generating document number:', error);
+        // Fallback to manual generation
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const sequence = "0001";
+        setDocumentNo(`${year}${month}${sequence}`);
+      }
     };
 
     const handlePatientTypeChange = (value: string) => {
@@ -273,7 +279,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         
         if (patientType === "opd") {
           // Map blood group to the format expected by the database
-          const bloodGroupMap: { [key: string]: string } = {
+          const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
             "A": "A+",
             "B": "B+", 
             "AB": "AB+",
@@ -283,10 +289,14 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           
           const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
           
+          // Generate patient ID for new patient
+          const patientIdNumber = `P${Date.now()}`;
+          
           // Create a new patient for OPD
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .insert({
+              patient_id: patientIdNumber,
               name: patientName,
               phone: phoneNo,
               date_of_birth: dob || null,
