@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./types";
 import { mockPatients, mockInvoices } from "./mock-data";
@@ -128,7 +127,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       const tempId = `temp-${items.length}`;
       const newItem: InvoiceItem = {
         id: tempId,
-        testId: "",
+        testId: 0, // Use numeric ID
         testName: "",
         qty: 1,
         rate: 0,
@@ -186,7 +185,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       calculateTotal(updatedItems);
     };
 
-    const handleTestSelect = async (testId: string) => {
+    const handleTestSelect = async (testId: number) => {
       try {
         const { data, error } = await supabase
           .from('test_information')
@@ -297,16 +296,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           
         if (invoiceError) throw invoiceError;
         
-        // Create invoice items
+        // Create invoice items - convert testId to string for storage
         const invoiceItems = items.map(item => ({
           invoice_id: invoiceData.id,
-          item_id: item.testId,
+          item_id: item.testId.toString(), // Convert to string as item_id is text in the database
           item_type: "test",
           quantity: item.qty,
           unit_price: item.rate,
           total_price: item.amount
         }));
         
+        // Insert all invoice items
         const { error: itemsError } = await supabase
           .from('invoice_items')
           .insert(invoiceItems);

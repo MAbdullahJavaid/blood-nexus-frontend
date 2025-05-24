@@ -119,8 +119,8 @@ const TestInformationForm = ({
 
       const testData = {
         name: formValues.testName,
-        category_id: formValues.categoryId,
-        price: formValues.testRate, // This is the database field name
+        category_id: formValues.categoryId, // Ensure this is a number
+        price: formValues.testRate,
         description: JSON.stringify(metadata) // Store metadata as JSON string
       };
 
@@ -175,23 +175,7 @@ const TestInformationForm = ({
     setCurrentTestId(test.id);
     
     // We need to manually set the testId for display purposes
-    // We'll fetch it separately since it's not in our type
-    const fetchTestId = async () => {
-      try {
-        const { data, error } = await supabase
-          .rpc('get_test_id_by_uuid', { test_uuid: test.id });
-        
-        if (error) {
-          console.error('Error fetching test ID:', error);
-        } else if (data) {
-          setTestId(data);
-        }
-      } catch (error) {
-        console.error('Error fetching test ID:', error);
-      }
-    };
-    
-    fetchTestId();
+    setTestId(test.id); // Now we can directly use the id as it's already a number
     
     // Parse the description field to get the test metadata
     let metadata: any = {};

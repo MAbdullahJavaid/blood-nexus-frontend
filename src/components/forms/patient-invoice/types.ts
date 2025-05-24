@@ -23,7 +23,7 @@ export interface Patient {
 
 export interface InvoiceItem {
   id: string;
-  testId: number;
+  testId: number; // Changed from string to number
   testName: string;
   qty: number;
   rate: number;
