@@ -93,9 +93,8 @@ export function BloodDetailsSection({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bag">bag</SelectItem>
               <SelectItem value="ml">ml</SelectItem>
-              <SelectItem value="N/A">N/A</SelectItem>
+              <SelectItem value="bag">bag</SelectItem>
             </SelectContent>
           </Select>
         </div>

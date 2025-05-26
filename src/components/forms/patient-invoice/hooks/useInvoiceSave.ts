@@ -49,7 +49,7 @@ export function useInvoiceSave() {
         
         const mappedBloodGroup = bloodGroupMap[params.bloodGroup] || "O+";
         
-        // Use the entered patient ID or generate one if empty
+        // Generate a new patient ID automatically using the database function
         let finalPatientId = params.patientID;
         if (!finalPatientId) {
           const { data: generatedId, error: genError } = await supabase

@@ -18,6 +18,8 @@ interface PatientDetailsSectionProps {
   isEditable: boolean;
   isAdding: boolean;
   patientID: string;
+  patientPrefix: string;
+  setPatientPrefix: (value: string) => void;
   setPatientId: (value: string) => void;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
@@ -44,6 +46,8 @@ export function PatientDetailsSection({
   setDocumentDate,
   shouldEnableEditing,
   patientID,
+  patientPrefix,
+  setPatientPrefix,
   setPatientId,
 }: PatientDetailsSectionProps) {
   return (
@@ -73,26 +77,47 @@ export function PatientDetailsSection({
             Patient ID:
           </Label>
           <div className="flex items-center gap-2">
-            <Input
-              id="patientId"
-              className="h-9"
-              value={patientType === "opd" ? patientID : (selectedPatient?.id || "")}
-              maxLength={11}
-              disabled={patientType === "regular" || !isEditable}
-              onChange={(e) => {
-                if (patientType === "opd") {
-                  setPatientId(e.target.value);
-                }
-              }}
-            />
-            {isEditable && patientType === "regular" && (
-              <button
-                onClick={onSearchPatientClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-                aria-label="Search patient"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </button>
+            {patientType === "opd" ? (
+              <div className="flex w-full">
+                <Select
+                  value={patientPrefix}
+                  onValueChange={setPatientPrefix}
+                  disabled={!isEditable}
+                >
+                  <SelectTrigger className="w-16 h-9 rounded-r-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="T">T</SelectItem>
+                    <SelectItem value="H">H</SelectItem>
+                    <SelectItem value="S">S</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  className="h-9 flex-1 rounded-l-none"
+                  value="Auto-generated"
+                  readOnly
+                  disabled
+                />
+              </div>
+            ) : (
+              <>
+                <Input
+                  id="patientId"
+                  className="h-9"
+                  value={selectedPatient?.id || ""}
+                  disabled={true}
+                />
+                {isEditable && (
+                  <button
+                    onClick={onSearchPatientClick}
+                    className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                    aria-label="Search patient"
+                  >
+                    <SearchIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

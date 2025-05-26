@@ -1,3 +1,4 @@
+
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
@@ -43,6 +44,8 @@ const PatientInvoiceFormLogic = forwardRef<FormRefObject, PatientInvoiceFormProp
           setDocumentDate={form.setDocumentDate}
           shouldEnableEditing={form.shouldEnableEditing}
           patientID={form.patientID}
+          patientPrefix={form.patientPrefix}
+          setPatientPrefix={form.setPatientPrefix}
           setPatientId={form.setPatientID}
         />
 

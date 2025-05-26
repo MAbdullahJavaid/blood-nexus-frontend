@@ -12,7 +12,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
   const [rhType, setRhType] = useState<string>("N/A");
   const [bloodCategory, setBloodCategory] = useState<string>("FWB");
   const [bottleRequired, setBottleRequired] = useState<number>(1);
-  const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
+  const [bottleUnitType, setBottleUnitType] = useState<string>("ml");
   const [discount, setDiscount] = useState<number>(0);
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -20,6 +20,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
     new Date().toISOString().split('T')[0]
   );
   const [patientID, setPatientID] = useState<string>("");
+  const [patientPrefix, setPatientPrefix] = useState<string>("T");
 
   const invoiceGeneration = useInvoiceGeneration(isEditable);
   const patientHandling = usePatientHandling();
@@ -109,7 +110,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
       discount,
       receivedAmount,
       items: testHandling.items,
-      patientID
+      patientID: patientType === "opd" ? patientPrefix : patientID
     });
   };
 
@@ -127,6 +128,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
     documentDate,
     shouldEnableEditing,
     patientID,
+    patientPrefix,
     
     // Handlers
     setBloodGroup,
@@ -136,6 +138,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
     setBottleUnitType,
     setDocumentDate,
     setPatientID,
+    setPatientPrefix,
     handlePatientTypeChange,
     handleDiscountChange,
     handleReceivedAmountChange,
