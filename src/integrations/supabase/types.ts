@@ -359,6 +359,8 @@ export type Database = {
           address: string | null
           age: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          bottle_quantity: number | null
+          bottle_unit_type: string | null
           created_at: string | null
           created_by: string | null
           date_of_birth: string | null
@@ -375,6 +377,8 @@ export type Database = {
           address?: string | null
           age?: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          bottle_quantity?: number | null
+          bottle_unit_type?: string | null
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
@@ -391,6 +395,8 @@ export type Database = {
           address?: string | null
           age?: number | null
           blood_group?: Database["public"]["Enums"]["blood_group"]
+          bottle_quantity?: number | null
+          bottle_unit_type?: string | null
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
@@ -501,6 +507,10 @@ export type Database = {
     Functions: {
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_patient_reg_number: {
+        Args: { prefix_type: string }
         Returns: string
       }
       get_test_id_by_uuid: {

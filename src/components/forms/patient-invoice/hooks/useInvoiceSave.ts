@@ -26,6 +26,7 @@ interface SaveParams {
   discount: number;
   receivedAmount: number;
   items: InvoiceItem[];
+  patientID: string;
 }
 
 export function useInvoiceSave() {
@@ -47,19 +48,30 @@ export function useInvoiceSave() {
         };
         
         const mappedBloodGroup = bloodGroupMap[params.bloodGroup] || "O+";
-        const patientIdNumber = `P${Date.now()}`;
+        
+        // Use the entered patient ID or generate one if empty
+        let finalPatientId = params.patientID;
+        if (!finalPatientId) {
+          const { data: generatedId, error: genError } = await supabase
+            .rpc('generate_patient_reg_number', { prefix_type: 'P' });
+          
+          if (genError) throw genError;
+          finalPatientId = generatedId;
+        }
         
         const { data: patientData, error: patientError } = await supabase
           .from('patients')
           .insert({
-            patient_id: patientIdNumber,
+            patient_id: finalPatientId,
             name: params.patientName,
             phone: params.phoneNo,
             date_of_birth: params.dob || null,
             gender: params.gender,
             blood_group: mappedBloodGroup,
             hospital: params.hospital,
-            age: params.age
+            age: params.age,
+            bottle_quantity: params.bottleRequired,
+            bottle_unit_type: params.bottleUnitType
           })
           .select('id')
           .single();

@@ -19,6 +19,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
   const [documentDate, setDocumentDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [patientID, setPatientID] = useState<string>("");
 
   const invoiceGeneration = useInvoiceGeneration(isEditable);
   const patientHandling = usePatientHandling();
@@ -35,6 +36,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
   const handlePatientTypeChange = (value: string) => {
     setPatientType(value);
     patientHandling.resetPatientData();
+    setPatientID("");
   };
 
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +108,8 @@ export function usePatientInvoiceForm(isEditable: boolean) {
       references: patientHandling.references,
       discount,
       receivedAmount,
-      items: testHandling.items
+      items: testHandling.items,
+      patientID
     });
   };
 
@@ -123,6 +126,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
     totalAmount,
     documentDate,
     shouldEnableEditing,
+    patientID,
     
     // Handlers
     setBloodGroup,
@@ -131,6 +135,7 @@ export function usePatientInvoiceForm(isEditable: boolean) {
     setBottleRequired,
     setBottleUnitType,
     setDocumentDate,
+    setPatientID,
     handlePatientTypeChange,
     handleDiscountChange,
     handleReceivedAmountChange,

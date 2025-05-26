@@ -17,8 +17,8 @@ interface PatientDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
   isAdding: boolean;
-  patientID?: any;
-  setPatientId?: any;
+  patientID: string;
+  setPatientId: (value: string) => void;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -27,7 +27,6 @@ interface PatientDetailsSectionProps {
   documentDate: string;
   setDocumentDate: (value: string) => void;
   shouldEnableEditing: boolean;
-  setDocumentNo?: (value: string) => void;
 }
 
 export function PatientDetailsSection({
@@ -44,7 +43,6 @@ export function PatientDetailsSection({
   documentDate,
   setDocumentDate,
   shouldEnableEditing,
-  setDocumentNo,
   patientID,
   setPatientId,
 }: PatientDetailsSectionProps) {
@@ -78,11 +76,11 @@ export function PatientDetailsSection({
             <Input
               id="patientId"
               className="h-9"
-              value={patientType === "opd" ? patientID : documentNo}
+              value={patientType === "opd" ? patientID : (selectedPatient?.id || "")}
               maxLength={11}
-              disabled={!isEditable}
+              disabled={patientType === "regular" || !isEditable}
               onChange={(e) => {
-                if (patientType === "opd" && setPatientId) {
+                if (patientType === "opd") {
                   setPatientId(e.target.value);
                 }
               }}
