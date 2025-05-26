@@ -77,19 +77,22 @@ export function BloodDetailsSection({
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <Label htmlFor="bottleRequired" className="mb-1 block">Bottle Required:</Label>
-        <div className="flex items-center gap-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label htmlFor="bottleRequired" className="mb-1 block">Bottle:</Label>
           <Input 
             id="bottleRequired" 
-            className="h-9 flex-1" 
+            className="h-9" 
             type="number" 
             value={bottleRequired}
             onChange={(e) => onBottleRequiredChange?.(parseInt(e.target.value) || 1)}
             disabled={!isEditable} 
           />
+        </div>
+        <div>
+          <Label htmlFor="required" className="mb-1 block">Required:</Label>
           <Select value={bottleUnitType} onValueChange={onBottleUnitTypeChange} disabled={!isEditable}>
-            <SelectTrigger className="h-9 w-20">
+            <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
