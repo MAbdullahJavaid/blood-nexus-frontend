@@ -260,6 +260,7 @@ export type Database = {
         Row: {
           amount_received: number | null
           blood_category: string | null
+          blood_group: string | null
           blood_group_type: string | null
           bottle_required: number | null
           bottle_unit_type: string | null
@@ -275,6 +276,7 @@ export type Database = {
           patient_dob: string | null
           patient_gender: string | null
           patient_id: string
+          patient_name: string | null
           patient_phone: string | null
           patient_references: string | null
           patient_type: string | null
@@ -287,6 +289,7 @@ export type Database = {
         Insert: {
           amount_received?: number | null
           blood_category?: string | null
+          blood_group?: string | null
           blood_group_type?: string | null
           bottle_required?: number | null
           bottle_unit_type?: string | null
@@ -302,6 +305,7 @@ export type Database = {
           patient_dob?: string | null
           patient_gender?: string | null
           patient_id: string
+          patient_name?: string | null
           patient_phone?: string | null
           patient_references?: string | null
           patient_type?: string | null
@@ -314,6 +318,7 @@ export type Database = {
         Update: {
           amount_received?: number | null
           blood_category?: string | null
+          blood_group?: string | null
           blood_group_type?: string | null
           bottle_required?: number | null
           bottle_unit_type?: string | null
@@ -329,6 +334,7 @@ export type Database = {
           patient_dob?: string | null
           patient_gender?: string | null
           patient_id?: string
+          patient_name?: string | null
           patient_phone?: string | null
           patient_references?: string | null
           patient_type?: string | null

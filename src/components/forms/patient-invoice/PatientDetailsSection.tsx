@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,8 +17,8 @@ interface PatientDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
   isAdding: boolean;
-  patientID: any;
-  setPatientId: any;
+  patientID?: any;
+  setPatientId?: any;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -26,7 +27,7 @@ interface PatientDetailsSectionProps {
   documentDate: string;
   setDocumentDate: (value: string) => void;
   shouldEnableEditing: boolean;
-  setDocumentNo: (value: string) => void; // new prop to handle documentNo input for OPD
+  setDocumentNo?: (value: string) => void;
 }
 
 export function PatientDetailsSection({
@@ -81,7 +82,7 @@ export function PatientDetailsSection({
               maxLength={11}
               disabled={!isEditable}
               onChange={(e) => {
-                if (patientType === "opd") {
+                if (patientType === "opd" && setPatientId) {
                   setPatientId(e.target.value);
                 }
               }}
@@ -108,7 +109,7 @@ export function PatientDetailsSection({
               value={documentNo}
               disabled={true}
             />
-            {isEditable || !isAdding &&(
+            {(isEditable || !isAdding) && (
               <button
                 onClick={onSearchDocumentClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300"

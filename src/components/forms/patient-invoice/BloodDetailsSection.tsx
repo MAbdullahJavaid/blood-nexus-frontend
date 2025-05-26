@@ -4,24 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BloodDetailsSectionProps {
-  bloodGroup: string;
-  rhType: string;
+  bloodGroup?: string;
+  rhType?: string;
   bloodCategory: string;
-  bottleRequired: number;
+  bottleRequired?: number;
   bottleUnitType: string;
   isEditable: boolean;
-  onBloodGroupChange: (value: string) => void;
-  onRhTypeChange: (value: string) => void;
+  onBloodGroupChange?: (value: string) => void;
+  onRhTypeChange?: (value: string) => void;
   onBloodCategoryChange: (value: string) => void;
-  onBottleRequiredChange: (value: number) => void;
+  onBottleRequiredChange?: (value: number) => void;
   onBottleUnitTypeChange: (value: string) => void;
 }
 
 export function BloodDetailsSection({
-  bloodGroup,
-  rhType,
+  bloodGroup = "N/A",
+  rhType = "N/A",
   bloodCategory,
-  bottleRequired,
+  bottleRequired = 1,
   bottleUnitType,
   isEditable,
   onBloodGroupChange,
@@ -85,7 +85,7 @@ export function BloodDetailsSection({
             className="h-9 flex-1" 
             type="number" 
             value={bottleRequired}
-            onChange={(e) => onBottleRequiredChange(parseInt(e.target.value) || 1)}
+            onChange={(e) => onBottleRequiredChange?.(parseInt(e.target.value) || 1)}
             disabled={!isEditable} 
           />
           <Select value={bottleUnitType} onValueChange={onBottleUnitTypeChange} disabled={!isEditable}>

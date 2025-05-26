@@ -19,9 +19,12 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [isTestSearchModalOpen, setIsTestSearchModalOpen] = useState(false);
     const [isDocumentSearchModalOpen, setIsDocumentSearchModalOpen] = useState(false);
     const [patientType, setPatientType] = useState<string>("regular");
-    const [patientID,setPatientId]=useState<any>('')
+    const [patientID, setPatientId] = useState<any>('');
     const [documentNo, setDocumentNo] = useState<string>("");
+    const [bloodGroup, setBloodGroup] = useState<string>("N/A");
+    const [rhType, setRhType] = useState<string>("N/A");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
+    const [bottleRequired, setBottleRequired] = useState<number>(1);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -257,16 +260,32 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         let patientId: string;
         
         if (patientType === "opd") {
+          // Map blood group to the format expected by the database
+          const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
+            "A": "A+",
+            "B": "B+", 
+            "AB": "AB+",
+            "O": "O+",
+            "N/A": "O+"
+          };
+          
+          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
+          
+          // Generate patient ID for new patient
+          const patientIdNumber = `P${Date.now()}`;
+          
           // Create a new patient for OPD
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .insert({
-              patient_id: documentNo, // Using document number as patient ID for OPD
+              patient_id: patientIdNumber,
               name: patientName,
               phone: phoneNo,
               date_of_birth: dob || null,
               gender: gender,
-              blood_group: "O+" // Default blood group for OPD patients
+              blood_group: mappedBloodGroup,
+              hospital: hospital,
+              age: age
             })
             .select('id')
             .single();
@@ -281,15 +300,31 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           patientId = selectedPatient.id;
         }
         
-        // Create invoice
+        // Create invoice with all the fields that match the updated schema
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
           .insert({
             invoice_number: documentNo,
             invoice_date: documentDate,
             patient_id: patientId,
+            patient_name: patientName, // Now properly mapped
             total_amount: totalAmount,
-            remarks: bloodCategory + " - " + bottleUnitType + " - " + references, // Storing additional info in remarks
+            patient_type: patientType,
+            blood_group: bloodGroup, // Now properly mapped
+            blood_group_type: bloodGroup,
+            rh_type: rhType, // Now properly mapped
+            blood_category: bloodCategory,
+            bottle_required: bottleRequired,
+            bottle_unit_type: bottleUnitType,
+            ex_donor: exDonor,
+            patient_references: references,
+            hospital_name: hospital,
+            patient_age: age,
+            patient_dob: dob || null,
+            patient_phone: phoneNo,
+            patient_gender: gender,
+            discount_amount: discount,
+            amount_received: receivedAmount,
             status: receivedAmount >= totalAmount ? "Paid" : "Pending"
           })
           .select('id')
@@ -300,7 +335,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         // Create invoice items - convert testId to string for storage
         const invoiceItems = items.map(item => ({
           invoice_id: invoiceData.id,
-          item_id: item.testId.toString(), // Convert to string as item_id is text in the database
+          item_id: item.testId.toString(),
           item_type: "test",
           quantity: item.qty,
           unit_price: item.rate,
@@ -333,7 +368,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           selectedPatient={selectedPatient}
           isEditable={isEditable}
           isAdding={isAdding}
-          onPatientTypeChange={handlePatientTypeChange}
+          onPatientTypeChange={setPatientType}
           onSearchPatientClick={() => setIsSearchModalOpen(true)}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
           patientName={patientName}
@@ -363,19 +398,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           phoneNo={phoneNo}
           setPhoneNo={setPhoneNo}
           age={age}
-          setAge={handleAgeChange}
+          setAge={setAge}
           dob={dob}
-          setDob={handleDobChange}
+          setDob={setDob}
           references={references}
           setReferences={setReferences}
           shouldEnableEditing={shouldEnableEditing}
         />
 
         <BloodDetailsSection
+          bloodGroup={bloodGroup}
+          rhType={rhType}
           bloodCategory={bloodCategory}
+          bottleRequired={bottleRequired}
           bottleUnitType={bottleUnitType}
           isEditable={isEditable}
+          onBloodGroupChange={setBloodGroup}
+          onRhTypeChange={setRhType}
           onBloodCategoryChange={setBloodCategory}
+          onBottleRequiredChange={setBottleRequired}
           onBottleUnitTypeChange={setBottleUnitType}
         />
 
@@ -383,8 +424,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           items={items}
           selectedItemIndex={selectedItemIndex}
           isEditable={isEditable}
-          onSelectRow={handleSelectRow}
-          onSearchTest={handleSearchTest}
+          onSelectRow={setSelectedItemIndex}
+          onSearchTest={setCurrentTestIndex}
           onQuantityChange={handleQuantityChange}
           onRateChange={handleRateChange}
         />
