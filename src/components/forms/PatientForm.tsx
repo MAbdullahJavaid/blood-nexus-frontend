@@ -15,7 +15,11 @@ const PatientForm = ({ isSearchEnabled = false, isEditable = false }: PatientFor
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [prefix, setPrefix] = useState("T");
   const [postfix, setPostfix] = useState("000");
-  const [bottleUnit, setBottleUnit] = useState("ml");
+  const [bottleQuantity, setBottleQuantity] = useState("1");
+  const [requiredUnit, setRequiredUnit] = useState("ml");
+  
+  // Set current date as default
+  const currentDate = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white p-4 rounded-md">
@@ -49,7 +53,7 @@ const PatientForm = ({ isSearchEnabled = false, isEditable = false }: PatientFor
         <div></div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" disabled={!isEditable} />
+          <Input id="date" className="h-9" type="date" value={currentDate} disabled={!isEditable} />
         </div>
       </div>
 
@@ -156,22 +160,26 @@ const PatientForm = ({ isSearchEnabled = false, isEditable = false }: PatientFor
         <div className="grid grid-cols-2 gap-2">
           <div>
             <Label htmlFor="bottle" className="mb-1 block">Bottle:</Label>
-            <div className="flex items-center">
-              <Input id="bottle" className="h-9 rounded-r-none" type="number" defaultValue="0" disabled={!isEditable} />
-              <Select value={bottleUnit} onValueChange={setBottleUnit} disabled={!isEditable}>
-                <SelectTrigger className="h-9 w-16 rounded-l-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ml">ml</SelectItem>
-                  <SelectItem value="bag">bag</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Input 
+              id="bottle" 
+              className="h-9" 
+              type="number" 
+              value={bottleQuantity}
+              onChange={(e) => setBottleQuantity(e.target.value)}
+              disabled={!isEditable} 
+            />
           </div>
           <div>
             <Label htmlFor="required" className="mb-1 block">Required:</Label>
-            <Input id="required" className="h-9" disabled={!isEditable} />
+            <Select value={requiredUnit} onValueChange={setRequiredUnit} disabled={!isEditable}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ml">ml</SelectItem>
+                <SelectItem value="bag">bag</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -181,10 +189,7 @@ const PatientForm = ({ isSearchEnabled = false, isEditable = false }: PatientFor
           <Label htmlFor="dob" className="mb-1 block">Date Of Birth:</Label>
           <Input id="dob" className="h-9" type="date" disabled={!isEditable} />
         </div>
-        <div>
-          <Label htmlFor="expDate" className="mb-1 block">Exp Date:</Label>
-          <Input id="expDate" className="h-9" type="date" disabled={!isEditable} />
-        </div>
+        <div></div>
       </div>
 
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
