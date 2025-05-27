@@ -12,6 +12,7 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
   const { 
     selectedDonor, 
     bagNo, 
+    setBagNo,
     bleedingDate, 
     donorPatientValues, 
     results, 
@@ -38,6 +39,13 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
       const dateArr = bleedingDate.split('/');
       const formattedBleedingDate = `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}`;
       
+      console.log("Submitting bleeding record with data:", {
+        donor_id: selectedDonor.id,
+        bleeding_date: formattedBleedingDate,
+        technician: "Current User",
+        remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+      });
+      
       // Save to bleeding_records table - let the database generate the bag_id from sequence
       const { data, error } = await supabase
         .from('bleeding_records')
@@ -50,7 +58,17 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
         .select('bag_id')
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
+      console.log("Successfully saved bleeding record:", data);
+      
+      // Update the bag number in the form context
+      if (data && data.bag_id) {
+        setBagNo(data.bag_id);
+      }
       
       toast({
         title: "Success",

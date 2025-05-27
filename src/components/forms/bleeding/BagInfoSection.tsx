@@ -23,6 +23,10 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
   } = useBleedingForm();
   const [isBagSearchModalOpen, setIsBagSearchModalOpen] = useState(false);
 
+  // Show the actual bag number if it's been generated, otherwise show placeholder
+  const displayBagNo = bagNo === "Auto-generated on save" ? "" : bagNo;
+  const placeholderText = bagNo === "Auto-generated on save" ? "Auto-generated on save" : "";
+
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
       <div>
@@ -30,10 +34,10 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
         <div className="flex items-center gap-2">
           <Input 
             id="bagNo"
-            value={bagNo}
-            className="h-9 bg-gray-100 text-gray-600"
+            value={displayBagNo}
+            className="h-9 bg-green-100 text-gray-800 font-medium"
             readOnly={true}
-            placeholder="Auto-generated on save"
+            placeholder={placeholderText}
           />
           {isEditable && isSearchEnabled && (
             <button 
