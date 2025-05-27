@@ -30,7 +30,6 @@ interface BleedingFormContextType {
   handleDonorSelect: (donor: Donor) => void;
   handleDonorPatientValueChange: (test: keyof DonorPatientValues, value: string) => void;
   handleProductInfoChange: (key: keyof ProductInfo, value: boolean) => void;
-  generateNewBagNumber: () => Promise<void>;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
@@ -90,12 +89,6 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
     });
   }, [donorPatientValues]);
 
-  // Generate new bag number function
-  const generateNewBagNumber = async () => {
-    const newBagNumber = await generateBagNumber();
-    setBagNo(newBagNumber);
-  };
-
   // Handle donor selection
   const handleDonorSelect = (donor: Donor) => {
     setSelectedDonor(donor);
@@ -135,8 +128,7 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
       setIsSubmitting,
       handleDonorSelect,
       handleDonorPatientValueChange,
-      handleProductInfoChange,
-      generateNewBagNumber
+      handleProductInfoChange
     }}>
       {children}
     </BleedingFormContext.Provider>
