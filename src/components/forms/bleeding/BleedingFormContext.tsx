@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
 import { 
@@ -30,6 +30,7 @@ interface BleedingFormContextType {
   handleDonorSelect: (donor: Donor) => void;
   handleDonorPatientValueChange: (test: keyof DonorPatientValues, value: string) => void;
   handleProductInfoChange: (key: keyof ProductInfo, value: boolean) => void;
+  generateNewBagNumber: () => Promise<void>;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
@@ -39,7 +40,7 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
   isEditable = true 
 }) => {
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
-  const [bagNo, setBagNo] = useState(generateBagNumber());
+  const [bagNo, setBagNo] = useState("");
   const [bagType, setBagType] = useState("double");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +70,16 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
     CS: false,
   });
 
+  // Generate initial bag number on mount
+  useEffect(() => {
+    const initializeBagNumber = async () => {
+      const newBagNumber = await generateBagNumber();
+      setBagNo(newBagNumber);
+    };
+    
+    initializeBagNumber();
+  }, []);
+
   // Calculate results based on donor/patient values
   React.useEffect(() => {
     setResults({
@@ -78,6 +89,12 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
       vdrl: calculateTestResult(donorPatientValues.vdrl),
     });
   }, [donorPatientValues]);
+
+  // Generate new bag number function
+  const generateNewBagNumber = async () => {
+    const newBagNumber = await generateBagNumber();
+    setBagNo(newBagNumber);
+  };
 
   // Handle donor selection
   const handleDonorSelect = (donor: Donor) => {
@@ -118,7 +135,8 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
       setIsSubmitting,
       handleDonorSelect,
       handleDonorPatientValueChange,
-      handleProductInfoChange
+      handleProductInfoChange,
+      generateNewBagNumber
     }}>
       {children}
     </BleedingFormContext.Provider>

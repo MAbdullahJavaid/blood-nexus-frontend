@@ -1,8 +1,24 @@
 
-export const generateBagNumber = (): string => {
-  // Generate a random number between 10001 and 99999
-  const bagNum = Math.floor(Math.random() * 90000) + 10000;
-  return `B${bagNum}`;
+import { supabase } from "@/integrations/supabase/client";
+
+export const generateBagNumber = async (): Promise<string> => {
+  try {
+    const { data, error } = await supabase.rpc('get_next_bag_number');
+    
+    if (error) {
+      console.error('Error fetching next bag number:', error);
+      // Fallback to random number if database call fails
+      const bagNum = Math.floor(Math.random() * 90000) + 10000;
+      return `B${bagNum}`;
+    }
+    
+    return `B${data}`;
+  } catch (error) {
+    console.error('Error calling get_next_bag_number:', error);
+    // Fallback to random number if database call fails
+    const bagNum = Math.floor(Math.random() * 90000) + 10000;
+    return `B${bagNum}`;
+  }
 };
 
 export const generateRandomScreeningValue = (): string => {

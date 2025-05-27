@@ -513,6 +513,10 @@ export type Database = {
         Args: { prefix_type: string }
         Returns: string
       }
+      get_next_bag_number: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_test_id_by_uuid: {
         Args: { test_id: number } | { test_uuid: string }
         Returns: number
