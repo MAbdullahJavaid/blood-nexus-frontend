@@ -167,7 +167,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
           />
         </div>
         <div>
-          <Label htmlFor="bloodCate" className="mb-1 block">Blood Cate:</Label>
+          <Label htmlFor="bloodCate" className="mb-1 block">Blood Category:</Label>
           <Input id="bloodCate" className="h-9" disabled={!isEditable} />
         </div>
       </div>
