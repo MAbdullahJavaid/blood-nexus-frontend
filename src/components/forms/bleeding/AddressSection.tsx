@@ -12,7 +12,7 @@ const AddressSection = () => {
       <Input 
         id="address" 
         value={selectedDonor?.address || ""}
-        className="h-9 bg-gray-50"
+        className="h-9 bg-green-100"
         readOnly
       />
     </div>

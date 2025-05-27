@@ -13,7 +13,7 @@ const BloodGroupSection = () => {
         <Input 
           id="group" 
           value={selectedDonor?.blood_group || ""}
-          className="h-9 bg-gray-50"
+          className="h-9 bg-green-100"
           readOnly
         />
       </div>
@@ -22,7 +22,7 @@ const BloodGroupSection = () => {
         <Input 
           id="rh" 
           value={selectedDonor?.blood_group?.includes('+') ? '+ve' : selectedDonor?.blood_group?.includes('-') ? '-ve' : ""}
-          className="h-9 bg-gray-50"
+          className="h-9 bg-green-100"
           readOnly
         />
       </div>
