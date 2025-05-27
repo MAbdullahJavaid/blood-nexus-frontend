@@ -17,10 +17,8 @@ interface PatientDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
   isAdding: boolean;
-  patientID: string;
-  patientPrefix: string;
-  setPatientPrefix: (value: string) => void;
-  setPatientId: (value: string) => void;
+  patientID?: any;
+  setPatientId?: any;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -29,6 +27,7 @@ interface PatientDetailsSectionProps {
   documentDate: string;
   setDocumentDate: (value: string) => void;
   shouldEnableEditing: boolean;
+  setDocumentNo?: (value: string) => void;
 }
 
 export function PatientDetailsSection({
@@ -45,9 +44,8 @@ export function PatientDetailsSection({
   documentDate,
   setDocumentDate,
   shouldEnableEditing,
+  setDocumentNo,
   patientID,
-  patientPrefix,
-  setPatientPrefix,
   setPatientId,
 }: PatientDetailsSectionProps) {
   return (
@@ -77,47 +75,26 @@ export function PatientDetailsSection({
             Patient ID:
           </Label>
           <div className="flex items-center gap-2">
-            {patientType === "opd" ? (
-              <div className="flex w-full">
-                <Select
-                  value={patientPrefix}
-                  onValueChange={setPatientPrefix}
-                  disabled={!isEditable}
-                >
-                  <SelectTrigger className="w-16 h-9 rounded-r-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="T">T</SelectItem>
-                    <SelectItem value="H">H</SelectItem>
-                    <SelectItem value="S">S</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  className="h-9 flex-1 rounded-l-none"
-                  value="Auto-generated"
-                  readOnly
-                  disabled
-                />
-              </div>
-            ) : (
-              <>
-                <Input
-                  id="patientId"
-                  className="h-9"
-                  value={selectedPatient?.id || ""}
-                  disabled={true}
-                />
-                {isEditable && (
-                  <button
-                    onClick={onSearchPatientClick}
-                    className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-                    aria-label="Search patient"
-                  >
-                    <SearchIcon className="h-4 w-4" />
-                  </button>
-                )}
-              </>
+            <Input
+              id="patientId"
+              className="h-9"
+              value={patientType === "opd" ? patientID : documentNo}
+              maxLength={11}
+              disabled={!isEditable}
+              onChange={(e) => {
+                if (patientType === "opd" && setPatientId) {
+                  setPatientId(e.target.value);
+                }
+              }}
+            />
+            {isEditable && patientType === "regular" && (
+              <button
+                onClick={onSearchPatientClick}
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                aria-label="Search patient"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
             )}
           </div>
         </div>
