@@ -55,15 +55,20 @@ const DonorInfoSection = ({ isEditable, isSearchEnabled }: DonorInfoSectionProps
           readOnly 
         />
       </div>
-      <div>
-        <Label htmlFor="donorCategory" className="mb-1 block">Donor Category:</Label>
-        <Input 
-          id="donorCategory" 
-          value="Self Donor" 
-          className="h-9 bg-gray-50" 
-          readOnly 
-        />
-      </div>
+<div>
+  <Label htmlFor="donorCategory" className="mb-1 block">Donor Category:</Label>
+  <select 
+    id="donorCategory" 
+    className="h-9 bg-gray-50 w-full rounded-md border px-2"
+    defaultValue="Self Donor"
+  >
+    <option value="Self Donor">Self Donor</option>
+    <option value="Call Donor">Call Donor</option>
+    <option value="EX/Patient">EX/Patient</option>
+    <option value="EX/OPD">EX/OPD</option>
+  </select>
+</div>
+
 
       {/* Donor Search Modal */}
       <DonorSearchModal 
