@@ -31,9 +31,9 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
           <Input 
             id="bagNo"
             value={bagNo}
-            onChange={(e) => setBagNo(e.target.value)}
-            className="h-9 bg-green-100"
+            className="h-9 bg-gray-100 text-gray-600"
             readOnly={true}
+            placeholder="Auto-generated on save"
           />
           {isEditable && isSearchEnabled && (
             <button 

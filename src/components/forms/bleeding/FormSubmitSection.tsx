@@ -22,10 +22,10 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDonor) {
+    if (!selectedDonor || !selectedDonor.name || !selectedDonor.donor_id) {
       toast({
         title: "Error",
-        description: "Please select a donor first",
+        description: "Please select a donor with both name and donor number",
         variant: "destructive",
       });
       return;
@@ -38,22 +38,23 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
       const dateArr = bleedingDate.split('/');
       const formattedBleedingDate = `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}`;
       
-      // Save to bleeding_records table
+      // Save to bleeding_records table - let the database generate the bag_id from sequence
       const { data, error } = await supabase
         .from('bleeding_records')
         .insert({
-          bag_id: bagNo,
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
           technician: "Current User", // You might want to get this from user context
           remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
-        });
+        })
+        .select('bag_id')
+        .single();
       
       if (error) throw error;
       
       toast({
         title: "Success",
-        description: "Bleeding record saved successfully",
+        description: `Bleeding record saved successfully with bag number: ${data.bag_id}`,
       });
       
     } catch (error) {
@@ -76,8 +77,9 @@ const FormSubmitSection = ({ isEditable }: FormSubmitSectionProps) => {
     <div className="mt-6 flex justify-end">
       <Button 
         type="submit" 
+        onClick={handleSubmit}
         className="bg-red-600 hover:bg-red-700"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !selectedDonor || !selectedDonor.name || !selectedDonor.donor_id}
       >
         {isSubmitting ? "Saving..." : "Save"}
       </Button>

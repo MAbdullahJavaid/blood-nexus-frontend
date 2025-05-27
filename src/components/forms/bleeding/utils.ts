@@ -1,27 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const generateBagNumber = async (): Promise<string> => {
-  try {
-    const { data, error } = await supabase.rpc('get_next_bag_number');
-    
-    if (error) {
-      console.error('Error fetching next bag number:', error);
-      // Fallback to random number starting from 1001 if database call fails
-      const bagNum = Math.floor(Math.random() * 90000) + 1001;
-      return bagNum.toString();
-    }
-    
-    // Ensure the number starts from 1001 minimum
-    const bagNumber = Math.max(data, 1001);
-    return bagNumber.toString();
-  } catch (error) {
-    console.error('Error calling get_next_bag_number:', error);
-    // Fallback to random number starting from 1001 if database call fails
-    const bagNum = Math.floor(Math.random() * 90000) + 1001;
-    return bagNum.toString();
-  }
-};
-
 export const generateRandomScreeningValue = (): string => {
   return (Math.random() * 0.43 + 0.01).toFixed(2);
 };

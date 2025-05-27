@@ -22,7 +22,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          bag_id: string
+          bag_id?: string
           bleeding_date: string
           created_at?: string | null
           created_by?: string | null
@@ -44,13 +44,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "bleeding_records_bag_id_fkey"
-            columns: ["bag_id"]
-            isOneToOne: false
-            referencedRelation: "blood_inventory"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "bleeding_records_donor_id_fkey"
             columns: ["donor_id"]

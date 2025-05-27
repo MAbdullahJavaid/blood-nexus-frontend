@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
 import { 
-  generateBagNumber, 
   generateRandomScreeningValue,
   generateRandomHBValue,
   calculateTestResult,
@@ -39,7 +38,7 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
   isEditable = true 
 }) => {
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
-  const [bagNo, setBagNo] = useState("");
+  const [bagNo, setBagNo] = useState("Auto-generated on save");
   const [bagType, setBagType] = useState("double");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,16 +67,6 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
     CP: false,
     CS: false,
   });
-
-  // Generate initial bag number on mount
-  useEffect(() => {
-    const initializeBagNumber = async () => {
-      const newBagNumber = await generateBagNumber();
-      setBagNo(newBagNumber);
-    };
-    
-    initializeBagNumber();
-  }, []);
 
   // Calculate results based on donor/patient values
   React.useEffect(() => {
