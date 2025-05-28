@@ -23,18 +23,18 @@ const PatientForm = ({ isSearchEnabled = false, isEditable = false }: PatientFor
   const [postfix, setPostfix] = useState("000");
   const [name, setName] = useState("");
   const [fName, setFName] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState("Male");
   const [address, setAddress] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [amount, setAmount] = useState("");
   const [phone, setPhone] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("");
-  const [rhType, setRhType] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("B");
+  const [rhType, setRhType] = useState("+ve");
   const [bgCategory, setBgCategory] = useState("PC");
-  const [weight, setWeight] = useState("0.00");
-  const [hospital, setHospital] = useState("");
+  const [weight, setWeight] = useState("15.2");
+  const [hospital, setHospital] = useState("Sundas Foundation");
   const [bottleQuantity, setBottleQuantity] = useState("1");
-  const [requiredUnit, setRequiredUnit] = useState("ml");
+  const [requiredUnit, setRequiredUnit] = useState("bag");
   const [dob, setDob] = useState("");
   
   // Set current date as default
