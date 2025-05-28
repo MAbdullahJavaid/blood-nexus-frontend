@@ -107,6 +107,7 @@ export type Database = {
           created_by: string | null
           id: string
           patient_id: string
+          patient_reg_id: string | null
           remarks: string | null
           result: string
           technician: string | null
@@ -119,6 +120,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           patient_id: string
+          patient_reg_id?: string | null
           remarks?: string | null
           result: string
           technician?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           patient_id?: string
+          patient_reg_id?: string | null
           remarks?: string | null
           result?: string
           technician?: string | null
@@ -146,11 +149,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "crossmatch_patient_id_fkey"
-            columns: ["patient_id"]
+            foreignKeyName: "crossmatch_patient_reg_id_fkey"
+            columns: ["patient_reg_id"]
             isOneToOne: false
             referencedRelation: "patients"
-            referencedColumns: ["id"]
+            referencedColumns: ["patient_id"]
           },
         ]
       }
@@ -272,6 +275,7 @@ export type Database = {
           patient_name: string | null
           patient_phone: string | null
           patient_references: string | null
+          patient_reg_id: string | null
           patient_type: string | null
           remarks: string | null
           rh_type: string | null
@@ -301,6 +305,7 @@ export type Database = {
           patient_name?: string | null
           patient_phone?: string | null
           patient_references?: string | null
+          patient_reg_id?: string | null
           patient_type?: string | null
           remarks?: string | null
           rh_type?: string | null
@@ -330,6 +335,7 @@ export type Database = {
           patient_name?: string | null
           patient_phone?: string | null
           patient_references?: string | null
+          patient_reg_id?: string | null
           patient_type?: string | null
           remarks?: string | null
           rh_type?: string | null
@@ -339,11 +345,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "patient_invoices_patient_id_fkey"
-            columns: ["patient_id"]
+            foreignKeyName: "patient_invoices_patient_reg_id_fkey"
+            columns: ["patient_reg_id"]
             isOneToOne: false
             referencedRelation: "patients"
-            referencedColumns: ["id"]
+            referencedColumns: ["patient_id"]
           },
         ]
       }
