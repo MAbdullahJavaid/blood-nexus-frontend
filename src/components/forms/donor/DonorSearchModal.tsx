@@ -9,13 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { useDonorForm } from "./DonorFormContext";
 import { Donor } from "@/types/donor";
 
-interface DonorSearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
-  const { loadDonorData } = useDonorForm();
+const DonorSearchModal = () => {
+  const { loadDonorData, isSearchModalOpen, setIsSearchModalOpen } = useDonorForm();
   const [searchQuery, setSearchQuery] = useState("");
   const [donors, setDonors] = useState<Donor[]>([]);
   const [searchResults, setSearchResults] = useState<Donor[]>([]);
@@ -23,10 +18,10 @@ const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
 
   // Load donors when component mounts or modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isSearchModalOpen) {
       fetchDonors();
     }
-  }, [isOpen]);
+  }, [isSearchModalOpen]);
 
   // Fetch donors from Supabase
   const fetchDonors = async () => {
@@ -72,11 +67,15 @@ const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
 
   const handleDonorSelect = (donor: Donor) => {
     loadDonorData(donor);
-    onClose();
+    setIsSearchModalOpen(false);
+  };
+
+  const handleClose = () => {
+    setIsSearchModalOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isSearchModalOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Search Donor</DialogTitle>

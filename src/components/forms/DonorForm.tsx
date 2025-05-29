@@ -1,6 +1,5 @@
 
 import { DonorFormProvider } from "./donor/DonorFormContext";
-import { useState } from "react";
 import { 
   PersonalInfoSection,
   AddressSection,
@@ -19,8 +18,6 @@ interface DonorFormProps {
 }
 
 const DonorForm = ({ isSearchEnabled = false, isEditable = false, isDeleting = false }: DonorFormProps) => {
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-
   return (
     <DonorFormProvider isEditable={isEditable} isDeleting={isDeleting}>
       <div className="bg-white p-4 rounded-md">
@@ -36,11 +33,8 @@ const DonorForm = ({ isSearchEnabled = false, isEditable = false, isDeleting = f
         <StatusSection isEditable={isEditable} />
         <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
         
-        {/* Donor Search Modal */}
-        <DonorSearchModal 
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
+        {/* Donor Search Modal - This will be controlled by the context */}
+        <DonorSearchModal />
       </div>
     </DonorFormProvider>
   );
