@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -298,28 +299,28 @@ const Landing = () => {
 
         {/* Floating donor images */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-10 left-10 w-20 h-20 rounded-full overflow-hidden shadow-lg animate-[float_6s_ease-in-out_infinite]">
+          <div className="absolute top-10 left-10 w-20 h-20 rounded-full overflow-hidden shadow-lg animate-bounce">
             <img 
               src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&h=200&fit=crop"
               alt="Floating donor 1"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute top-32 right-16 w-16 h-16 rounded-full overflow-hidden shadow-lg animate-[float_8s_ease-in-out_infinite_2s]">
+          <div className="absolute top-32 right-16 w-16 h-16 rounded-full overflow-hidden shadow-lg animate-pulse">
             <img 
               src="https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=200&h=200&fit=crop"
               alt="Floating donor 2"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute bottom-20 left-20 w-24 h-24 rounded-full overflow-hidden shadow-lg animate-[float_7s_ease-in-out_infinite_1s]">
+          <div className="absolute bottom-20 left-20 w-24 h-24 rounded-full overflow-hidden shadow-lg animate-bounce">
             <img 
               src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop"
               alt="Floating donor 3"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute bottom-32 right-12 w-18 h-18 rounded-full overflow-hidden shadow-lg animate-[float_9s_ease-in-out_infinite_3s]">
+          <div className="absolute bottom-32 right-12 w-18 h-18 rounded-full overflow-hidden shadow-lg animate-pulse">
             <img 
               src="https://images.unsplash.com/photo-1594824947633-d0501ba2fe65?w=200&h=200&fit=crop"
               alt="Floating donor 4"
@@ -464,13 +465,6 @@ const Landing = () => {
           Donate
         </Button>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-      `}</style>
     </div>
   );
 };
