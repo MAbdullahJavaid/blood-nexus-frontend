@@ -210,8 +210,28 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         if (patient) {
           console.log("Setting patient data:", patient);
           
+          // Create a properly typed Patient object
+          const typedPatient: Patient = {
+            id: patient.id,
+            patient_id: patient.patient_id,
+            name: patient.name,
+            phone: patient.phone || "",
+            age: patient.age || 0,
+            hospital: patient.hospital || "",
+            gender: patient.gender || "male",
+            date_of_birth: patient.date_of_birth,
+            blood_group: patient.blood_group,
+            address: patient.address,
+            email: patient.email,
+            bottle_quantity: patient.bottle_quantity,
+            bottle_unit_type: patient.bottle_unit_type,
+            created_at: patient.created_at,
+            created_by: patient.created_by,
+            updated_at: patient.updated_at
+          };
+          
           // Set the selected patient object
-          setSelectedPatient(patient);
+          setSelectedPatient(typedPatient);
           
           // Update all form fields with patient data
           setPatientName(patient.name || "");
@@ -311,7 +331,27 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               .single();
             
             if (patient) {
-              setSelectedPatient(patient);
+              // Create a properly typed Patient object
+              const typedPatient: Patient = {
+                id: patient.id,
+                patient_id: patient.patient_id,
+                name: patient.name,
+                phone: patient.phone || "",
+                age: patient.age || 0,
+                hospital: patient.hospital || "",
+                gender: patient.gender || "male",
+                date_of_birth: patient.date_of_birth,
+                blood_group: patient.blood_group,
+                address: patient.address,
+                email: patient.email,
+                bottle_quantity: patient.bottle_quantity,
+                bottle_unit_type: patient.bottle_unit_type,
+                created_at: patient.created_at,
+                created_by: patient.created_by,
+                updated_at: patient.updated_at
+              };
+              
+              setSelectedPatient(typedPatient);
               setPatientName(patient.name || "");
               setPhoneNo(patient.phone || "");
               setAge(patient.age || null);
