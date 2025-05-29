@@ -136,7 +136,12 @@ const Dashboard = () => {
                  ref={activeFormRef}
                />;
       case 'patient':
-        return <PatientForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return <PatientForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable}
+                 isDeleting={isDeleting}
+                 ref={activeFormRef}
+               />;
       case 'bleeding':
         return <BleedingForm 
                  isSearchEnabled={isSearchEnabled} 
