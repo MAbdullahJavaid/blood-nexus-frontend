@@ -3,9 +3,9 @@ import { Patient, Invoice, Test } from "./types";
 
 // Mock patients data for demonstration
 export const mockPatients: Patient[] = [
-  { id: "P0001", patient_id: "P0001", name: "John Smith", hospital: "General Hospital", gender: "male", phoneNo: "555-1234", age: 45 },
-  { id: "P0002", patient_id: "P0002", name: "Jane Doe", hospital: "City Medical", gender: "female", phoneNo: "555-5678", age: 32 },
-  { id: "P0003", patient_id: "P0003", name: "Robert Johnson", hospital: "County Healthcare", gender: "male", phoneNo: "555-9012", age: 58 },
+  { id: "P0001", name: "John Smith", hospital: "General Hospital", gender: "male", phoneNo: "555-1234", age: 45 },
+  { id: "P0002", name: "Jane Doe", hospital: "City Medical", gender: "female", phoneNo: "555-5678", age: 32 },
+  { id: "P0003", name: "Robert Johnson", hospital: "County Healthcare", gender: "male", phoneNo: "555-9012", age: 58 },
 ];
 
 // Mock invoices data for demonstration

@@ -1,6 +1,7 @@
+
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
-import { mockInvoices } from "./patient-invoice/mock-data";
+import { mockPatients, mockTests, mockInvoices } from "./patient-invoice/mock-data";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
 import { TestSearchModal } from "./patient-invoice/TestSearchModal";
 import { DocumentSearchModal } from "./patient-invoice/DocumentSearchModal";
@@ -44,7 +45,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [hospital, setHospital] = useState("");
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
-    const [patientID, setPatientID] = useState("");
 
     // Expose methods to parent component via ref
     useImperativeHandle(ref, () => ({
@@ -99,7 +99,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setHospital("");
       setGender("male");
       setExDonor("");
-      setPatientID("");
     };
 
     const handleAddItem = () => {
@@ -131,38 +130,18 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const calculateTotal = (itemsArray: InvoiceItem[]) => {
       const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
-      const newTotal = sum - discount;
-      setTotalAmount(newTotal);
-      
-      // Auto-adjust received amount if it was equal to old total
-      if (receivedAmount === totalAmount && newTotal !== totalAmount) {
-        setReceivedAmount(newTotal);
-      }
+      setTotalAmount(sum - discount);
     };
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setDiscount(value);
-      const newTotal = items.reduce((acc, item) => acc + item.amount, 0) - value;
-      setTotalAmount(newTotal);
-      
-      // Auto-adjust received amount if it was equal to old total
-      if (receivedAmount === totalAmount) {
-        setReceivedAmount(newTotal);
-      }
+      setTotalAmount(items.reduce((acc, item) => acc + item.amount, 0) - value);
     };
 
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
-      
-      // Auto-adjust discount if received amount equals total + discount
-      const itemsTotal = items.reduce((acc, item) => acc + item.amount, 0);
-      if (value < itemsTotal) {
-        const newDiscount = itemsTotal - value;
-        setDiscount(newDiscount);
-        setTotalAmount(value);
-      }
     };
 
     const handleSelectRow = (index: number) => {
@@ -200,37 +179,20 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const handlePatientSelect = (patient: any) => {
-      console.log("Selected patient:", patient);
+    const handlePatientSelect = (patientId: string) => {
+      const patient = mockPatients.find(p => p.id === patientId);
       setSelectedPatient(patient);
-      setPatientName(patient.name || "");
-      setPhoneNo(patient.phone || "");
-      setAge(patient.age || null);
-      setHospital(patient.hospital || "");
-      setGender(patient.gender || "male");
       
-      // Set DOB if available
-      if (patient.date_of_birth) {
-        setDob(patient.date_of_birth);
-      }
-      
-      // Set blood group info if available
-      if (patient.blood_group) {
-        const bloodGroupStr = patient.blood_group;
-        if (bloodGroupStr.includes('+')) {
-          setBloodGroup(bloodGroupStr.replace('+', ''));
-          setRhType('+ve');
-        } else if (bloodGroupStr.includes('-')) {
-          setBloodGroup(bloodGroupStr.replace('-', ''));
-          setRhType('-ve');
-        } else {
-          setBloodGroup(bloodGroupStr);
-          setRhType('+ve');
-        }
+      // Update form fields with patient data
+      if (patient) {
+        setPatientName(patient.name);
+        setPhoneNo(patient.phoneNo || "");
+        setAge(patient.age);
+        setHospital(patient.hospital || "");
+        setGender(patient.gender || "male");
       }
       
       setIsSearchModalOpen(false);
-      toast.success("Patient data loaded");
     };
 
     const handleDocumentSelect = (docNum: string) => {
@@ -238,6 +200,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       if (invoice) {
         setDocumentNo(invoice.documentNo);
         // In a real application, you would load the full invoice data here
+        const patient = mockPatients.find(p => p.id === invoice.patientId);
+        setSelectedPatient(patient);
+        
+        // Set patient details if available
+        if (patient) {
+          setPatientName(patient.name);
+          setPhoneNo(patient.phoneNo || "");
+          setAge(patient.age);
+          setHospital(patient.hospital || "");
+          setGender(patient.gender || "male");
+        }
       }
       setIsDocumentSearchModalOpen(false);
     };
@@ -419,8 +392,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           documentDate={documentDate}
           setDocumentDate={setDocumentDate}
           shouldEnableEditing={shouldEnableEditing}
-          patientID={patientID}
-          setPatientId={setPatientID}
         />
 
         <HospitalDetailsSection

@@ -19,9 +19,6 @@ export function TotalSection({
   onDiscountChange,
   onReceivedAmountChange
 }: TotalSectionProps) {
-  // Calculate remaining balance
-  const remainingBalance = totalAmount - receivedAmount;
-  
   return (
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div></div>
@@ -57,17 +54,6 @@ export function TotalSection({
             value={receivedAmount} 
             onChange={onReceivedAmountChange}
             disabled={!isEditable} 
-          />
-        </div>
-        <div className="flex justify-between items-center">
-          <Label htmlFor="balance" className="mb-0">Remaining Balance:</Label>
-          <Input 
-            id="balance" 
-            className={`h-9 w-32 text-right ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}
-            type="number" 
-            value={remainingBalance} 
-            readOnly 
-            disabled
           />
         </div>
       </div>

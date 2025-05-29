@@ -48,12 +48,6 @@ export function PatientDetailsSection({
   patientID,
   setPatientId,
 }: PatientDetailsSectionProps) {
-  
-  // Display patient ID based on type - handle both patient_id and id properties
-  const displayPatientId = patientType === "regular" 
-    ? (selectedPatient?.patient_id || selectedPatient?.id || "") 
-    : (patientID || "");
-
   return (
     <>
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -84,17 +78,16 @@ export function PatientDetailsSection({
             <Input
               id="patientId"
               className="h-9"
-              value={displayPatientId}
+              value={patientType === "opd" ? patientID : documentNo}
               maxLength={11}
-              disabled={patientType === "regular" || !isEditable}
+              disabled={!isEditable}
               onChange={(e) => {
                 if (patientType === "opd" && setPatientId) {
                   setPatientId(e.target.value);
                 }
               }}
-              placeholder={patientType === "regular" ? "Select a patient" : "Enter patient ID"}
             />
-            {isEditable && (
+            {isEditable && patientType === "regular" && (
               <button
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300"
@@ -145,10 +138,7 @@ export function PatientDetailsSection({
             onChange={(e) =>
               patientType === "opd" && setPatientName(e.target.value)
             }
-            disabled={
-              (patientType === "regular" && !!selectedPatient) || !shouldEnableEditing
-            }
-            placeholder={patientType === "regular" && !selectedPatient ? "Select a patient first" : ""}
+            disabled={patientType === "regular" && !!selectedPatient}
           />
         </div>
         <div>

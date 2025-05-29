@@ -72,34 +72,9 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       clearForm
     }));
 
-    // Load all patients when search modal opens
-    const loadAllPatients = async () => {
-      try {
-        setLoading(true);
-        console.log("Loading all patients...");
-        
-        const { data, error } = await supabase
-          .from('patients')
-          .select('*')
-          .order('name', { ascending: true });
-
-        console.log("All patients loaded:", data);
-        console.log("Load error:", error);
-
-        if (error) throw error;
-        setSearchResults(data || []);
-      } catch (error) {
-        console.error("Error loading patients:", error);
-        toast.error("Failed to load patients");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const handleSearch = async () => {
       if (!searchQuery.trim()) {
-        // If no search query, load all patients
-        await loadAllPatients();
+        toast.error("Please enter a search term");
         return;
       }
 
@@ -111,7 +86,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           .from('patients')
           .select('*')
           .or(`name.ilike.%${searchQuery}%,patient_id.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
-          .order('name', { ascending: true })
           .limit(10);
 
         console.log("Search results:", data);
@@ -167,13 +141,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       
       setIsSearchModalOpen(false);
       toast.success("Patient data loaded");
-    };
-
-    // Open search modal and load all patients
-    const openSearchModal = () => {
-      setIsSearchModalOpen(true);
-      setSearchQuery("");
-      loadAllPatients();
     };
 
     const handleSave = async () => {
@@ -327,7 +294,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
               </div>
               {isSearchEnabled && (
                 <button 
-                  onClick={openSearchModal}
+                  onClick={() => setIsSearchModalOpen(true)}
                   className="bg-gray-200 p-1 rounded hover:bg-gray-300"
                 >
                   <SearchIcon className="h-4 w-4" />
@@ -607,7 +574,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   </div>
                 ) : (
                   <div className="p-8 text-center text-gray-500">
-                    {loading ? "Loading..." : searchQuery ? "No patients found" : "Enter search terms and click Search or browse all patients"}
+                    {searchQuery ? "No patients found" : "Enter search terms and click Search"}
                   </div>
                 )}
               </div>
