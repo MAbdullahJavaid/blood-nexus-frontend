@@ -220,17 +220,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const handlePatientSelect = (patientId: string) => {
-      const patient = mockPatients.find(p => p.id === patientId);
-      setSelectedPatient(patient);
+    const handlePatientSelect = (patient: Patient) => {
+      const foundPatient = mockPatients.find(p => p.id === patient.id) || patient;
+      setSelectedPatient(foundPatient);
       
       // Update form fields with patient data
-      if (patient) {
-        setPatientName(patient.name);
-        setPhoneNo(patient.phoneNo || "");
-        setAge(patient.age);
-        setHospital(patient.hospital || "");
-        setGender(patient.gender || "male");
+      if (foundPatient) {
+        setPatientName(foundPatient.name);
+        setPhoneNo(foundPatient.phoneNo || foundPatient.phone || "");
+        setAge(foundPatient.age);
+        setHospital(foundPatient.hospital || "");
+        setGender(foundPatient.gender || "male");
       }
       
       setIsSearchModalOpen(false);
