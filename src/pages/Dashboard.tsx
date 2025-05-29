@@ -20,6 +20,7 @@ type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoic
 interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
+  clearForm?: () => void;
 }
 
 const Dashboard = () => {
@@ -46,11 +47,19 @@ const Dashboard = () => {
     activeFormRef.current = {};
   };
 
+  const clearActiveForm = () => {
+    if (activeFormRef.current && activeFormRef.current.clearForm) {
+      activeFormRef.current.clearForm();
+    }
+  };
+
   const handleAddClick = () => {
     setIsAdding(true);
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsDeleting(false);
+    // Clear form when switching to add mode
+    clearActiveForm();
   };
 
   const handleEditClick = () => {
@@ -58,6 +67,8 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsAdding(false);
     setIsDeleting(false);
+    // Clear form when switching to edit mode
+    clearActiveForm();
   };
 
   const handleDeleteClick = () => {
@@ -65,6 +76,8 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsEditing(false);
     setIsAdding(false);
+    // Clear form when switching to delete mode
+    clearActiveForm();
   };
 
   const handleSaveClick = () => {
@@ -85,6 +98,8 @@ const Dashboard = () => {
     setIsAdding(false);
     setIsDeleting(false);
     setIsSearchEnabled(false);
+    // Clear form when canceling
+    clearActiveForm();
   };
 
   const handleCloseClick = () => {
@@ -117,6 +132,7 @@ const Dashboard = () => {
                  isSearchEnabled={isSearchEnabled} 
                  isEditable={isEditable}
                  isDeleting={isDeleting}
+                 ref={activeFormRef}
                />;
       case 'patient':
         return <PatientForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
@@ -125,6 +141,7 @@ const Dashboard = () => {
                  isSearchEnabled={isSearchEnabled} 
                  isEditable={isEditable}
                  isDeleting={isDeleting}
+                 ref={activeFormRef}
                />;
       case 'crossmatch':
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;

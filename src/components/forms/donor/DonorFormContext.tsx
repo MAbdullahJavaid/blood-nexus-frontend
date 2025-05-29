@@ -30,6 +30,7 @@ interface DonorFormContextType {
   setIsSearchModalOpen: (isOpen: boolean) => void;
   isDeleting: boolean;
   loadDonorData: (donor: any) => void;
+  clearForm: () => void;
 }
 
 const defaultDonorData: DonorData = {
@@ -63,6 +64,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const [donorData, setDonorData] = useState<DonorData>(defaultDonorData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  const clearForm = () => {
+    setDonorData(defaultDonorData);
+    setIsSearchModalOpen(false);
+  };
 
   const handleInputChange = (field: keyof DonorData, value: string | boolean) => {
     setDonorData(prev => ({
@@ -149,8 +155,8 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
         description: "Donor information saved successfully",
       });
       
-      // Reset form
-      setDonorData(defaultDonorData);
+      // Clear form after successful submission
+      clearForm();
       
     } catch (error) {
       console.error("Error saving donor:", error);
@@ -189,8 +195,8 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
         description: "Donor deleted successfully",
       });
       
-      // Reset form
-      setDonorData(defaultDonorData);
+      // Clear form after successful deletion
+      clearForm();
       
     } catch (error) {
       console.error("Error deleting donor:", error);
@@ -216,7 +222,8 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       isSearchModalOpen,
       setIsSearchModalOpen,
       isDeleting,
-      loadDonorData
+      loadDonorData,
+      clearForm
     }}>
       {children}
     </DonorFormContext.Provider>

@@ -34,9 +34,27 @@ interface BleedingFormContextType {
   isDeleting: boolean;
   loadBleedingRecord: (bagId: string) => Promise<void>;
   handleSubmit: () => Promise<void>;
+  clearForm: () => void;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
+
+const getDefaultDonorPatientValues = () => ({
+  hepB: generateRandomScreeningValue(),
+  hepC: generateRandomScreeningValue(),
+  hiv: generateRandomScreeningValue(),
+  vdrl: generateRandomScreeningValue(),
+  hb: generateRandomHBValue(),
+});
+
+const getDefaultProductInfo = () => ({
+  WB: false,
+  PC: true,
+  FFP: true,
+  PLT: false,
+  CP: false,
+  CS: false,
+});
 
 export const BleedingFormProvider: React.FC<{ 
   children: ReactNode; 
@@ -54,29 +72,23 @@ export const BleedingFormProvider: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize with random values
-  const [donorPatientValues, setDonorPatientValues] = useState<DonorPatientValues>({
-    hepB: generateRandomScreeningValue(),
-    hepC: generateRandomScreeningValue(),
-    hiv: generateRandomScreeningValue(),
-    vdrl: generateRandomScreeningValue(),
-    hb: generateRandomHBValue(),
-  });
-
+  const [donorPatientValues, setDonorPatientValues] = useState<DonorPatientValues>(getDefaultDonorPatientValues());
   const [results, setResults] = useState<TestResults>({
     hepB: "",
     hepC: "",
     hiv: "",
     vdrl: "",
   });
+  const [productInfo, setProductInfo] = useState<ProductInfo>(getDefaultProductInfo());
 
-  const [productInfo, setProductInfo] = useState<ProductInfo>({
-    WB: false,
-    PC: true,
-    FFP: true,
-    PLT: false,
-    CP: false,
-    CS: false,
-  });
+  const clearForm = () => {
+    setSelectedDonor(null);
+    setBagNo("Auto-generated on save");
+    setBagType("double");
+    setBleedingDate(getFormattedDate());
+    setDonorPatientValues(getDefaultDonorPatientValues());
+    setProductInfo(getDefaultProductInfo());
+  };
 
   // Calculate results based on donor/patient values
   React.useEffect(() => {
@@ -230,6 +242,9 @@ export const BleedingFormProvider: React.FC<{
           }
         }
       }
+
+      // Clear form after successful submission
+      clearForm();
       
     } catch (error) {
       console.error("Error saving bleeding record:", error);
@@ -261,18 +276,8 @@ export const BleedingFormProvider: React.FC<{
       
       if (error) throw error;
       
-      // Reset form
-      setSelectedDonor(null);
-      setBagNo("Auto-generated on save");
-      setBleedingDate(getFormattedDate());
-      setProductInfo({
-        WB: false,
-        PC: true,
-        FFP: true,
-        PLT: false,
-        CP: false,
-        CS: false,
-      });
+      // Clear form after successful deletion
+      clearForm();
       
     } catch (error) {
       console.error("Error deleting bleeding record:", error);
@@ -320,7 +325,8 @@ export const BleedingFormProvider: React.FC<{
       handleDelete,
       isDeleting,
       loadBleedingRecord,
-      handleSubmit
+      handleSubmit,
+      clearForm
     }}>
       {children}
     </BleedingFormContext.Provider>

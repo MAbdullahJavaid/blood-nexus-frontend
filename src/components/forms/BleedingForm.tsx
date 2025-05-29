@@ -1,5 +1,6 @@
 
-import { BleedingFormProvider } from "./bleeding/BleedingFormContext";
+import React, { forwardRef, useImperativeHandle } from "react";
+import { BleedingFormProvider, useBleedingForm } from "./bleeding/BleedingFormContext";
 import { BleedingFormProps } from "./bleeding/types";
 import DonorInfoSection from "./bleeding/DonorInfoSection";
 import BagInfoSection from "./bleeding/BagInfoSection";
@@ -15,11 +16,20 @@ interface ExtendedBleedingFormProps extends BleedingFormProps {
   isDeleting?: boolean;
 }
 
-const BleedingForm = ({ isSearchEnabled = true, isEditable = true, isDeleting = false }: ExtendedBleedingFormProps) => {
-  const formattedDate = getFormattedDate();
+interface BleedingFormRef {
+  clearForm: () => void;
+}
 
-  return (
-    <BleedingFormProvider isEditable={isEditable} isDeleting={isDeleting}>
+const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
+  ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
+    const { clearForm } = useBleedingForm();
+    const formattedDate = getFormattedDate();
+
+    useImperativeHandle(ref, () => ({
+      clearForm
+    }));
+
+    return (
       <form className="bg-white p-4 rounded-md" onSubmit={(e) => e.preventDefault()}>
         <DonorInfoSection 
           isEditable={isEditable} 
@@ -43,8 +53,26 @@ const BleedingForm = ({ isSearchEnabled = true, isEditable = true, isDeleting = 
         <ProductInfoSection isEditable={isEditable} />
         <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
       </form>
-    </BleedingFormProvider>
-  );
-};
+    );
+  }
+);
+
+const BleedingForm = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
+  ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
+    return (
+      <BleedingFormProvider isEditable={isEditable} isDeleting={isDeleting}>
+        <BleedingFormContent 
+          ref={ref}
+          isSearchEnabled={isSearchEnabled}
+          isEditable={isEditable}
+          isDeleting={isDeleting}
+        />
+      </BleedingFormProvider>
+    );
+  }
+);
+
+BleedingForm.displayName = "BleedingForm";
+BleedingFormContent.displayName = "BleedingFormContent";
 
 export default BleedingForm;

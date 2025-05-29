@@ -1,5 +1,6 @@
 
-import { DonorFormProvider } from "./donor/DonorFormContext";
+import React, { forwardRef, useImperativeHandle } from "react";
+import { DonorFormProvider, useDonorForm } from "./donor/DonorFormContext";
 import { 
   PersonalInfoSection,
   AddressSection,
@@ -17,9 +18,19 @@ interface DonorFormProps {
   isDeleting?: boolean;
 }
 
-const DonorForm = ({ isSearchEnabled = false, isEditable = false, isDeleting = false }: DonorFormProps) => {
-  return (
-    <DonorFormProvider isEditable={isEditable} isDeleting={isDeleting}>
+interface DonorFormRef {
+  clearForm: () => void;
+}
+
+const DonorFormContent = forwardRef<DonorFormRef, DonorFormProps>(
+  ({ isSearchEnabled = false, isEditable = false, isDeleting = false }, ref) => {
+    const { clearForm } = useDonorForm();
+
+    useImperativeHandle(ref, () => ({
+      clearForm
+    }));
+
+    return (
       <div className="bg-white p-4 rounded-md">
         <PersonalInfoSection 
           isEditable={isEditable} 
@@ -36,8 +47,26 @@ const DonorForm = ({ isSearchEnabled = false, isEditable = false, isDeleting = f
         {/* Donor Search Modal - This will be controlled by the context */}
         <DonorSearchModal />
       </div>
-    </DonorFormProvider>
-  );
-};
+    );
+  }
+);
+
+const DonorForm = forwardRef<DonorFormRef, DonorFormProps>(
+  ({ isSearchEnabled = false, isEditable = false, isDeleting = false }, ref) => {
+    return (
+      <DonorFormProvider isEditable={isEditable} isDeleting={isDeleting}>
+        <DonorFormContent 
+          ref={ref}
+          isSearchEnabled={isSearchEnabled}
+          isEditable={isEditable}
+          isDeleting={isDeleting}
+        />
+      </DonorFormProvider>
+    );
+  }
+);
+
+DonorForm.displayName = "DonorForm";
+DonorFormContent.displayName = "DonorFormContent";
 
 export default DonorForm;
