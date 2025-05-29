@@ -1,4 +1,3 @@
-
 import { useState, forwardRef, useImperativeHandle } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,14 +80,23 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
 
       try {
         setLoading(true);
+        console.log("Searching for:", searchQuery);
+        
         const { data, error } = await supabase
           .from('patients')
           .select('*')
-          .or(`(name.ilike.%${searchQuery}%),(patient_id.ilike.%${searchQuery}%),(phone.ilike.%${searchQuery}%)`)
+          .or(`name.ilike.%${searchQuery}%,patient_id.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
           .limit(10);
+
+        console.log("Search results:", data);
+        console.log("Search error:", error);
 
         if (error) throw error;
         setSearchResults(data || []);
+        
+        if (data && data.length === 0) {
+          toast.info("No patients found matching your search");
+        }
       } catch (error) {
         console.error("Error searching patients:", error);
         toast.error("Failed to search patients");
@@ -98,6 +106,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     };
 
     const handleSelectPatient = (patient: any) => {
+      console.log("Selected patient:", patient);
       setSelectedPatient(patient);
       setName(patient.name || "");
       setFName(""); // F.Name not stored in database
@@ -551,7 +560,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   <div className="divide-y">
                     {searchResults.map((patient) => (
                       <div
-                        key={patient.patien_id}
+                        key={patient.patient_id}
                         className="p-3 hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleSelectPatient(patient)}
                       >
