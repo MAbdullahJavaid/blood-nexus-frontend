@@ -14,11 +14,15 @@ export interface FormRefObject {
 
 export interface Patient {
   id: string;
+  patient_id: string; // Added this property
   name: string;
   hospital: string;
   gender: string;
   phoneNo: string;
   age: number;
+  phone?: string; // Added for compatibility with database
+  date_of_birth?: string; // Added for compatibility with database
+  blood_group?: string; // Added for compatibility with database
 }
 
 export interface InvoiceItem {

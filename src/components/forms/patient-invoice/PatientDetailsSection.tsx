@@ -49,9 +49,9 @@ export function PatientDetailsSection({
   setPatientId,
 }: PatientDetailsSectionProps) {
   
-  // Display patient ID based on type
+  // Display patient ID based on type - handle both patient_id and id properties
   const displayPatientId = patientType === "regular" 
-    ? (selectedPatient?.patient_id || "") 
+    ? (selectedPatient?.patient_id || selectedPatient?.id || "") 
     : (patientID || "");
 
   return (
