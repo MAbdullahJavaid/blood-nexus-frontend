@@ -410,6 +410,41 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          bag_no: string
+          created_at: string
+          donor_name: string
+          id: string
+          product: string
+          updated_at: string
+        }
+        Insert: {
+          bag_no: string
+          created_at?: string
+          donor_name: string
+          id?: string
+          product: string
+          updated_at?: string
+        }
+        Update: {
+          bag_no?: string
+          created_at?: string
+          donor_name?: string
+          id?: string
+          product?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_bag_no_fkey"
+            columns: ["bag_no"]
+            isOneToOne: false
+            referencedRelation: "bleeding_records"
+            referencedColumns: ["bag_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

@@ -33,6 +33,7 @@ interface BleedingFormContextType {
   handleDelete: () => Promise<void>;
   isDeleting: boolean;
   loadBleedingRecord: (bagId: string) => Promise<void>;
+  handleSubmit: () => Promise<void>;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
@@ -134,9 +135,107 @@ export const BleedingFormProvider: React.FC<{
         const bleedingDateObj = new Date(bleedingRecord.bleeding_date);
         const formattedBleedingDate = `${bleedingDateObj.getDate().toString().padStart(2, '0')}/${(bleedingDateObj.getMonth() + 1).toString().padStart(2, '0')}/${bleedingDateObj.getFullYear()}`;
         setBleedingDate(formattedBleedingDate);
+
+        // Load product information if available
+        try {
+          const { data: products, error: productError } = await supabase
+            .from('products')
+            .select('product')
+            .eq('bag_no', bagId);
+
+          if (!productError && products) {
+            const newProductInfo = { ...productInfo };
+            // Reset all to false first
+            Object.keys(newProductInfo).forEach(key => {
+              newProductInfo[key as keyof ProductInfo] = false;
+            });
+            // Set true for found products
+            products.forEach(p => {
+              if (p.product in newProductInfo) {
+                newProductInfo[p.product as keyof ProductInfo] = true;
+              }
+            });
+            setProductInfo(newProductInfo);
+          }
+        } catch (error) {
+          console.error('Error loading product information:', error);
+        }
       }
     } catch (error) {
       console.error('Error loading bleeding record:', error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedDonor || !selectedDonor.name || !selectedDonor.donor_id) {
+      throw new Error("Please select a donor with both name and donor number");
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Format the date for database storage (YYYY-MM-DD)
+      const dateArr = bleedingDate.split('/');
+      const formattedBleedingDate = `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}`;
+      
+      console.log("Submitting bleeding record with data:", {
+        donor_id: selectedDonor.id,
+        bleeding_date: formattedBleedingDate,
+        technician: "Current User",
+        remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+      });
+      
+      // Save to bleeding_records table - let the database generate the bag_id from sequence
+      const { data, error } = await supabase
+        .from('bleeding_records')
+        .insert({
+          donor_id: selectedDonor.id,
+          bleeding_date: formattedBleedingDate,
+          technician: "Current User", // You might want to get this from user context
+          remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+        })
+        .select('bag_id')
+        .single();
+      
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
+      console.log("Successfully saved bleeding record:", data);
+      
+      // Update the bag number in the form context
+      if (data && data.bag_id) {
+        setBagNo(data.bag_id);
+        
+        // Save product information to products table
+        const selectedProducts = Object.entries(productInfo)
+          .filter(([key, value]) => value)
+          .map(([key]) => key);
+
+        if (selectedProducts.length > 0) {
+          const productInserts = selectedProducts.map(product => ({
+            bag_no: data.bag_id,
+            donor_name: selectedDonor.name,
+            product: product
+          }));
+
+          const { error: productError } = await supabase
+            .from('products')
+            .insert(productInserts);
+
+          if (productError) {
+            console.error("Error saving products:", productError);
+            // Don't throw here, bleeding record was saved successfully
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error("Error saving bleeding record:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -148,6 +247,13 @@ export const BleedingFormProvider: React.FC<{
     try {
       setIsSubmitting(true);
       
+      // Delete products first (due to foreign key constraint)
+      await supabase
+        .from('products')
+        .delete()
+        .eq('bag_no', bagNo);
+      
+      // Then delete bleeding record
       const { error } = await supabase
         .from('bleeding_records')
         .delete()
@@ -159,6 +265,14 @@ export const BleedingFormProvider: React.FC<{
       setSelectedDonor(null);
       setBagNo("Auto-generated on save");
       setBleedingDate(getFormattedDate());
+      setProductInfo({
+        WB: false,
+        PC: true,
+        FFP: true,
+        PLT: false,
+        CP: false,
+        CS: false,
+      });
       
     } catch (error) {
       console.error("Error deleting bleeding record:", error);
@@ -205,7 +319,8 @@ export const BleedingFormProvider: React.FC<{
       handleProductInfoChange,
       handleDelete,
       isDeleting,
-      loadBleedingRecord
+      loadBleedingRecord,
+      handleSubmit
     }}>
       {children}
     </BleedingFormContext.Provider>

@@ -12,58 +12,54 @@ interface PersonalInfoSectionProps {
 }
 
 const PersonalInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: PersonalInfoSectionProps) => {
-  const { donorData, handleInputChange, setIsSearchModalOpen } = useDonorForm();
-  
-  // Auto-open search modal when edit or delete is selected
+  const { 
+    donorData, 
+    handleInputChange, 
+    setIsSearchModalOpen,
+    isSubmitting 
+  } = useDonorForm();
+
+  // Auto-open search modal for edit/delete operations
   useEffect(() => {
     if ((isSearchEnabled && !isEditable) || isDeleting) {
       setIsSearchModalOpen(true);
     }
   }, [isSearchEnabled, isEditable, isDeleting, setIsSearchModalOpen]);
-  
+
   return (
-    <div className="grid grid-cols-3 gap-4 mb-4">
+    <div className="grid grid-cols-2 gap-4 mb-4">
       <div>
-        <Label htmlFor="regNo" className="mb-1 block">Reg No</Label>
+        <Label htmlFor="regNo" className="mb-1 block">Reg No:</Label>
         <div className="flex items-center gap-2">
-          <Input 
-            id="regNo" 
+          <Input
+            id="regNo"
             value={donorData.regNo}
             onChange={(e) => handleInputChange("regNo", e.target.value)}
-            className="h-9" 
-            maxLength={11} 
-            disabled={!isEditable && !isDeleting}
+            className="h-9"
+            disabled={!isEditable || isSubmitting}
+            placeholder="Enter registration number"
           />
           {(isSearchEnabled || isDeleting) && (
             <button 
               type="button"
               onClick={() => setIsSearchModalOpen(true)}
               className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+              disabled={isSubmitting}
             >
               <SearchIcon className="h-4 w-4" />
             </button>
           )}
         </div>
       </div>
-      <div className="col-span-1">
-        <Label htmlFor="name" className="mb-1 block">Name</Label>
+      <div>
+        <Label htmlFor="name" className="mb-1 block">Name:</Label>
         <Input 
           id="name" 
-          value={donorData.name}
+          value={donorData.name} 
           onChange={(e) => handleInputChange("name", e.target.value)}
           className="h-9" 
-          disabled={!isEditable && !isDeleting}
-        />
-      </div>
-      <div>
-        <Label htmlFor="date" className="mb-1 block">Date</Label>
-        <Input 
-          id="date" 
-          type="date" 
-          value={donorData.date}
-          onChange={(e) => handleInputChange("date", e.target.value)}
-          className="h-9" 
-          disabled={!isEditable && !isDeleting}
+          disabled={!isEditable || isSubmitting}
+          placeholder="Enter donor name"
         />
       </div>
     </div>
