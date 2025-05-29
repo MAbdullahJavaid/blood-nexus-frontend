@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -16,11 +15,11 @@ import { toast } from "@/hooks/use-toast";
 
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
 
-// Use the FormRefObject interface from PatientInvoiceForm
+// Updated FormRef interface to make clearForm required
 interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
-  clearForm?: () => void;
+  clearForm: () => void; // Made required to match DonorFormRef and BleedingFormRef
 }
 
 const Dashboard = () => {
@@ -33,7 +32,9 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<string[]>([]);
   
   // Reference to the active form component
-  const activeFormRef = useRef<FormRef>({});
+  const activeFormRef = useRef<FormRef>({
+    clearForm: () => {} // Provide default implementation
+  });
   
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -44,7 +45,7 @@ const Dashboard = () => {
     setIsDeleting(false);
     
     // Reset the form ref when changing forms
-    activeFormRef.current = {};
+    activeFormRef.current = { clearForm: () => {} };
   };
 
   const clearActiveForm = () => {
