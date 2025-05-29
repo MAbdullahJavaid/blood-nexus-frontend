@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [currentStory, setCurrentStory] = useState(0);
+  const [currentDonor, setCurrentDonor] = useState(0);
 
   const patientStories = [
     {
@@ -43,6 +43,57 @@ const Landing = () => {
       name: "Omar, 6 years old",
       story: "Omar's hemophilia treatment has given him the freedom to be a normal, active child. His courage inspires everyone around him.",
       image: "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop"
+    }
+  ];
+
+  const donorStories = [
+    {
+      name: "Sarah Johnson",
+      story: "I've been donating blood for over 10 years. Knowing that my donations help children with blood disorders fills my heart with joy. Every drop makes a difference.",
+      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop",
+      donations: "50+ donations"
+    },
+    {
+      name: "Michael Chen", 
+      story: "As a regular donor, I've seen firsthand how blood donations save lives. It's a small act that creates a huge impact for families in need.",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      donations: "75+ donations"
+    },
+    {
+      name: "Emma Rodriguez",
+      story: "Donating blood is my way of giving back to the community. When I think about the children who receive this gift of life, it motivates me to continue.",
+      image: "https://images.unsplash.com/photo-1494725176-7c40e5a71c5e?w=400&h=300&fit=crop",
+      donations: "30+ donations"
+    },
+    {
+      name: "David Thompson",
+      story: "I started donating after learning about thalassemia. These brave children inspire me to be a regular donor and advocate for blood donation awareness.",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop",
+      donations: "40+ donations"
+    },
+    {
+      name: "Lisa Williams",
+      story: "Every time I donate, I remember that somewhere a child is getting a chance at a normal life. It's the most rewarding feeling in the world.",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop",
+      donations: "60+ donations"
+    },
+    {
+      name: "James Miller",
+      story: "Being a blood donor has taught me the true meaning of compassion. These children are fighters, and I'm honored to support their journey.",
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop",
+      donations: "25+ donations"
+    },
+    {
+      name: "Maria Garcia",
+      story: "I believe everyone deserves a chance at life. Through blood donation, I can be part of these children's success stories and their bright futures.",
+      image: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=300&fit=crop",
+      donations: "35+ donations"
+    },
+    {
+      name: "Robert Davis",
+      story: "Donating blood is more than just giving; it's about creating hope. Every donation brings these brave children one step closer to their dreams.",
+      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop",
+      donations: "45+ donations"
     }
   ];
 
@@ -88,6 +139,41 @@ const Landing = () => {
     setCurrentStory((prev) => (prev - 1 + patientStories.length) % patientStories.length);
   };
 
+  const nextDonor = () => {
+    setCurrentDonor((prev) => (prev + 1) % donorStories.length);
+  };
+
+  const prevDonor = () => {
+    setCurrentDonor((prev) => (prev - 1 + donorStories.length) % donorStories.length);
+  };
+
+  const handleDonate = () => {
+    toast({
+      title: "Thank you for your interest!",
+      description: "Donation portal will be available soon. Please contact us for immediate assistance.",
+    });
+  };
+
+  const handleVolunteer = () => {
+    toast({
+      title: "Thank you for volunteering!",
+      description: "Our team will contact you soon with volunteer opportunities.",
+    });
+  };
+
+  const handleOrganizeDrive = () => {
+    toast({
+      title: "Thank you for organizing!",
+      description: "Our team will help you set up a blood drive in your community.",
+    });
+  };
+
+  const handleLearnMore = () => {
+    // Scroll to about section
+    const aboutSection = document.querySelector('#about-section');
+    aboutSection?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -128,6 +214,7 @@ const Landing = () => {
             <Button 
               size="lg" 
               className="bg-blood hover:bg-blood-dark text-white px-8 py-4 text-lg rounded-full"
+              onClick={handleDonate}
             >
               Donate Now
             </Button>
@@ -135,6 +222,7 @@ const Landing = () => {
               size="lg" 
               variant="outline" 
               className="border-blood text-blood hover:bg-blood hover:text-white px-8 py-4 text-lg rounded-full"
+              onClick={handleLearnMore}
             >
               Learn More
             </Button>
@@ -143,7 +231,7 @@ const Landing = () => {
       </section>
 
       {/* About Us */}
-      <section className="py-20 bg-gray-50">
+      <section id="about-section" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-6">About Our Mission</h2>
@@ -236,8 +324,60 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How to Help */}
+      {/* Our Donors Are Our Heroes */}
       <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Donors Are Our Heroes</h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="relative">
+              <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="md:flex">
+                    <div className="md:w-1/2">
+                      <img 
+                        src={donorStories[currentDonor].image}
+                        alt={donorStories[currentDonor].name}
+                        className="w-full h-64 md:h-full object-cover"
+                      />
+                    </div>
+                    <div className="md:w-1/2 p-8 flex flex-col justify-center">
+                      <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                        {donorStories[currentDonor].name}
+                      </h3>
+                      <p className="text-sm text-blood font-medium mb-4">
+                        {donorStories[currentDonor].donations}
+                      </p>
+                      <p className="text-gray-600 text-lg leading-relaxed">
+                        {donorStories[currentDonor].story}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <button 
+                onClick={prevDonor}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <ChevronLeft className="h-6 w-6 text-gray-600" />
+              </button>
+              <button 
+                onClick={nextDonor}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <ChevronRight className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+          </div>
+          <div className="text-center mt-12">
+            <p className="text-2xl font-semibold text-blood">
+              Donate blood, save life
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How to Help */}
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">How You Can Help</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -248,7 +388,10 @@ const Landing = () => {
                 <p className="text-gray-600 mb-6">
                   Your financial contribution directly funds treatments and saves lives.
                 </p>
-                <Button className="bg-blood hover:bg-blood-dark text-white rounded-full">
+                <Button 
+                  className="bg-blood hover:bg-blood-dark text-white rounded-full"
+                  onClick={handleDonate}
+                >
                   Donate Now
                 </Button>
               </CardContent>
@@ -260,7 +403,11 @@ const Landing = () => {
                 <p className="text-gray-600 mb-6">
                   Join our team and make a direct impact in children's lives.
                 </p>
-                <Button variant="outline" className="border-blood text-blood hover:bg-blood hover:text-white rounded-full">
+                <Button 
+                  variant="outline" 
+                  className="border-blood text-blood hover:bg-blood hover:text-white rounded-full"
+                  onClick={handleVolunteer}
+                >
                   Get Involved
                 </Button>
               </CardContent>
@@ -272,7 +419,11 @@ const Landing = () => {
                 <p className="text-gray-600 mb-6">
                   Organize a blood drive in your community or workplace.
                 </p>
-                <Button variant="outline" className="border-blood text-blood hover:bg-blood hover:text-white rounded-full">
+                <Button 
+                  variant="outline" 
+                  className="border-blood text-blood hover:bg-blood hover:text-white rounded-full"
+                  onClick={handleOrganizeDrive}
+                >
                   Organize Drive
                 </Button>
               </CardContent>
@@ -282,7 +433,7 @@ const Landing = () => {
       </section>
 
       {/* Newsletter */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-6">Stay Connected</h2>
@@ -322,9 +473,9 @@ const Landing = () => {
                 Dedicated to providing free medical care to children with genetic blood disorders.
               </p>
               <div className="flex gap-4">
-                <Facebook className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer" />
-                <Twitter className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer" />
-                <Instagram className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer" />
+                <Facebook className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                <Twitter className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                <Instagram className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
               </div>
             </div>
             <div>
@@ -347,11 +498,36 @@ const Landing = () => {
             <div>
               <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
               <div className="space-y-2">
-                <div className="hover:text-blood cursor-pointer">About Us</div>
-                <div className="hover:text-blood cursor-pointer">Services</div>
-                <div className="hover:text-blood cursor-pointer">Get Help</div>
-                <div className="hover:text-blood cursor-pointer">Donate</div>
-                <div className="hover:text-blood cursor-pointer">Contact</div>
+                <div 
+                  className="hover:text-blood cursor-pointer transition-colors"
+                  onClick={handleLearnMore}
+                >
+                  About Us
+                </div>
+                <div 
+                  className="hover:text-blood cursor-pointer transition-colors"
+                  onClick={() => document.querySelector('#services-section')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Services
+                </div>
+                <div 
+                  className="hover:text-blood cursor-pointer transition-colors"
+                  onClick={() => navigate('/contact')}
+                >
+                  Get Help
+                </div>
+                <div 
+                  className="hover:text-blood cursor-pointer transition-colors"
+                  onClick={handleDonate}
+                >
+                  Donate
+                </div>
+                <div 
+                  className="hover:text-blood cursor-pointer transition-colors"
+                  onClick={() => navigate('/contact')}
+                >
+                  Contact
+                </div>
               </div>
             </div>
           </div>
@@ -366,6 +542,7 @@ const Landing = () => {
         <Button 
           size="lg"
           className="bg-blood hover:bg-blood-dark text-white rounded-full px-6 py-4 shadow-lg hover:shadow-xl transition-all"
+          onClick={handleDonate}
         >
           <Heart className="h-5 w-5 mr-2" />
           Donate
