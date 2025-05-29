@@ -17,8 +17,8 @@ interface PatientDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
   isAdding: boolean;
-  patientID?: any;
-  setPatientId?: any;
+  patientID?: string;
+  setPatientId?: (value: string) => void;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -48,6 +48,17 @@ export function PatientDetailsSection({
   patientID,
   setPatientId,
 }: PatientDetailsSectionProps) {
+  
+  // Display patient ID based on type and selection
+  const getDisplayPatientId = () => {
+    if (patientType === "opd") {
+      return patientID || "";
+    } else if (patientType === "regular" && selectedPatient) {
+      return selectedPatient.patient_id || selectedPatient.id || "";
+    }
+    return "";
+  };
+
   return (
     <>
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -78,20 +89,22 @@ export function PatientDetailsSection({
             <Input
               id="patientId"
               className="h-9"
-              value={patientType === "opd" ? patientID : documentNo}
+              value={getDisplayPatientId()}
               maxLength={11}
-              disabled={!isEditable}
+              disabled={patientType === "regular"}
               onChange={(e) => {
                 if (patientType === "opd" && setPatientId) {
                   setPatientId(e.target.value);
                 }
               }}
+              placeholder={patientType === "opd" ? "Enter Patient ID" : "Select a patient"}
             />
             {isEditable && patientType === "regular" && (
               <button
                 onClick={onSearchPatientClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
                 aria-label="Search patient"
+                type="button"
               >
                 <SearchIcon className="h-4 w-4" />
               </button>
@@ -112,8 +125,9 @@ export function PatientDetailsSection({
             {(isEditable || !isAdding) && (
               <button
                 onClick={onSearchDocumentClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
                 aria-label="Search document"
+                type="button"
               >
                 <SearchIcon className="h-4 w-4" />
               </button>
@@ -130,15 +144,14 @@ export function PatientDetailsSection({
           <Input
             id="name"
             className="h-9"
-            value={
-              patientType === "regular"
-                ? selectedPatient?.name || ""
-                : patientName
-            }
-            onChange={(e) =>
-              patientType === "opd" && setPatientName(e.target.value)
-            }
+            value={patientName}
+            onChange={(e) => {
+              if (patientType === "opd" || !selectedPatient) {
+                setPatientName(e.target.value);
+              }
+            }}
             disabled={patientType === "regular" && !!selectedPatient}
+            placeholder="Enter patient name"
           />
         </div>
         <div>

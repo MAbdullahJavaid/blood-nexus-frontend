@@ -44,6 +44,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [hospital, setHospital] = useState("");
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
+    const [patientID, setPatientID] = useState("");
 
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
@@ -82,7 +83,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handlePatientTypeChange = (value: string) => {
+      console.log("Patient type changed to:", value);
       setPatientType(value);
+      
+      // Clear all patient-related data when type changes
       setSelectedPatient(null);
       setPatientName("");
       setPhoneNo("");
@@ -92,6 +96,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setHospital("");
       setGender("male");
       setExDonor("");
+      setPatientID("");
+      setBloodGroup("N/A");
+      setRhType("N/A");
+      
+      console.log("Patient data cleared for type change");
     };
 
     const handleAddItem = () => {
@@ -181,7 +190,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const handlePatientSelect = async (patientId: string) => {
       try {
-        console.log("Loading patient with ID:", patientId);
+        console.log("=== PATIENT SELECTION STARTED ===");
+        console.log("Patient ID received:", patientId);
+        console.log("Current patient type:", patientType);
         
         const { data: patient, error } = await supabase
           .from('patients')
@@ -189,21 +200,34 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           .eq('id', patientId)
           .single();
         
-        console.log("Patient data from database:", patient);
-        console.log("Patient query error:", error);
+        console.log("Database query result:", { patient, error });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Database error:", error);
+          throw error;
+        }
         
         if (patient) {
+          console.log("Setting patient data:", patient);
+          
+          // Set the selected patient object
           setSelectedPatient(patient);
+          
+          // Update all form fields with patient data
           setPatientName(patient.name || "");
           setPhoneNo(patient.phone || "");
           setAge(patient.age || null);
           setHospital(patient.hospital || "");
           setGender(patient.gender || "male");
+          setPatientID(patient.patient_id || "");
           
+          // Handle date of birth
           if (patient.date_of_birth) {
-            setDob(patient.date_of_birth);
+            const dobString = patient.date_of_birth;
+            console.log("Setting DOB:", dobString);
+            setDob(dobString);
+          } else {
+            setDob("");
           }
           
           // Handle blood group parsing
@@ -212,25 +236,50 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             console.log("Processing blood group:", bloodGroupStr);
             
             if (bloodGroupStr.includes('+')) {
-              setBloodGroup(bloodGroupStr.replace('+', ''));
+              const group = bloodGroupStr.replace('+', '');
+              setBloodGroup(group);
               setRhType('+ve');
+              console.log("Set blood group:", group, "+ve");
             } else if (bloodGroupStr.includes('-')) {
-              setBloodGroup(bloodGroupStr.replace('-', ''));
+              const group = bloodGroupStr.replace('-', '');
+              setBloodGroup(group);
               setRhType('-ve');
+              console.log("Set blood group:", group, "-ve");
             } else {
               setBloodGroup(bloodGroupStr);
-              setRhType('+ve');
+              setRhType('N/A');
+              console.log("Set blood group:", bloodGroupStr, "N/A");
             }
+          } else {
+            setBloodGroup("N/A");
+            setRhType("N/A");
           }
           
-          console.log("Patient data loaded successfully");
-          toast.success("Patient data loaded successfully");
+          console.log("=== PATIENT DATA LOADED SUCCESSFULLY ===");
+          console.log("Final form state:", {
+            patientName: patient.name,
+            phoneNo: patient.phone,
+            age: patient.age,
+            hospital: patient.hospital,
+            gender: patient.gender,
+            patientID: patient.patient_id,
+            bloodGroup: patient.blood_group
+          });
+          
+          toast.success(`Patient ${patient.name} loaded successfully`);
+        } else {
+          console.warn("No patient data returned from database");
+          toast.error("No patient data found");
         }
         
+        // Close the search modal
         setIsSearchModalOpen(false);
+        
       } catch (error) {
-        console.error("Error loading patient:", error);
+        console.error("=== ERROR IN PATIENT SELECTION ===");
+        console.error("Error details:", error);
         toast.error("Failed to load patient data");
+        setIsSearchModalOpen(false);
       }
     };
 
@@ -258,6 +307,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleSearchPatient = () => {
+      console.log("Opening patient search modal");
       setIsSearchModalOpen(true);
     };
 
@@ -411,13 +461,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isEditable={isEditable}
           isAdding={isAdding}
           onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={() => setIsSearchModalOpen(true)}
+          onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
           patientName={patientName}
           setPatientName={setPatientName}
           documentDate={documentDate}
           setDocumentDate={setDocumentDate}
           shouldEnableEditing={shouldEnableEditing}
+          setDocumentNo={setDocumentNo}
+          patientID={patientID}
+          setPatientId={setPatientID}
         />
 
         <HospitalDetailsSection
