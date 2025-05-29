@@ -560,7 +560,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   <div className="divide-y">
                     {searchResults.map((patient) => (
                       <div
-                        key={patient.patient_id}
+                        key={patient.id}
                         className="p-3 hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleSelectPatient(patient)}
                       >
