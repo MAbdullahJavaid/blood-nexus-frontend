@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -67,6 +66,19 @@ const Landing = () => {
       title: "Regular Monitoring",
       description: "Ongoing health monitoring and treatment adjustments for optimal patient care"
     }
+  ];
+
+  const donorImages = [
+    "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1594824947633-d0501ba2fe65?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop"
   ];
 
   const handleNewsletterSignup = (e: React.FormEvent) => {
@@ -236,6 +248,87 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Our Donors Are Our Heroes */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center text-gray-800 mb-4">Our Donors Are Our Heroes</h2>
+          <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            Every donation makes a difference. Meet some of the incredible people who have opened their hearts 
+            and given the gift of life to children in need.
+          </p>
+          
+          {/* Main donor grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            {donorImages.slice(0, 6).map((image, index) => (
+              <div key={index} className="group relative">
+                <div className="aspect-square rounded-full overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                  <img 
+                    src={image}
+                    alt={`Donor ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Hero {index + 1}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Second row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto mt-8">
+            {donorImages.slice(6, 10).map((image, index) => (
+              <div key={index + 6} className="group relative">
+                <div className="aspect-square rounded-full overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                  <img 
+                    src={image}
+                    alt={`Donor ${index + 7}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Hero {index + 7}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Floating donor images */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 w-20 h-20 rounded-full overflow-hidden shadow-lg animate-[float_6s_ease-in-out_infinite]">
+            <img 
+              src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&h=200&fit=crop"
+              alt="Floating donor 1"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute top-32 right-16 w-16 h-16 rounded-full overflow-hidden shadow-lg animate-[float_8s_ease-in-out_infinite_2s]">
+            <img 
+              src="https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=200&h=200&fit=crop"
+              alt="Floating donor 2"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute bottom-20 left-20 w-24 h-24 rounded-full overflow-hidden shadow-lg animate-[float_7s_ease-in-out_infinite_1s]">
+            <img 
+              src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop"
+              alt="Floating donor 3"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute bottom-32 right-12 w-18 h-18 rounded-full overflow-hidden shadow-lg animate-[float_9s_ease-in-out_infinite_3s]">
+            <img 
+              src="https://images.unsplash.com/photo-1594824947633-d0501ba2fe65?w=200&h=200&fit=crop"
+              alt="Floating donor 4"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* How to Help */}
       <section className="py-20">
         <div className="container mx-auto px-4">
@@ -371,6 +464,13 @@ const Landing = () => {
           Donate
         </Button>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
     </div>
   );
 };
