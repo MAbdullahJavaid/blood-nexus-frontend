@@ -35,8 +35,8 @@ const Landing = () => {
       image: "https://sundas.org/images/cause_1.jpg?w=400&h=300&fit=crop"
     },
     {
-      name: "Fatima, 12 years old", 
-      story: "Fatima's thalassemia is well-managed with our comprehensive care program. She dreams of becoming a doctor to help other children like herself.",
+      name: "Hamza, 12 years old", 
+      story: "Hamza's thalassemia is well-managed with our comprehensive care program. He dreams of becoming a doctor to help other children like himself.",
       image: "https://sundas.org/images/cause_2.jpg?w=400&h=300&fit=crop"
     },
     {
