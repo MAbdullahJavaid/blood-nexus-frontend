@@ -3,14 +3,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchIcon } from "lucide-react";
 import { useDonorForm } from "./DonorFormContext";
+import { useEffect } from "react";
 
 interface PersonalInfoSectionProps {
   isEditable: boolean;
   isSearchEnabled: boolean;
+  isDeleting?: boolean;
 }
 
-const PersonalInfoSection = ({ isEditable, isSearchEnabled }: PersonalInfoSectionProps) => {
+const PersonalInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: PersonalInfoSectionProps) => {
   const { donorData, handleInputChange, setIsSearchModalOpen } = useDonorForm();
+  
+  // Auto-open search modal when edit or delete is selected
+  useEffect(() => {
+    if ((isSearchEnabled && !isEditable) || isDeleting) {
+      setIsSearchModalOpen(true);
+    }
+  }, [isSearchEnabled, isEditable, isDeleting, setIsSearchModalOpen]);
   
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
@@ -23,14 +32,13 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled }: PersonalInfoSectio
             onChange={(e) => handleInputChange("regNo", e.target.value)}
             className="h-9" 
             maxLength={11} 
-            disabled={!isEditable}
+            disabled={!isEditable && !isDeleting}
           />
-          {isSearchEnabled && (
+          {(isSearchEnabled || isDeleting) && (
             <button 
               type="button"
               onClick={() => setIsSearchModalOpen(true)}
               className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-              disabled={!isEditable}
             >
               <SearchIcon className="h-4 w-4" />
             </button>
@@ -44,7 +52,7 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled }: PersonalInfoSectio
           value={donorData.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
           className="h-9" 
-          disabled={!isEditable}
+          disabled={!isEditable && !isDeleting}
         />
       </div>
       <div>
@@ -55,7 +63,7 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled }: PersonalInfoSectio
           value={donorData.date}
           onChange={(e) => handleInputChange("date", e.target.value)}
           className="h-9" 
-          disabled={!isEditable}
+          disabled={!isEditable && !isDeleting}
         />
       </div>
     </div>

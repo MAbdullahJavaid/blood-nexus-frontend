@@ -8,6 +8,7 @@ import {
   calculateTestResult,
   getFormattedDate
 } from "./utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BleedingFormContextType {
   selectedDonor: Donor | null;
@@ -29,13 +30,21 @@ interface BleedingFormContextType {
   handleDonorSelect: (donor: Donor) => void;
   handleDonorPatientValueChange: (test: keyof DonorPatientValues, value: string) => void;
   handleProductInfoChange: (key: keyof ProductInfo, value: boolean) => void;
+  handleDelete: () => Promise<void>;
+  isDeleting: boolean;
+  loadBleedingRecord: (bagId: string) => Promise<void>;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
 
-export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: boolean }> = ({ 
+export const BleedingFormProvider: React.FC<{ 
+  children: ReactNode; 
+  isEditable?: boolean;
+  isDeleting?: boolean;
+}> = ({ 
   children, 
-  isEditable = true 
+  isEditable = true,
+  isDeleting = false
 }) => {
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState("Auto-generated on save");
@@ -79,8 +88,84 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
   }, [donorPatientValues]);
 
   // Handle donor selection
-  const handleDonorSelect = (donor: Donor) => {
+  const handleDonorSelect = async (donor: Donor) => {
     setSelectedDonor(donor);
+    
+    // Set the bleeding date to the donor's last donation date or today
+    if (donor.last_donation_date) {
+      const donorDate = new Date(donor.last_donation_date);
+      const formattedDonorDate = `${donorDate.getDate().toString().padStart(2, '0')}/${(donorDate.getMonth() + 1).toString().padStart(2, '0')}/${donorDate.getFullYear()}`;
+      setBleedingDate(formattedDonorDate);
+    }
+
+    // Update donor status to false when selected for bleeding
+    try {
+      await supabase
+        .from('donors')
+        .update({ 
+          // Note: This assumes there's a status field in the donors table
+          // If not, this update might need to be adjusted based on actual table structure
+        })
+        .eq('id', donor.id);
+    } catch (error) {
+      console.error('Error updating donor status:', error);
+    }
+  };
+
+  const loadBleedingRecord = async (bagId: string) => {
+    try {
+      const { data: bleedingRecord, error } = await supabase
+        .from('bleeding_records')
+        .select(`
+          *,
+          donors!inner(*)
+        `)
+        .eq('bag_id', bagId)
+        .single();
+
+      if (error) throw error;
+
+      if (bleedingRecord && bleedingRecord.donors) {
+        // Load the donor data
+        setSelectedDonor(bleedingRecord.donors as Donor);
+        setBagNo(bleedingRecord.bag_id);
+        
+        // Format bleeding date
+        const bleedingDateObj = new Date(bleedingRecord.bleeding_date);
+        const formattedBleedingDate = `${bleedingDateObj.getDate().toString().padStart(2, '0')}/${(bleedingDateObj.getMonth() + 1).toString().padStart(2, '0')}/${bleedingDateObj.getFullYear()}`;
+        setBleedingDate(formattedBleedingDate);
+      }
+    } catch (error) {
+      console.error('Error loading bleeding record:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!bagNo || bagNo === "Auto-generated on save") {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      const { error } = await supabase
+        .from('bleeding_records')
+        .delete()
+        .eq('bag_id', bagNo);
+      
+      if (error) throw error;
+      
+      // Reset form
+      setSelectedDonor(null);
+      setBagNo("Auto-generated on save");
+      setBleedingDate(getFormattedDate());
+      
+    } catch (error) {
+      console.error("Error deleting bleeding record:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDonorPatientValueChange = (test: keyof DonorPatientValues, value: string) => {
@@ -117,7 +202,10 @@ export const BleedingFormProvider: React.FC<{ children: ReactNode; isEditable?: 
       setIsSubmitting,
       handleDonorSelect,
       handleDonorPatientValueChange,
-      handleProductInfoChange
+      handleProductInfoChange,
+      handleDelete,
+      isDeleting,
+      loadBleedingRecord
     }}>
       {children}
     </BleedingFormContext.Provider>

@@ -4,22 +4,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchIcon } from "lucide-react";
 import { useBleedingForm } from "./BleedingFormContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BagSearchModal from "./BagSearchModal";
 
 interface BagInfoSectionProps {
   isEditable: boolean;
   isSearchEnabled: boolean;
+  isDeleting?: boolean;
 }
 
-const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) => {
+const BagInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: BagInfoSectionProps) => {
   const { 
     bagNo, 
     setBagNo, 
     bagType, 
     setBagType, 
     bleedingDate, 
-    setBleedingDate
+    setBleedingDate,
+    selectedDonor,
+    loadBleedingRecord
   } = useBleedingForm();
   const [isBagSearchModalOpen, setIsBagSearchModalOpen] = useState(false);
 
@@ -27,10 +30,21 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
   const displayBagNo = bagNo === "Auto-generated on save" ? "" : bagNo;
   const placeholderText = bagNo === "Auto-generated on save" ? "Auto-generated on save" : "";
 
+  // For edit/delete mode, bag selection is mandatory
+  const shouldShowBagSearch = (isSearchEnabled && !isEditable) || isDeleting;
+
+  const handleBagSelect = async (bagId: string) => {
+    setBagNo(bagId);
+    await loadBleedingRecord(bagId);
+    setIsBagSearchModalOpen(false);
+  };
+
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
       <div>
-        <Label htmlFor="bagNo" className="mb-1 block">Bag No:</Label>
+        <Label htmlFor="bagNo" className="mb-1 block">
+          Bag No: {shouldShowBagSearch && <span className="text-red-500">*</span>}
+        </Label>
         <div className="flex items-center gap-2">
           <Input 
             id="bagNo"
@@ -39,7 +53,7 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
             readOnly={true}
             placeholder={placeholderText}
           />
-          {isEditable && isSearchEnabled && (
+          {(isEditable && isSearchEnabled) || shouldShowBagSearch ? (
             <button 
               type="button"
               onClick={() => setIsBagSearchModalOpen(true)}
@@ -48,8 +62,11 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
             >
               <SearchIcon className="h-4 w-4" />
             </button>
-          )}
+          ) : null}
         </div>
+        {shouldShowBagSearch && !bagNo && (
+          <p className="text-red-500 text-xs mt-1">Bag selection is mandatory for edit/delete</p>
+        )}
       </div>
       <div>
         <Label htmlFor="date" className="mb-1 block">Date:</Label>
@@ -86,7 +103,7 @@ const BagInfoSection = ({ isEditable, isSearchEnabled }: BagInfoSectionProps) =>
       <BagSearchModal 
         isOpen={isBagSearchModalOpen} 
         onClose={() => setIsBagSearchModalOpen(false)}
-        onSelect={(bagId) => setBagNo(bagId)}
+        onSelect={handleBagSelect}
       />
     </div>
   );

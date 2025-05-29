@@ -1,3 +1,4 @@
+
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const [isSearchEnabled, setIsSearchEnabled] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   
   // Reference to the active form component
@@ -38,6 +40,7 @@ const Dashboard = () => {
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsAdding(false);
+    setIsDeleting(false);
     
     // Reset the form ref when changing forms
     activeFormRef.current = {};
@@ -46,11 +49,22 @@ const Dashboard = () => {
   const handleAddClick = () => {
     setIsAdding(true);
     setIsSearchEnabled(false);
+    setIsEditing(false);
+    setIsDeleting(false);
   };
 
   const handleEditClick = () => {
     setIsEditing(true);
     setIsSearchEnabled(true);
+    setIsAdding(false);
+    setIsDeleting(false);
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleting(true);
+    setIsSearchEnabled(true);
+    setIsEditing(false);
+    setIsAdding(false);
   };
 
   const handleSaveClick = () => {
@@ -61,6 +75,7 @@ const Dashboard = () => {
     });
     setIsEditing(false);
     setIsAdding(false);
+    setIsDeleting(false);
     setIsSearchEnabled(false);
   };
 
@@ -68,6 +83,7 @@ const Dashboard = () => {
     // Would typically reset form data here
     setIsEditing(false);
     setIsAdding(false);
+    setIsDeleting(false);
     setIsSearchEnabled(false);
   };
 
@@ -77,6 +93,7 @@ const Dashboard = () => {
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsAdding(false);
+    setIsDeleting(false);
   };
 
   const handleAddItemClick = () => {
@@ -96,11 +113,19 @@ const Dashboard = () => {
     
     switch(activeForm) {
       case 'donor':
-        return <DonorForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return <DonorForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable}
+                 isDeleting={isDeleting}
+               />;
       case 'patient':
         return <PatientForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'bleeding':
-        return <BleedingForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return <BleedingForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable}
+                 isDeleting={isDeleting}
+               />;
       case 'crossmatch':
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'patientInvoice':
@@ -127,7 +152,8 @@ const Dashboard = () => {
         />
         {showCrudBar && (
           <CrudBar 
-            onEditClick={handleEditClick} 
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
             onCloseClick={handleCloseClick}
             onAddClick={handleAddClick}
             onCancelClick={handleCancelClick}
@@ -137,6 +163,7 @@ const Dashboard = () => {
             activeForm={activeForm}
             isEditing={isEditing}
             isAdding={isAdding}
+            isDeleting={isDeleting}
           />
         )}
         <div className="flex-1 overflow-auto p-6">

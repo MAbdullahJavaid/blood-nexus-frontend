@@ -25,8 +25,11 @@ interface DonorFormContextType {
   setIsSubmitting: (isSubmitting: boolean) => void;
   handleInputChange: (field: keyof DonorData, value: string | boolean) => void;
   handleSubmit: () => Promise<void>;
+  handleDelete: () => Promise<void>;
   isSearchModalOpen: boolean;
   setIsSearchModalOpen: (isOpen: boolean) => void;
+  isDeleting: boolean;
+  loadDonorData: (donor: any) => void;
 }
 
 const defaultDonorData: DonorData = {
@@ -41,7 +44,7 @@ const defaultDonorData: DonorData = {
   phoneRes: "",
   phoneOffice: "",
   remarks: "",
-  status: false,
+  status: true,
 };
 
 const DonorFormContext = createContext<DonorFormContextType | undefined>(undefined);
@@ -49,11 +52,13 @@ const DonorFormContext = createContext<DonorFormContextType | undefined>(undefin
 interface DonorFormProviderProps {
   children: ReactNode;
   isEditable?: boolean;
+  isDeleting?: boolean;
 }
 
 export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({ 
   children, 
-  isEditable = true 
+  isEditable = true,
+  isDeleting = false
 }) => {
   const [donorData, setDonorData] = useState<DonorData>(defaultDonorData);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +69,37 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const loadDonorData = (donor: any) => {
+    // Parse blood group
+    const group = donor.blood_group?.replace(/[+-]/g, '') || 'B';
+    const rh = donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '--';
+    
+    // Calculate age from date_of_birth if available
+    const age = donor.date_of_birth 
+      ? (new Date().getFullYear() - new Date(donor.date_of_birth).getFullYear()).toString() 
+      : '';
+    
+    // Use registration date (created_at) as the date
+    const registrationDate = donor.created_at 
+      ? new Date(donor.created_at).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+    
+    setDonorData({
+      regNo: donor.donor_id || '',
+      name: donor.name || '',
+      date: registrationDate,
+      address: donor.address || '',
+      age,
+      sex: donor.gender || 'male',
+      group,
+      rh,
+      phoneRes: donor.phone || '',
+      phoneOffice: '',
+      remarks: '',
+      status: true // Status is by default true/tick
+    });
   };
 
   const handleSubmit = async () => {
@@ -92,7 +128,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       
       const { error } = await supabase
         .from('donors')
-        .insert({
+        .upsert({
           donor_id: donorData.regNo,
           name: donorData.name,
           address: donorData.address,
@@ -102,6 +138,8 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           email: "",
           date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
           last_donation_date: donorData.date
+        }, {
+          onConflict: 'donor_id'
         });
       
       if (error) throw error;
@@ -126,6 +164,46 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!donorData.regNo) {
+      toast({
+        title: "Error",
+        description: "Please select a donor to delete",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const { error } = await supabase
+        .from('donors')
+        .delete()
+        .eq('donor_id', donorData.regNo);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Donor deleted successfully",
+      });
+      
+      // Reset form
+      setDonorData(defaultDonorData);
+      
+    } catch (error) {
+      console.error("Error deleting donor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete donor",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <DonorFormContext.Provider value={{
       donorData,
@@ -134,8 +212,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       setIsSubmitting,
       handleInputChange,
       handleSubmit,
+      handleDelete,
       isSearchModalOpen,
-      setIsSearchModalOpen
+      setIsSearchModalOpen,
+      isDeleting,
+      loadDonorData
     }}>
       {children}
     </DonorFormContext.Provider>

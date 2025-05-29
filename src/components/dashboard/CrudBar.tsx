@@ -34,6 +34,7 @@ const CrudButton = ({ icon: Icon, label, onClick, disabled = false }: CrudButton
 
 interface CrudBarProps {
   onEditClick?: () => void;
+  onDeleteClick?: () => void;
   onCloseClick?: () => void;
   onAddClick?: () => void;
   onCancelClick?: () => void;
@@ -43,10 +44,12 @@ interface CrudBarProps {
   activeForm?: string;
   isEditing: boolean;
   isAdding: boolean;
+  isDeleting?: boolean;
 }
 
 export function CrudBar({ 
   onEditClick, 
+  onDeleteClick,
   onCloseClick, 
   onAddClick,
   onCancelClick,
@@ -55,11 +58,12 @@ export function CrudBar({
   onDeleteItemClick,
   activeForm,
   isEditing,
-  isAdding
+  isAdding,
+  isDeleting = false
 }: CrudBarProps) {
   // Determine which buttons should be enabled
   const isFormActive = activeForm !== null;
-  const isEditingOrAdding = isEditing || isAdding;
+  const isEditingOrAdding = isEditing || isAdding || isDeleting;
   const isPrintHidden = activeForm === 'patient' || activeForm === 'donor' || 
                         activeForm === 'category' || activeForm === 'testInformation' || 
                         activeForm === 'bleeding';
@@ -81,6 +85,12 @@ export function CrudBar({
         icon={PenIcon} 
         label="Edit" 
         onClick={onEditClick} 
+        disabled={isEditingOrAdding || !isFormActive}
+      />
+      <CrudButton 
+        icon={TrashIcon} 
+        label="Delete" 
+        onClick={onDeleteClick}
         disabled={isEditingOrAdding || !isFormActive}
       />
       <CrudButton 

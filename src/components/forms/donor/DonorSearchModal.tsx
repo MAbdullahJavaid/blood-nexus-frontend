@@ -15,7 +15,7 @@ interface DonorSearchModalProps {
 }
 
 const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
-  const { setDonorData } = useDonorForm();
+  const { loadDonorData } = useDonorForm();
   const [searchQuery, setSearchQuery] = useState("");
   const [donors, setDonors] = useState<Donor[]>([]);
   const [searchResults, setSearchResults] = useState<Donor[]>([]);
@@ -34,7 +34,7 @@ const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('donors')
-        .select('id, donor_id, name, blood_group, address, phone, email, gender, date_of_birth, last_donation_date');
+        .select('id, donor_id, name, blood_group, address, phone, email, gender, date_of_birth, last_donation_date, created_at');
       
       if (error) throw error;
       
@@ -71,30 +71,7 @@ const DonorSearchModal = ({ isOpen, onClose }: DonorSearchModalProps) => {
   };
 
   const handleDonorSelect = (donor: Donor) => {
-    // Parse blood group
-    const group = donor.blood_group?.replace(/[+-]/g, '') || 'B';
-    const rh = donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '--';
-    
-    // Calculate age from date_of_birth if available
-    const age = donor.date_of_birth 
-      ? (new Date().getFullYear() - new Date(donor.date_of_birth).getFullYear()).toString() 
-      : '';
-    
-    setDonorData({
-      regNo: donor.donor_id || '',
-      name: donor.name || '',
-      date: donor.last_donation_date || new Date().toISOString().split('T')[0],
-      address: donor.address || '',
-      age,
-      sex: donor.gender || 'male',
-      group,
-      rh,
-      phoneRes: donor.phone || '',
-      phoneOffice: '',
-      remarks: '',
-      status: false
-    });
-    
+    loadDonorData(donor);
     onClose();
   };
 

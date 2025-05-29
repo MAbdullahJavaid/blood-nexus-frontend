@@ -11,14 +11,26 @@ import ProductInfoSection from "./bleeding/ProductInfoSection";
 import FormSubmitSection from "./bleeding/FormSubmitSection";
 import { getFormattedDate } from "./bleeding/utils";
 
-const BleedingForm = ({ isSearchEnabled = true, isEditable = true }: BleedingFormProps) => {
+interface ExtendedBleedingFormProps extends BleedingFormProps {
+  isDeleting?: boolean;
+}
+
+const BleedingForm = ({ isSearchEnabled = true, isEditable = true, isDeleting = false }: ExtendedBleedingFormProps) => {
   const formattedDate = getFormattedDate();
 
   return (
-    <BleedingFormProvider isEditable={isEditable}>
+    <BleedingFormProvider isEditable={isEditable} isDeleting={isDeleting}>
       <form className="bg-white p-4 rounded-md" onSubmit={(e) => e.preventDefault()}>
-        <DonorInfoSection isEditable={isEditable} isSearchEnabled={isSearchEnabled} />
-        <BagInfoSection isEditable={isEditable} isSearchEnabled={isSearchEnabled} />
+        <DonorInfoSection 
+          isEditable={isEditable} 
+          isSearchEnabled={isSearchEnabled}
+          isDeleting={isDeleting}
+        />
+        <BagInfoSection 
+          isEditable={isEditable} 
+          isSearchEnabled={isSearchEnabled}
+          isDeleting={isDeleting}
+        />
         <BloodGroupSection />
         <AddressSection />
 
@@ -29,7 +41,7 @@ const BleedingForm = ({ isSearchEnabled = true, isEditable = true }: BleedingFor
         <ScreeningResultsPanel isEditable={isEditable} />
         <HBAndDateSection isEditable={isEditable} formattedDate={formattedDate} />
         <ProductInfoSection isEditable={isEditable} />
-        <FormSubmitSection isEditable={isEditable} />
+        <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
       </form>
     </BleedingFormProvider>
   );
