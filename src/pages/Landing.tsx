@@ -32,7 +32,7 @@ const Landing = () => {
     {
       name: "Ahmed, 8 years old",
       story: "Thanks to regular blood transfusions, Ahmed is now able to attend school and play with his friends. His smile lights up our center every visit.",
-      image: "https://sundas.org/images/cause_1.jpg&fit=crop"
+      image: "https://sundas.org/images/cause_1.jpg"
     },
     {
       name: "Fatima, 12 years old", 
