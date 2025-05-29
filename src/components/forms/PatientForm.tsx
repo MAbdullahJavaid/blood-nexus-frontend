@@ -84,7 +84,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         const { data, error } = await supabase
           .from('patients')
           .select('*')
-          .or(`name.ilike.%${searchQuery}%,patient_id.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
+          .or(`(name.ilike.%${searchQuery}%),(patient_id.ilike.%${searchQuery}%),(phone.ilike.%${searchQuery}%)`)
           .limit(10);
 
         if (error) throw error;
@@ -551,7 +551,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                   <div className="divide-y">
                     {searchResults.map((patient) => (
                       <div
-                        key={patient.id}
+                        key={patient.patien_id}
                         className="p-3 hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleSelectPatient(patient)}
                       >
