@@ -6,7 +6,7 @@ import DonorForm from "@/components/forms/DonorForm";
 import PatientForm from "@/components/forms/PatientForm";
 import CrossmatchForm from "@/components/forms/CrossmatchForm";
 import BleedingForm from "@/components/forms/BleedingForm";
-import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
+import PatientInvoiceForm from "@/components/forms/patient-invoice/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 
@@ -59,7 +59,6 @@ const Dashboard = () => {
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsDeleting(false);
-    // Clear form when switching to add mode
     clearActiveForm();
   };
 
@@ -68,7 +67,6 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsAdding(false);
     setIsDeleting(false);
-    // Clear form when switching to edit mode
     clearActiveForm();
   };
 
@@ -77,12 +75,10 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsEditing(false);
     setIsAdding(false);
-    // Clear form when switching to delete mode
     clearActiveForm();
   };
 
   const handleSaveClick = () => {
-    // Would typically save form data here
     toast({
       title: "Form Saved",
       description: `${activeForm} data has been saved successfully.`
@@ -94,12 +90,10 @@ const Dashboard = () => {
   };
 
   const handleCancelClick = () => {
-    // Would typically reset form data here
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
     setIsSearchEnabled(false);
-    // Clear form when canceling
     clearActiveForm();
   };
 

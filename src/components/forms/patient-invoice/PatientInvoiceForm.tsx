@@ -1,6 +1,6 @@
+
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem, Patient } from "./types";
-import { mockPatients, mockTests, mockInvoices } from "./mock-data";
 import { PatientSearchModal } from "./PatientSearchModal";
 import { TestSearchModal } from "./TestSearchModal";
 import { DocumentSearchModal } from "./DocumentSearchModal";
@@ -31,7 +31,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [totalAmount, setTotalAmount] = useState<number>(0);
     const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
     const [currentTestIndex, setCurrentTestIndex] = useState<number | null>(null);
-    const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [documentDate, setDocumentDate] = useState<string>(
       new Date().toISOString().split('T')[0]
     );
@@ -283,21 +283,69 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const handleDocumentSelect = (docNum: string) => {
-      const invoice = mockInvoices.find(inv => inv.documentNo === docNum);
-      if (invoice) {
-        setDocumentNo(invoice.documentNo);
-        const patient = mockPatients.find(p => p.id === invoice.patientId);
-        setSelectedPatient(patient);
+    const handleDocumentSelect = async (docNum: string) => {
+      try {
+        // Search for invoice by document number
+        const { data: invoice, error } = await supabase
+          .from('patient_invoices')
+          .select('*')
+          .eq('invoice_number', docNum)
+          .single();
         
-        if (patient) {
-          setPatientName(patient.name);
-          setPhoneNo(patient.phoneNo || "");
-          setAge(patient.age);
-          setHospital(patient.hospital || "");
-          setGender(patient.gender || "male");
+        if (error) throw error;
+        
+        if (invoice) {
+          setDocumentNo(invoice.invoice_number);
+          setDocumentDate(invoice.invoice_date);
+          setTotalAmount(invoice.total_amount || 0);
+          setDiscount(invoice.discount_amount || 0);
+          setReceivedAmount(invoice.amount_received || 0);
+          setPatientType(invoice.patient_type || 'regular');
+          
+          // Load patient data if patient_id exists
+          if (invoice.patient_id) {
+            const { data: patient } = await supabase
+              .from('patients')
+              .select('*')
+              .eq('id', invoice.patient_id)
+              .single();
+            
+            if (patient) {
+              setSelectedPatient(patient);
+              setPatientName(patient.name || "");
+              setPhoneNo(patient.phone || "");
+              setAge(patient.age || null);
+              setHospital(patient.hospital || "");
+              setGender(patient.gender || "male");
+              setPatientID(patient.patient_id || "");
+            }
+          }
+          
+          // Load invoice items
+          const { data: invoiceItems } = await supabase
+            .from('invoice_items')
+            .select('*')
+            .eq('invoice_id', invoice.id);
+          
+          if (invoiceItems) {
+            const formattedItems = invoiceItems.map(item => ({
+              id: item.id,
+              testId: parseInt(item.item_id),
+              testName: "", // Will be loaded from test_information
+              qty: item.quantity,
+              rate: Number(item.unit_price),
+              amount: Number(item.total_price)
+            }));
+            setItems(formattedItems);
+          }
+          
+          toast.success("Document loaded successfully");
         }
+      } catch (error) {
+        console.error("Error loading document:", error);
+        toast.error("Failed to load document");
       }
+      
       setIsDocumentSearchModalOpen(false);
     };
 
@@ -371,7 +419,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           };
           
           const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-          const patientIdNumber = `P${Date.now()}`;
+          const patientIdNumber = patientID || `P${Date.now()}`;
           
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
