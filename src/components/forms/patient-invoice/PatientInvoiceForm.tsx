@@ -122,34 +122,26 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const calculateTotal = (itemsArray: InvoiceItem[]) => {
       const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
-      const finalTotal = sum - discount;
-      setTotalAmount(finalTotal);
+      setTotalAmount(sum);
       
-      if (receivedAmount === sum - discount + discount) {
-        setReceivedAmount(finalTotal);
-      }
+      // Calculate discount as net amount minus received amount
+      const calculatedDiscount = sum - receivedAmount;
+      setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
     };
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseFloat(e.target.value) || 0;
-      setDiscount(value);
-      const itemsSum = items.reduce((acc, item) => acc + item.amount, 0);
-      const newTotal = itemsSum - value;
-      setTotalAmount(newTotal);
-      
-      setReceivedAmount(newTotal);
+      // Discount is now calculated automatically, so this function is disabled
+      return;
     };
 
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
       
+      // Calculate discount as net amount minus received amount
       const itemsSum = items.reduce((acc, item) => acc + item.amount, 0);
-      const newDiscount = itemsSum - value;
-      if (newDiscount >= 0) {
-        setDiscount(newDiscount);
-        setTotalAmount(value);
-      }
+      const calculatedDiscount = itemsSum - value;
+      setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
     };
 
     const handleSelectRow = (index: number) => {
@@ -189,11 +181,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const handlePatientSelect = async (patientId: string) => {
       try {
+        console.log("Loading patient with ID:", patientId);
+        
         const { data: patient, error } = await supabase
           .from('patients')
           .select('*')
           .eq('id', patientId)
           .single();
+        
+        console.log("Patient data from database:", patient);
+        console.log("Patient query error:", error);
         
         if (error) throw error;
         
@@ -209,8 +206,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             setDob(patient.date_of_birth);
           }
           
+          // Handle blood group parsing
           if (patient.blood_group) {
             const bloodGroupStr = patient.blood_group;
+            console.log("Processing blood group:", bloodGroupStr);
+            
             if (bloodGroupStr.includes('+')) {
               setBloodGroup(bloodGroupStr.replace('+', ''));
               setRhType('+ve');
@@ -222,10 +222,12 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               setRhType('+ve');
             }
           }
+          
+          console.log("Patient data loaded successfully");
+          toast.success("Patient data loaded successfully");
         }
         
         setIsSearchModalOpen(false);
-        toast.success("Patient data loaded");
       } catch (error) {
         console.error("Error loading patient:", error);
         toast.error("Failed to load patient data");

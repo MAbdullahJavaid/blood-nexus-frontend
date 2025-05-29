@@ -19,7 +19,7 @@ export function TotalSection({
   onDiscountChange,
   onReceivedAmountChange
 }: TotalSectionProps) {
-  // Calculate the gross amount (before discount)
+  // Calculate the gross amount (sum of all items before discount)
   const grossAmount = totalAmount + discount;
   
   return (
@@ -41,13 +41,11 @@ export function TotalSection({
           <Label htmlFor="discount" className="mb-0">Discount Amount:</Label>
           <Input 
             id="discount" 
-            className="h-9 w-32 text-right" 
+            className="h-9 w-32 text-right bg-gray-100" 
             type="number" 
             value={discount} 
-            onChange={onDiscountChange}
-            disabled={!isEditable} 
-            min="0"
-            max={grossAmount}
+            readOnly
+            disabled
           />
         </div>
         <div className="flex justify-between items-center">
