@@ -32,12 +32,12 @@ const Landing = () => {
     {
       name: "Ahmed, 8 years old",
       story: "Thanks to regular blood transfusions, Ahmed is now able to attend school and play with his friends. His smile lights up our center every visit.",
-      image: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=300&fit=crop"
+      image: "https://sundas.org/images/cause_1.jpg&fit=crop"
     },
     {
       name: "Fatima, 12 years old", 
       story: "Fatima's thalassemia is well-managed with our comprehensive care program. She dreams of becoming a doctor to help other children like herself.",
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=300&fit=crop"
+      image: "https://sundas.org/images/cause_2.jpgw=400&h=300&fit=crop"
     },
     {
       name: "Omar, 6 years old",
