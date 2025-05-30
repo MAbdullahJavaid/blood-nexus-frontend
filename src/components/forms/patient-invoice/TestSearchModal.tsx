@@ -5,18 +5,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { mockTests } from "./mock-data";
 import { Test } from './types';
 
 interface TestSearchModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onTestSelect: (testId: number) => void; // Ensure this is a number type
+  onTestSelect: (testId: number) => void;
 }
 
 export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSearchModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [tests, setTests] = useState<Test[]>(mockTests);
+  const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,8 +45,7 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
       
       if (error) {
         console.error('Error fetching tests:', error);
-        // Fallback to mock data if there's an error
-        setTests(mockTests);
+        setTests([]);
       } else if (data && data.length > 0) {
         // Filter out inactive tests if description contains that info
         const activeTests = data.filter(item => {
@@ -72,12 +70,11 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
         
         setTests(mappedData);
       } else {
-        // Fallback to mock data if no results
-        setTests(mockTests);
+        setTests([]);
       }
     } catch (error) {
       console.error('Error:', error);
-      setTests(mockTests);
+      setTests([]);
     } finally {
       setLoading(false);
     }
