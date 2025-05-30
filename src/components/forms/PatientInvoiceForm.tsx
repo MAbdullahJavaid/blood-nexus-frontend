@@ -1,15 +1,16 @@
+
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
-import { PatientInvoiceFormProps, FormRefObject, InvoiceItem, Patient } from "./types";
-import { mockPatients, mockTests, mockInvoices } from "./mock-data";
-import { PatientSearchModal } from "./PatientSearchModal";
-import { TestSearchModal } from "./TestSearchModal";
-import { DocumentSearchModal } from "./DocumentSearchModal";
-import { PatientDetailsSection } from "./PatientDetailsSection";
-import { HospitalDetailsSection } from "./HospitalDetailsSection";
-import { PatientInfoSection } from "./PatientInfoSection";
-import { BloodDetailsSection } from "./BloodDetailsSection";
-import { TestsSection } from "./TestsSection";
-import { TotalSection } from "./TotalSection";
+import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
+import { mockPatients, mockTests, mockInvoices } from "./patient-invoice/mock-data";
+import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
+import { TestSearchModal } from "./patient-invoice/TestSearchModal";
+import { DocumentSearchModal } from "./patient-invoice/DocumentSearchModal";
+import { PatientDetailsSection } from "./patient-invoice/PatientDetailsSection";
+import { HospitalDetailsSection } from "./patient-invoice/HospitalDetailsSection";
+import { PatientInfoSection } from "./patient-invoice/PatientInfoSection";
+import { BloodDetailsSection } from "./patient-invoice/BloodDetailsSection";
+import { TestsSection } from "./patient-invoice/TestsSection";
+import { TotalSection } from "./patient-invoice/TotalSection";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -44,8 +45,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [hospital, setHospital] = useState("");
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
-    const [patientID, setPatientID] = useState("");
 
+    // Expose methods to parent component via ref
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
         handleAddItem();
@@ -58,6 +59,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }));
 
+    // Generate document number on component mount
     useEffect(() => {
       if (isEditable && isAdding) {
         generateDocumentNo();
@@ -65,6 +67,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     }, [isEditable]);
 
     const isAdding = !documentNo;
+
+    // Enable editing based on patient type
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
     const generateDocumentNo = async () => {
@@ -74,6 +78,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         setDocumentNo(data);
       } catch (error) {
         console.error('Error generating document number:', error);
+        // Fallback to manual generation
         const date = new Date();
         const year = date.getFullYear().toString().slice(-2);
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -83,11 +88,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handlePatientTypeChange = (value: string) => {
-      console.log("Patient type changed to:", value);
       setPatientType(value);
-      
-      // Clear all patient-related data when type changes
       setSelectedPatient(null);
+      // Reset patient data if type changes
       setPatientName("");
       setPhoneNo("");
       setAge(null);
@@ -96,14 +99,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setHospital("");
       setGender("male");
       setExDonor("");
-      setPatientID("");
-      setBloodGroup("N/A");
-      setRhType("N/A");
-      
-      console.log("Patient data cleared for type change");
     };
 
     const handleAddItem = () => {
+      // Add an empty row with a unique temporary ID
       const tempId = `temp-${items.length}`;
       const newItem: InvoiceItem = {
         id: tempId,
@@ -131,26 +130,18 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const calculateTotal = (itemsArray: InvoiceItem[]) => {
       const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
-      setTotalAmount(sum);
-      
-      // Calculate discount as net amount minus received amount
-      const calculatedDiscount = sum - receivedAmount;
-      setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
+      setTotalAmount(sum - discount);
     };
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Discount is now calculated automatically, so this function is disabled
-      return;
+      const value = parseFloat(e.target.value) || 0;
+      setDiscount(value);
+      setTotalAmount(items.reduce((acc, item) => acc + item.amount, 0) - value);
     };
 
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
-      
-      // Calculate discount as net amount minus received amount
-      const itemsSum = items.reduce((acc, item) => acc + item.amount, 0);
-      const calculatedDiscount = itemsSum - value;
-      setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
     };
 
     const handleSelectRow = (index: number) => {
@@ -188,108 +179,31 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const handlePatientSelect = async (patientId: string) => {
-      try {
-        console.log("=== PATIENT SELECTION STARTED ===");
-        console.log("Patient ID received:", patientId);
-        console.log("Current patient type:", patientType);
-        
-        const { data: patient, error } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('id', patientId)
-          .single();
-        
-        console.log("Database query result:", { patient, error });
-        
-        if (error) {
-          console.error("Database error:", error);
-          throw error;
-        }
-        
-        if (patient) {
-          console.log("Setting patient data:", patient);
-          
-          // Set the selected patient object
-          setSelectedPatient(patient);
-          
-          // Update all form fields with patient data
-          setPatientName(patient.name || "");
-          setPhoneNo(patient.phone || "");
-          setAge(patient.age || null);
-          setHospital(patient.hospital || "");
-          setGender(patient.gender || "male");
-          setPatientID(patient.patient_id || "");
-          
-          // Handle date of birth
-          if (patient.date_of_birth) {
-            const dobString = patient.date_of_birth;
-            console.log("Setting DOB:", dobString);
-            setDob(dobString);
-          } else {
-            setDob("");
-          }
-          
-          // Handle blood group parsing
-          if (patient.blood_group) {
-            const bloodGroupStr = patient.blood_group;
-            console.log("Processing blood group:", bloodGroupStr);
-            
-            if (bloodGroupStr.includes('+')) {
-              const group = bloodGroupStr.replace('+', '');
-              setBloodGroup(group);
-              setRhType('+ve');
-              console.log("Set blood group:", group, "+ve");
-            } else if (bloodGroupStr.includes('-')) {
-              const group = bloodGroupStr.replace('-', '');
-              setBloodGroup(group);
-              setRhType('-ve');
-              console.log("Set blood group:", group, "-ve");
-            } else {
-              setBloodGroup(bloodGroupStr);
-              setRhType('N/A');
-              console.log("Set blood group:", bloodGroupStr, "N/A");
-            }
-          } else {
-            setBloodGroup("N/A");
-            setRhType("N/A");
-          }
-          
-          console.log("=== PATIENT DATA LOADED SUCCESSFULLY ===");
-          console.log("Final form state:", {
-            patientName: patient.name,
-            phoneNo: patient.phone,
-            age: patient.age,
-            hospital: patient.hospital,
-            gender: patient.gender,
-            patientID: patient.patient_id,
-            bloodGroup: patient.blood_group
-          });
-          
-          toast.success(`Patient ${patient.name} loaded successfully`);
-        } else {
-          console.warn("No patient data returned from database");
-          toast.error("No patient data found");
-        }
-        
-        // Close the search modal
-        setIsSearchModalOpen(false);
-        
-      } catch (error) {
-        console.error("=== ERROR IN PATIENT SELECTION ===");
-        console.error("Error details:", error);
-        toast.error("Failed to load patient data");
-        setIsSearchModalOpen(false);
+    const handlePatientSelect = (patientId: string) => {
+      const patient = mockPatients.find(p => p.id === patientId);
+      setSelectedPatient(patient);
+      
+      // Update form fields with patient data
+      if (patient) {
+        setPatientName(patient.name);
+        setPhoneNo(patient.phoneNo || "");
+        setAge(patient.age);
+        setHospital(patient.hospital || "");
+        setGender(patient.gender || "male");
       }
+      
+      setIsSearchModalOpen(false);
     };
 
     const handleDocumentSelect = (docNum: string) => {
       const invoice = mockInvoices.find(inv => inv.documentNo === docNum);
       if (invoice) {
         setDocumentNo(invoice.documentNo);
+        // In a real application, you would load the full invoice data here
         const patient = mockPatients.find(p => p.id === invoice.patientId);
         setSelectedPatient(patient);
         
+        // Set patient details if available
         if (patient) {
           setPatientName(patient.name);
           setPhoneNo(patient.phoneNo || "");
@@ -307,10 +221,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleSearchPatient = () => {
-      console.log("Opening patient search modal");
       setIsSearchModalOpen(true);
     };
 
+    // Handle date of birth change and calculate age
     const handleDobChange = (date: string) => {
       setDob(date);
       if (date) {
@@ -327,6 +241,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
+    // Handle age change and calculate DOB
     const handleAgeChange = (ageValue: number | null) => {
       setAge(ageValue);
       if (ageValue !== null) {
@@ -359,9 +274,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       try {
         setLoading(true);
         
+        // Create patient if OPD type or use selected patient for regular
         let patientId: string;
         
         if (patientType === "opd") {
+          // Map blood group to the format expected by the database
           const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
             "A": "A+",
             "B": "B+", 
@@ -371,8 +288,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           };
           
           const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
+          
+          // Generate patient ID for new patient
           const patientIdNumber = `P${Date.now()}`;
           
+          // Create a new patient for OPD
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .insert({
@@ -391,12 +311,14 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           if (patientError) throw patientError;
           patientId = patientData.id;
         } else {
+          // Use selected patient ID for regular patients
           if (!selectedPatient?.id) {
             throw new Error("No patient selected");
           }
           patientId = selectedPatient.id;
         }
         
+        // Create invoice
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
           .insert({
@@ -426,15 +348,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           
         if (invoiceError) throw invoiceError;
         
+        // Create invoice items - convert testId to string for storage
         const invoiceItems = items.map(item => ({
           invoice_id: invoiceData.id,
-          item_id: item.testId.toString(),
+          item_id: item.testId.toString(), // Convert to string as item_id is text in the database
           item_type: "test",
           quantity: item.qty,
           unit_price: item.rate,
           total_price: item.amount
         }));
         
+        // Insert all invoice items
         const { error: itemsError } = await supabase
           .from('invoice_items')
           .insert(invoiceItems);
@@ -461,16 +385,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isEditable={isEditable}
           isAdding={isAdding}
           onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={handleSearchPatient}
+          onSearchPatientClick={() => setIsSearchModalOpen(true)}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
           patientName={patientName}
           setPatientName={setPatientName}
           documentDate={documentDate}
           setDocumentDate={setDocumentDate}
           shouldEnableEditing={shouldEnableEditing}
-          setDocumentNo={setDocumentNo}
-          patientID={patientID}
-          setPatientId={setPatientID}
         />
 
         <HospitalDetailsSection
