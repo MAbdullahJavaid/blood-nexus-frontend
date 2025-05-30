@@ -17,7 +17,7 @@ interface PatientDetailsSectionProps {
   selectedPatient: Patient | null;
   isEditable: boolean;
   isAdding: boolean;
-  patientID?: string;
+  patientId?: string;
   setPatientId?: (value: string) => void;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
@@ -45,16 +45,39 @@ export function PatientDetailsSection({
   setDocumentDate,
   shouldEnableEditing,
   setDocumentNo,
-  patientID,
+  patientId,
   setPatientId,
 }: PatientDetailsSectionProps) {
   
-  // Display patient ID based on type and selection
   const getDisplayPatientId = () => {
-    if (patientType === "opd") {
-      return patientID || "";
-    } else if (patientType === "regular" && selectedPatient) {
+    if (patientType === "opd" && selectedPatient) {
       return selectedPatient.patient_id || selectedPatient.id || "";
+    } else if (patientType === "regular") {
+      return patientId || "";
+    }
+    return "";
+  };
+
+  const handlePatientIdChange = (value: string) => {
+    if (setPatientId) {
+      setPatientId(value);
+    }
+  };
+
+  const isPatientIdEditable = () => {
+    if (patientType === "opd") {
+      return false; // OPD type uses patient selection modal
+    } else if (patientType === "regular") {
+      return isEditable; // Regular type allows manual entry
+    }
+    return false;
+  };
+
+  const getPatientIdPlaceholder = () => {
+    if (patientType === "opd") {
+      return "Select a patient";
+    } else if (patientType === "regular") {
+      return "Enter Patient ID";
     }
     return "";
   };
@@ -91,15 +114,11 @@ export function PatientDetailsSection({
               className="h-9"
               value={getDisplayPatientId()}
               maxLength={11}
-              disabled={patientType === "regular"}
-              onChange={(e) => {
-                if (patientType === "opd" && setPatientId) {
-                  setPatientId(e.target.value);
-                }
-              }}
-              placeholder={patientType === "opd" ? "Enter Patient ID" : "Select a patient"}
+              disabled={!isPatientIdEditable()}
+              onChange={(e) => handlePatientIdChange(e.target.value)}
+              placeholder={getPatientIdPlaceholder()}
             />
-            {isEditable && patientType === "regular" && (
+            {isEditable && patientType === "opd" && (
               <button
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
@@ -146,11 +165,11 @@ export function PatientDetailsSection({
             className="h-9"
             value={patientName}
             onChange={(e) => {
-              if (patientType === "opd" || !selectedPatient) {
+              if (patientType === "regular" || !selectedPatient) {
                 setPatientName(e.target.value);
               }
             }}
-            disabled={patientType === "regular" && !!selectedPatient}
+            disabled={patientType === "opd" && !!selectedPatient}
             placeholder="Enter patient name"
           />
         </div>
