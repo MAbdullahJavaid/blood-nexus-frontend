@@ -229,28 +229,42 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         console.log("=== PATIENT SELECTION STARTED ===");
         console.log("Patient ID received:", patientId);
         
-        const { data: patient, error } = await supabase
+        const { data: dbPatient, error } = await supabase
           .from('patients')
           .select('*')
           .eq('id', patientId)
           .single();
         
-        console.log("Database query result:", { patient, error });
+        console.log("Database query result:", { dbPatient, error });
         
         if (error) {
           console.error("Database error:", error);
           throw error;
         }
         
-        if (patient) {
-          console.log("Setting regular patient data:", patient);
+        if (dbPatient) {
+          console.log("Setting regular patient data:", dbPatient);
+          
+          // Map database patient to Patient interface format
+          const patient: Patient = {
+            id: dbPatient.id,
+            patient_id: dbPatient.patient_id,
+            name: dbPatient.name,
+            hospital: dbPatient.hospital || "",
+            gender: dbPatient.gender || "male",
+            phoneNo: dbPatient.phone || "", // Map phone to phoneNo
+            phone: dbPatient.phone || "", // Keep both for compatibility
+            age: dbPatient.age || 0,
+            date_of_birth: dbPatient.date_of_birth || "",
+            blood_group: dbPatient.blood_group || "O+"
+          };
           
           // Set the regular patient object
           setRegularPatient(patient);
           
           // Handle blood group parsing for regular patients
-          if (patient.blood_group) {
-            const bloodGroupStr = patient.blood_group;
+          if (dbPatient.blood_group) {
+            const bloodGroupStr = dbPatient.blood_group;
             console.log("Processing blood group:", bloodGroupStr);
             
             if (bloodGroupStr.includes('+')) {
