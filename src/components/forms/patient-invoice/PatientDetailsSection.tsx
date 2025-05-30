@@ -49,14 +49,20 @@ export function PatientDetailsSection({
   setPatientId,
 }: PatientDetailsSectionProps) {
   
-  // Display patient ID based on type and selection
+  // Display patient ID based on type
   const getDisplayPatientId = () => {
-    if (patientType === "opd") {
-      return patientID || "";
-    } else if (patientType === "regular" && selectedPatient) {
-      return selectedPatient.patient_id || selectedPatient.id || "";
+    return patientID || "";
+  };
+
+  // Handle patient ID change with validation for OPD type
+  const handlePatientIdChange = (value: string) => {
+    if (patientType === "opd" && setPatientId) {
+      // Limit to 11 digits for OPD type
+      const numericValue = value.replace(/\D/g, ''); // Remove non-digits
+      if (numericValue.length <= 11) {
+        setPatientId(numericValue);
+      }
     }
-    return "";
   };
 
   return (
@@ -92,12 +98,8 @@ export function PatientDetailsSection({
               value={getDisplayPatientId()}
               maxLength={11}
               disabled={patientType === "regular"}
-              onChange={(e) => {
-                if (patientType === "opd" && setPatientId) {
-                  setPatientId(e.target.value);
-                }
-              }}
-              placeholder={patientType === "opd" ? "Enter Patient ID" : "Select a patient"}
+              onChange={(e) => handlePatientIdChange(e.target.value)}
+              placeholder={patientType === "opd" ? "Enter Patient ID (max 11 digits)" : "Select a patient"}
             />
             {isEditable && patientType === "regular" && (
               <button
@@ -122,7 +124,7 @@ export function PatientDetailsSection({
               value={documentNo}
               disabled={true}
             />
-            {(isEditable || !isAdding) && (
+            {!isAdding && (
               <button
                 onClick={onSearchDocumentClick}
                 className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
@@ -146,11 +148,11 @@ export function PatientDetailsSection({
             className="h-9"
             value={patientName}
             onChange={(e) => {
-              if (patientType === "opd" || !selectedPatient) {
+              if (patientType === "opd") {
                 setPatientName(e.target.value);
               }
             }}
-            disabled={patientType === "regular" && !!selectedPatient}
+            disabled={patientType === "regular"}
             placeholder="Enter patient name"
           />
         </div>
