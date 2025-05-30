@@ -1,5 +1,5 @@
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
-import { PatientInvoiceFormProps, FormRefObject, InvoiceItem, Patient, PatientInvoiceRecord } from "./types";
+import { PatientInvoiceFormProps, FormRefObject, InvoiceItem, Patient } from "./types";
 import { mockPatients, mockTests, mockInvoices } from "./mock-data";
 import { PatientSearchModal } from "./PatientSearchModal";
 import { TestSearchModal } from "./TestSearchModal";
@@ -31,7 +31,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [totalAmount, setTotalAmount] = useState<number>(0);
     const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
     const [currentTestIndex, setCurrentTestIndex] = useState<number | null>(null);
-    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [documentDate, setDocumentDate] = useState<string>(
       new Date().toISOString().split('T')[0]
     );
@@ -44,10 +44,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [hospital, setHospital] = useState("");
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
-    
-    // Separate patient ID variables for different types
-    const [patientId, setPatientId] = useState(""); // For regular type (linked to patient registration)
-    const [patientOpd, setPatientOpd] = useState(""); // For OPD type (linked to patient invoice)
+    const [patientID, setPatientID] = useState("");
 
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
@@ -85,7 +82,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const clearPatientData = () => {
+    const handlePatientTypeChange = (value: string) => {
+      console.log("Patient type changed to:", value);
+      setPatientType(value);
+      
+      // Clear all patient-related data when type changes
       setSelectedPatient(null);
       setPatientName("");
       setPhoneNo("");
@@ -95,88 +96,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setHospital("");
       setGender("male");
       setExDonor("");
-      setPatientId("");
-      setPatientOpd("");
+      setPatientID("");
       setBloodGroup("N/A");
       setRhType("N/A");
-    };
-
-    const handlePatientTypeChange = (value: string) => {
-      console.log("Patient type changed to:", value);
-      setPatientType(value);
-      clearPatientData();
-      console.log("Patient data cleared for type change");
-    };
-
-    // Load last patient invoice record for regular type
-    const loadLastPatientRecord = async (patientIdValue: string) => {
-      if (!patientIdValue.trim()) return;
       
-      try {
-        console.log("Loading last record for patient ID:", patientIdValue);
-        
-        const { data, error } = await supabase
-          .from('patient_invoices')
-          .select('*')
-          .ilike('patient_reg_id', patientIdValue)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (error) {
-          console.error("Error loading patient record:", error);
-          return;
-        }
-        
-        if (data && data.length > 0) {
-          const record = data[0] as PatientInvoiceRecord;
-          console.log("Found patient record:", record);
-          
-          // Load patient data from the last record
-          setPatientName(record.patient_name || "");
-          setPhoneNo(record.patient_phone || "");
-          setAge(record.patient_age || null);
-          setDob(record.patient_dob || "");
-          setHospital(record.hospital_name || "");
-          setGender(record.patient_gender || "male");
-          setExDonor(record.ex_donor || "");
-          setReferences(record.patient_references || "");
-          
-          // Handle blood group
-          if (record.blood_group_type) {
-            setBloodGroup(record.blood_group_type);
-          }
-          if (record.rh_type) {
-            setRhType(record.rh_type);
-          }
-          if (record.blood_category) {
-            setBloodCategory(record.blood_category);
-          }
-          if (record.bottle_required) {
-            setBottleRequired(record.bottle_required);
-          }
-          if (record.bottle_unit_type) {
-            setBottleUnitType(record.bottle_unit_type);
-          }
-          
-          toast.success(`Loaded last record for patient ${record.patient_name}`);
-        } else {
-          console.log("No previous records found for patient ID:", patientIdValue);
-        }
-      } catch (error) {
-        console.error("Error loading patient record:", error);
-      }
-    };
-
-    // Handle patient ID change for regular type
-    const handlePatientIdChange = (value: string) => {
-      setPatientId(value);
-      if (patientType === "regular" && value.trim()) {
-        // Debounce the search to avoid too many requests
-        const timeoutId = setTimeout(() => {
-          loadLastPatientRecord(value);
-        }, 500);
-        return () => clearTimeout(timeoutId);
-      }
+      console.log("Patient data cleared for type change");
     };
 
     const handleAddItem = () => {
@@ -209,11 +133,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
       setTotalAmount(sum);
       
+      // Calculate discount as net amount minus received amount
       const calculatedDiscount = sum - receivedAmount;
       setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
     };
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Discount is now calculated automatically, so this function is disabled
       return;
     };
 
@@ -221,6 +147,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
       
+      // Calculate discount as net amount minus received amount
       const itemsSum = items.reduce((acc, item) => acc + item.amount, 0);
       const calculatedDiscount = itemsSum - value;
       setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
@@ -283,27 +210,27 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         if (patient) {
           console.log("Setting patient data:", patient);
           
+          // Set the selected patient object
           setSelectedPatient(patient);
           
-          // Set patient data based on type
-          if (patientType === "opd") {
-            setPatientOpd(patient.patient_id || "");
-          } else {
-            setPatientId(patient.patient_id || "");
-          }
-          
+          // Update all form fields with patient data
           setPatientName(patient.name || "");
           setPhoneNo(patient.phone || "");
           setAge(patient.age || null);
           setHospital(patient.hospital || "");
           setGender(patient.gender || "male");
+          setPatientID(patient.patient_id || "");
           
+          // Handle date of birth
           if (patient.date_of_birth) {
-            setDob(patient.date_of_birth);
+            const dobString = patient.date_of_birth;
+            console.log("Setting DOB:", dobString);
+            setDob(dobString);
           } else {
             setDob("");
           }
           
+          // Handle blood group parsing
           if (patient.blood_group) {
             const bloodGroupStr = patient.blood_group;
             console.log("Processing blood group:", bloodGroupStr);
@@ -312,13 +239,16 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               const group = bloodGroupStr.replace('+', '');
               setBloodGroup(group);
               setRhType('+ve');
+              console.log("Set blood group:", group, "+ve");
             } else if (bloodGroupStr.includes('-')) {
               const group = bloodGroupStr.replace('-', '');
               setBloodGroup(group);
               setRhType('-ve');
+              console.log("Set blood group:", group, "-ve");
             } else {
               setBloodGroup(bloodGroupStr);
               setRhType('N/A');
+              console.log("Set blood group:", bloodGroupStr, "N/A");
             }
           } else {
             setBloodGroup("N/A");
@@ -326,12 +256,23 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           }
           
           console.log("=== PATIENT DATA LOADED SUCCESSFULLY ===");
+          console.log("Final form state:", {
+            patientName: patient.name,
+            phoneNo: patient.phone,
+            age: patient.age,
+            hospital: patient.hospital,
+            gender: patient.gender,
+            patientID: patient.patient_id,
+            bloodGroup: patient.blood_group
+          });
+          
           toast.success(`Patient ${patient.name} loaded successfully`);
         } else {
           console.warn("No patient data returned from database");
           toast.error("No patient data found");
         }
         
+        // Close the search modal
         setIsSearchModalOpen(false);
         
       } catch (error) {
@@ -418,60 +359,42 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       try {
         setLoading(true);
         
-        let dbPatientId: string;
+        let patientId: string;
         
         if (patientType === "opd") {
-          if (!selectedPatient?.id) {
-            throw new Error("No patient selected for OPD type");
-          }
-          dbPatientId = selectedPatient.id;
-        } else {
-          // For regular type, we need to find or create patient based on patientId
-          if (!patientId.trim()) {
-            throw new Error("Patient ID is required for regular type");
-          }
+          const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
+            "A": "A+",
+            "B": "B+", 
+            "AB": "AB+",
+            "O": "O+",
+            "N/A": "O+"
+          };
           
-          // Try to find existing patient by patient_id
-          const { data: existingPatient, error: findError } = await supabase
+          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
+          const patientIdNumber = `P${Date.now()}`;
+          
+          const { data: patientData, error: patientError } = await supabase
             .from('patients')
+            .insert({
+              patient_id: patientIdNumber,
+              name: patientName,
+              phone: phoneNo,
+              date_of_birth: dob || null,
+              gender: gender,
+              blood_group: mappedBloodGroup,
+              hospital: hospital,
+              age: age
+            })
             .select('id')
-            .eq('patient_id', patientId)
-            .maybeSingle();
-          
-          if (findError) throw findError;
-          
-          if (existingPatient) {
-            dbPatientId = existingPatient.id;
-          } else {
-            // Create new patient for regular type
-            const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
-              "A": "A+",
-              "B": "B+", 
-              "AB": "AB+",
-              "O": "O+",
-              "N/A": "O+"
-            };
+            .single();
             
-            const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-            
-            const { data: newPatient, error: createError } = await supabase
-              .from('patients')
-              .insert({
-                patient_id: patientId,
-                name: patientName,
-                phone: phoneNo,
-                date_of_birth: dob || null,
-                gender: gender,
-                blood_group: mappedBloodGroup,
-                hospital: hospital,
-                age: age
-              })
-              .select('id')
-              .single();
-              
-            if (createError) throw createError;
-            dbPatientId = newPatient.id;
+          if (patientError) throw patientError;
+          patientId = patientData.id;
+        } else {
+          if (!selectedPatient?.id) {
+            throw new Error("No patient selected");
           }
+          patientId = selectedPatient.id;
         }
         
         const { data: invoiceData, error: invoiceError } = await supabase
@@ -479,8 +402,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           .insert({
             invoice_number: documentNo,
             invoice_date: documentDate,
-            patient_id: dbPatientId,
-            patient_reg_id: patientType === "regular" ? patientId : null,
+            patient_id: patientId,
             total_amount: totalAmount,
             patient_type: patientType,
             blood_group_type: bloodGroup,
@@ -495,7 +417,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             patient_dob: dob || null,
             patient_phone: phoneNo,
             patient_gender: gender,
-            patient_name: patientName,
             discount_amount: discount,
             amount_received: receivedAmount,
             status: receivedAmount >= totalAmount ? "Paid" : "Pending"
@@ -548,8 +469,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           setDocumentDate={setDocumentDate}
           shouldEnableEditing={shouldEnableEditing}
           setDocumentNo={setDocumentNo}
-          patientId={patientType === "regular" ? patientId : patientOpd}
-          setPatientId={patientType === "regular" ? handlePatientIdChange : setPatientOpd}
+          patientID={patientID}
+          setPatientId={setPatientID}
         />
 
         <HospitalDetailsSection
