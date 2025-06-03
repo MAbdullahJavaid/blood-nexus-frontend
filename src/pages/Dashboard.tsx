@@ -5,12 +5,13 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { BloodInventory } from "@/components/dashboard/BloodInventory";
-import { DonorForm } from "@/components/forms/DonorForm";
-import { BleedingForm } from "@/components/forms/BleedingForm";
-import { CrossmatchForm } from "@/components/forms/CrossmatchForm";
-import { PatientForm } from "@/components/forms/PatientForm";
-import { TestInformationForm } from "@/components/forms/TestInformationForm";
-import { CategoryForm } from "@/components/forms/CategoryForm";
+import DonorForm from "@/components/forms/DonorForm";
+import BleedingForm from "@/components/forms/BleedingForm";
+import CrossmatchForm from "@/components/forms/CrossmatchForm";
+import PatientForm from "@/components/forms/PatientForm";
+import TestInformationForm from "@/components/forms/TestInformationForm";
+import CategoryForm from "@/components/forms/CategoryForm";
+import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
 
 const Dashboard = () => {
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -33,6 +34,8 @@ const Dashboard = () => {
         return <TestInformationForm />;
       case 'category':
         return <CategoryForm />;
+      case 'patientInvoice':
+        return <PatientInvoiceForm />;
       default:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

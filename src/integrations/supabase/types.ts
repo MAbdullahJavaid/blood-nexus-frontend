@@ -178,6 +178,30 @@ export type Database = {
           },
         ]
       }
+      document_sequences: {
+        Row: {
+          created_at: string
+          id: string
+          sequence_number: number
+          updated_at: string
+          year_month: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sequence_number?: number
+          updated_at?: string
+          year_month: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sequence_number?: number
+          updated_at?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       donors: {
         Row: {
           address: string | null
@@ -229,6 +253,128 @@ export type Database = {
           phone?: string | null
           rh_factor?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      patient_invoice_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          quantity: number
+          test_id: number | null
+          test_name: string
+          test_rate: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          test_id?: number | null
+          test_name: string
+          test_rate?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          test_id?: number | null
+          test_name?: string
+          test_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "patient_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_invoices: {
+        Row: {
+          age: number | null
+          amount_received: number | null
+          blood_category: string | null
+          blood_group_separate: string | null
+          bottle_quantity: number | null
+          bottle_unit: string | null
+          created_at: string
+          created_by: string | null
+          discount_amount: number | null
+          dob: string | null
+          document_date: string
+          document_no: string
+          ex_donor: string | null
+          gender: string | null
+          hospital_name: string | null
+          id: string
+          patient_id: string | null
+          patient_name: string | null
+          patient_type: string
+          phone_no: string | null
+          reference_notes: string | null
+          rh_factor: string | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          amount_received?: number | null
+          blood_category?: string | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number | null
+          dob?: string | null
+          document_date?: string
+          document_no: string
+          ex_donor?: string | null
+          gender?: string | null
+          hospital_name?: string | null
+          id?: string
+          patient_id?: string | null
+          patient_name?: string | null
+          patient_type: string
+          phone_no?: string | null
+          reference_notes?: string | null
+          rh_factor?: string | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          amount_received?: number | null
+          blood_category?: string | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number | null
+          dob?: string | null
+          document_date?: string
+          document_no?: string
+          ex_donor?: string | null
+          gender?: string | null
+          hospital_name?: string | null
+          id?: string
+          patient_id?: string | null
+          patient_name?: string | null
+          patient_type?: string
+          phone_no?: string | null
+          reference_notes?: string | null
+          rh_factor?: string | null
+          total_amount?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -546,6 +692,10 @@ export type Database = {
       }
     }
     Functions: {
+      generate_document_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_patient_reg_number: {
         Args: { prefix_type: string }
         Returns: string
