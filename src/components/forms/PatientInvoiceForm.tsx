@@ -102,13 +102,34 @@ const PatientInvoiceForm = () => {
       
       if (docError) throw docError;
 
+      // Prepare the invoice data to match the database schema exactly
+      const invoiceData = {
+        document_no: docNumber,
+        patient_type: data.patient_type,
+        patient_id: data.patient_id || null,
+        patient_name: data.patient_name || null,
+        hospital_name: data.hospital_name || null,
+        phone_no: data.phone_no || null,
+        gender: data.gender || null,
+        dob: data.dob || null,
+        age: data.age || null,
+        blood_group_separate: data.blood_group_separate || null,
+        rh_factor: data.rh_factor || null,
+        blood_category: data.blood_category || null,
+        bottle_quantity: data.bottle_quantity || null,
+        bottle_unit: data.bottle_unit || null,
+        document_date: data.document_date,
+        ex_donor: data.ex_donor || null,
+        reference_notes: data.reference_notes || null,
+        total_amount: data.total_amount || 0,
+        amount_received: data.amount_received || 0,
+        discount_amount: data.discount_amount || 0,
+      };
+
       // Insert patient invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from('patient_invoices')
-        .insert({
-          document_no: docNumber,
-          ...data,
-        })
+        .insert(invoiceData)
         .select()
         .single();
 
