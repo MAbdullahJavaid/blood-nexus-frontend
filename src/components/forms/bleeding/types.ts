@@ -39,3 +39,9 @@ export type BagData = {
   technician?: string;
   remarks?: string;
 };
+
+// Extended Donor type to include separate blood group fields
+export interface ExtendedDonor extends Donor {
+  blood_group_separate?: string;
+  rh_factor?: string;
+}

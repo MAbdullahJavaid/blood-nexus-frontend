@@ -78,9 +78,9 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   };
 
   const loadDonorData = (donor: any) => {
-    // Parse blood group
-    const group = donor.blood_group?.replace(/[+-]/g, '') || 'B';
-    const rh = donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '--';
+    // Parse blood group using new separate fields with fallback to combined field
+    const group = donor.blood_group_separate || donor.blood_group?.replace(/[+-]/g, '') || 'B';
+    const rh = donor.rh_factor || (donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '+ve');
     
     // Calculate age from date_of_birth if available
     const age = donor.date_of_birth 
@@ -121,15 +121,17 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Convert blood group format to match expected format in database
-      let bloodGroupValue;
+      // Handle blood group and rh factor separately
+      let bloodGroupSeparate = null;
+      let rhFactor = null;
+      let combinedBloodGroup = null;
       
-      if (donorData.group === "--" || donorData.rh === "--") {
-        bloodGroupValue = null;
-      } else {
-        // Map the rh value to the proper format
+      if (donorData.group !== "--" && donorData.rh !== "--") {
+        bloodGroupSeparate = donorData.group;
+        rhFactor = donorData.rh;
+        // Create combined format for backward compatibility
         const rhValue = donorData.rh === "+ve" ? "+" : "-";
-        bloodGroupValue = `${donorData.group}${rhValue}`;
+        combinedBloodGroup = `${donorData.group}${rhValue}`;
       }
       
       const { error } = await supabase
@@ -139,7 +141,9 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           name: donorData.name,
           address: donorData.address,
           gender: donorData.sex,
-          blood_group: bloodGroupValue,
+          blood_group: combinedBloodGroup as any, // Keep for backward compatibility
+          blood_group_separate: bloodGroupSeparate,
+          rh_factor: rhFactor,
           phone: donorData.phoneRes,
           email: "",
           date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,

@@ -51,6 +51,13 @@ export type Database = {
             referencedRelation: "donors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bleeding_records_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors_with_combined_blood_group"
+            referencedColumns: ["id"]
+          },
         ]
       }
       blood_inventory: {
@@ -96,6 +103,13 @@ export type Database = {
             columns: ["donor_id"]
             isOneToOne: false
             referencedRelation: "donors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blood_inventory_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors_with_combined_blood_group"
             referencedColumns: ["id"]
           },
         ]
@@ -155,12 +169,20 @@ export type Database = {
             referencedRelation: "patients"
             referencedColumns: ["patient_id"]
           },
+          {
+            foreignKeyName: "crossmatch_patient_reg_id_fkey"
+            columns: ["patient_reg_id"]
+            isOneToOne: false
+            referencedRelation: "patients_with_combined_blood_group"
+            referencedColumns: ["patient_id"]
+          },
         ]
       }
       donors: {
         Row: {
           address: string | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate: string | null
           created_at: string | null
           created_by: string | null
           date_of_birth: string | null
@@ -171,11 +193,13 @@ export type Database = {
           last_donation_date: string | null
           name: string
           phone: string | null
+          rh_factor: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate?: string | null
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
@@ -186,11 +210,13 @@ export type Database = {
           last_donation_date?: string | null
           name: string
           phone?: string | null
+          rh_factor?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
           blood_group?: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate?: string | null
           created_at?: string | null
           created_by?: string | null
           date_of_birth?: string | null
@@ -201,6 +227,7 @@ export type Database = {
           last_donation_date?: string | null
           name?: string
           phone?: string | null
+          rh_factor?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -351,6 +378,13 @@ export type Database = {
             referencedRelation: "patients"
             referencedColumns: ["patient_id"]
           },
+          {
+            foreignKeyName: "patient_invoices_patient_reg_id_fkey"
+            columns: ["patient_reg_id"]
+            isOneToOne: false
+            referencedRelation: "patients_with_combined_blood_group"
+            referencedColumns: ["patient_id"]
+          },
         ]
       }
       patients: {
@@ -358,6 +392,7 @@ export type Database = {
           address: string | null
           age: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate: string | null
           bottle_quantity: number | null
           bottle_unit_type: string | null
           created_at: string | null
@@ -370,12 +405,14 @@ export type Database = {
           name: string
           patient_id: string
           phone: string | null
+          rh_factor: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
           age?: number | null
           blood_group: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate?: string | null
           bottle_quantity?: number | null
           bottle_unit_type?: string | null
           created_at?: string | null
@@ -388,12 +425,14 @@ export type Database = {
           name: string
           patient_id: string
           phone?: string | null
+          rh_factor?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
           age?: number | null
           blood_group?: Database["public"]["Enums"]["blood_group"]
+          blood_group_separate?: string | null
           bottle_quantity?: number | null
           bottle_unit_type?: string | null
           created_at?: string | null
@@ -406,6 +445,7 @@ export type Database = {
           name?: string
           patient_id?: string
           phone?: string | null
+          rh_factor?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -536,7 +576,129 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      donors_with_combined_blood_group: {
+        Row: {
+          address: string | null
+          blood_group: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate: string | null
+          combined_blood_group: string | null
+          created_at: string | null
+          created_by: string | null
+          date_of_birth: string | null
+          donor_id: string | null
+          email: string | null
+          gender: string | null
+          id: string | null
+          last_donation_date: string | null
+          name: string | null
+          phone: string | null
+          rh_factor: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          blood_group?: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate?: string | null
+          combined_blood_group?: never
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          donor_id?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string | null
+          last_donation_date?: string | null
+          name?: string | null
+          phone?: string | null
+          rh_factor?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          blood_group?: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate?: string | null
+          combined_blood_group?: never
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          donor_id?: string | null
+          email?: string | null
+          gender?: string | null
+          id?: string | null
+          last_donation_date?: string | null
+          name?: string | null
+          phone?: string | null
+          rh_factor?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      patients_with_combined_blood_group: {
+        Row: {
+          address: string | null
+          age: number | null
+          blood_group: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate: string | null
+          bottle_quantity: number | null
+          bottle_unit_type: string | null
+          combined_blood_group: string | null
+          created_at: string | null
+          created_by: string | null
+          date_of_birth: string | null
+          email: string | null
+          gender: string | null
+          hospital: string | null
+          id: string | null
+          name: string | null
+          patient_id: string | null
+          phone: string | null
+          rh_factor: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          blood_group?: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit_type?: string | null
+          combined_blood_group?: never
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          gender?: string | null
+          hospital?: string | null
+          id?: string | null
+          name?: string | null
+          patient_id?: string | null
+          phone?: string | null
+          rh_factor?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          blood_group?: Database["public"]["Enums"]["blood_group"] | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit_type?: string | null
+          combined_blood_group?: never
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          gender?: string | null
+          hospital?: string | null
+          id?: string | null
+          name?: string | null
+          patient_id?: string | null
+          phone?: string | null
+          rh_factor?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_invoice_number: {
@@ -545,6 +707,10 @@ export type Database = {
       }
       generate_patient_reg_number: {
         Args: { prefix_type: string }
+        Returns: string
+      }
+      get_combined_blood_group: {
+        Args: { bg_separate: string; rh: string }
         Returns: string
       }
       get_next_bag_number: {
