@@ -1,3 +1,4 @@
+
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -9,17 +10,15 @@ import BleedingForm from "@/components/forms/BleedingForm";
 import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
-
-// Import necessary hooks and functions
 import { toast } from "@/hooks/use-toast";
 
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
 
-// Updated FormRef interface to make clearForm required
 interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
-  clearForm: () => void; // Made required to match DonorFormRef and BleedingFormRef
+  handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  clearForm?: () => void;
 }
 
 const Dashboard = () => {
@@ -31,10 +30,7 @@ const Dashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   
-  // Reference to the active form component
-  const activeFormRef = useRef<FormRef>({
-    clearForm: () => {} // Provide default implementation
-  });
+  const activeFormRef = useRef<FormRef>({});
   
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -44,8 +40,7 @@ const Dashboard = () => {
     setIsAdding(false);
     setIsDeleting(false);
     
-    // Reset the form ref when changing forms
-    activeFormRef.current = { clearForm: () => {} };
+    activeFormRef.current = {};
   };
 
   const clearActiveForm = () => {
@@ -59,7 +54,6 @@ const Dashboard = () => {
     setIsSearchEnabled(false);
     setIsEditing(false);
     setIsDeleting(false);
-    // Clear form when switching to add mode
     clearActiveForm();
   };
 
@@ -68,7 +62,6 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsAdding(false);
     setIsDeleting(false);
-    // Clear form when switching to edit mode
     clearActiveForm();
   };
 
@@ -77,29 +70,39 @@ const Dashboard = () => {
     setIsSearchEnabled(true);
     setIsEditing(false);
     setIsAdding(false);
-    // Clear form when switching to delete mode
     clearActiveForm();
   };
 
-  const handleSaveClick = () => {
-    // Would typically save form data here
-    toast({
-      title: "Form Saved",
-      description: `${activeForm} data has been saved successfully.`
-    });
-    setIsEditing(false);
-    setIsAdding(false);
-    setIsDeleting(false);
-    setIsSearchEnabled(false);
+  const handleSaveClick = async () => {
+    if (activeFormRef.current && activeFormRef.current.handleSave) {
+      const result = await activeFormRef.current.handleSave();
+      if (result.success) {
+        toast({
+          title: "Form Saved",
+          description: `${activeForm} data has been saved successfully.`
+        });
+        setIsEditing(false);
+        setIsAdding(false);
+        setIsDeleting(false);
+        setIsSearchEnabled(false);
+      }
+    } else {
+      toast({
+        title: "Form Saved",
+        description: `${activeForm} data has been saved successfully.`
+      });
+      setIsEditing(false);
+      setIsAdding(false);
+      setIsDeleting(false);
+      setIsSearchEnabled(false);
+    }
   };
 
   const handleCancelClick = () => {
-    // Would typically reset form data here
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
     setIsSearchEnabled(false);
-    // Clear form when canceling
     clearActiveForm();
   };
 

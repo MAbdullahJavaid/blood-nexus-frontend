@@ -261,71 +261,35 @@ export type Database = {
           created_at: string | null
           id: string
           invoice_id: string
-          item_id: string
-          item_type: string
-          quantity: number
-          total_price: number
-          unit_price: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          invoice_id: string
-          item_id: string
-          item_type?: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          invoice_id?: string
-          item_id?: string
-          item_type?: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      patient_invoice_items: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          invoice_id: string
           quantity: number
           test_id: number | null
           test_name: string
-          test_rate: number
+          total_price: number
+          unit_price: number
         }
         Insert: {
-          amount?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
           invoice_id: string
           quantity?: number
           test_id?: number | null
           test_name: string
-          test_rate?: number
+          total_price?: number
+          unit_price?: number
         }
         Update: {
-          amount?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
           invoice_id?: string
           quantity?: number
           test_id?: number | null
           test_name?: string
-          test_rate?: number
+          total_price?: number
+          unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "patient_invoice_items_invoice_id_fkey"
+            foreignKeyName: "invoice_items_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "patient_invoices"
@@ -341,7 +305,7 @@ export type Database = {
           blood_group_separate: string | null
           bottle_quantity: number | null
           bottle_unit: string | null
-          created_at: string
+          created_at: string | null
           created_by: string | null
           discount_amount: number | null
           dob: string | null
@@ -352,13 +316,13 @@ export type Database = {
           hospital_name: string | null
           id: string
           patient_id: string | null
-          patient_name: string | null
+          patient_name: string
           patient_type: string
           phone_no: string | null
           reference_notes: string | null
           rh_factor: string | null
           total_amount: number | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           age?: number | null
@@ -367,7 +331,7 @@ export type Database = {
           blood_group_separate?: string | null
           bottle_quantity?: number | null
           bottle_unit?: string | null
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           discount_amount?: number | null
           dob?: string | null
@@ -378,13 +342,13 @@ export type Database = {
           hospital_name?: string | null
           id?: string
           patient_id?: string | null
-          patient_name?: string | null
+          patient_name: string
           patient_type: string
           phone_no?: string | null
           reference_notes?: string | null
           rh_factor?: string | null
           total_amount?: number | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           age?: number | null
@@ -393,7 +357,7 @@ export type Database = {
           blood_group_separate?: string | null
           bottle_quantity?: number | null
           bottle_unit?: string | null
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           discount_amount?: number | null
           dob?: string | null
@@ -404,13 +368,13 @@ export type Database = {
           hospital_name?: string | null
           id?: string
           patient_id?: string | null
-          patient_name?: string | null
+          patient_name?: string
           patient_type?: string
           phone_no?: string | null
           reference_notes?: string | null
           rh_factor?: string | null
           total_amount?: number | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

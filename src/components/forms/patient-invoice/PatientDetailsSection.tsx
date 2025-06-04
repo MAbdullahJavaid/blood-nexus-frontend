@@ -1,24 +1,16 @@
 
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { SearchIcon } from "lucide-react";
-import { Patient } from "./types";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 
 interface PatientDetailsSectionProps {
   patientType: string;
   documentNo: string;
-  selectedPatient: Patient | null;
+  selectedPatient: any;
   isEditable: boolean;
   isAdding: boolean;
-  patientID?: string;
-  setPatientId?: (value: string) => void;
   onPatientTypeChange: (value: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -28,6 +20,8 @@ interface PatientDetailsSectionProps {
   setDocumentDate: (value: string) => void;
   shouldEnableEditing: boolean;
   setDocumentNo?: (value: string) => void;
+  patientID: string;
+  setPatientId: (value: string) => void;
 }
 
 export function PatientDetailsSection({
@@ -46,130 +40,100 @@ export function PatientDetailsSection({
   shouldEnableEditing,
   setDocumentNo,
   patientID,
-  setPatientId,
+  setPatientId
 }: PatientDetailsSectionProps) {
-  
-  // Display patient ID based on type
-  const getDisplayPatientId = () => {
-    return patientID || "";
-  };
-
-  // Handle patient ID change with validation for OPD type
-  const handlePatientIdChange = (value: string) => {
-    if (patientType === "opd" && setPatientId) {
-      // Limit to 11 digits for OPD type
-      const numericValue = value.replace(/\D/g, ''); // Remove non-digits
-      if (numericValue.length <= 11) {
-        setPatientId(numericValue);
-      }
-    }
-  };
-
   return (
-    <>
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div>
-          <Label htmlFor="type" className="mb-1 block">
-            Type:
-          </Label>
-          <Select
-            value={patientType}
-            onValueChange={onPatientTypeChange}
-            disabled={!isEditable}
-          >
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="regular">Regular</SelectItem>
-              <SelectItem value="opd">OPD</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded-lg">
+      {/* Patient Type */}
+      <div className="space-y-2">
+        <Label htmlFor="patientType">Patient Type</Label>
+        <Select 
+          value={patientType} 
+          onValueChange={onPatientTypeChange}
+          disabled={!isEditable}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="regular">Regular</SelectItem>
+            <SelectItem value="opd">OPD</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div>
-          <Label htmlFor="patientId" className="mb-1 block">
-            Patient ID:
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="patientId"
-              className="h-9"
-              value={getDisplayPatientId()}
-              maxLength={11}
-              disabled={patientType === "regular"}
-              onChange={(e) => handlePatientIdChange(e.target.value)}
-              placeholder={patientType === "opd" ? "Enter Patient ID (max 11 digits)" : "Select a patient"}
-            />
-            {isEditable && patientType === "regular" && (
-              <button
-                onClick={onSearchPatientClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
-                aria-label="Search patient"
-                type="button"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="documentNo" className="mb-1 block">
-            Document No:
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="documentNo"
-              className="h-9"
-              value={documentNo}
-              disabled={true}
-            />
-            {!isAdding && (
-              <button
-                onClick={onSearchDocumentClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300 flex-shrink-0"
-                aria-label="Search document"
-                type="button"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+      {/* Document Number */}
+      <div className="space-y-2">
+        <Label htmlFor="documentNo">Document No</Label>
+        <div className="flex gap-2">
+          <Input
+            id="documentNo"
+            value={documentNo}
+            onChange={(e) => setDocumentNo?.(e.target.value)}
+            disabled={!isEditable || isAdding}
+            placeholder="Auto-generated"
+          />
+          {!isAdding && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="icon"
+              onClick={onSearchDocumentClick}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <Label htmlFor="name" className="mb-1 block">
-            Patient Name:
-          </Label>
+      {/* Document Date */}
+      <div className="space-y-2">
+        <Label htmlFor="documentDate">Date</Label>
+        <Input
+          id="documentDate"
+          type="date"
+          value={documentDate}
+          onChange={(e) => setDocumentDate(e.target.value)}
+          disabled={!isEditable}
+        />
+      </div>
+
+      {/* Patient ID */}
+      <div className="space-y-2">
+        <Label htmlFor="patientId">Patient ID</Label>
+        <div className="flex gap-2">
           <Input
-            id="name"
-            className="h-9"
-            value={patientName}
-            onChange={(e) => {
-              if (patientType === "opd") {
-                setPatientName(e.target.value);
-              }
-            }}
-            disabled={patientType === "regular"}
-            placeholder="Enter patient name"
+            id="patientId"
+            value={patientID}
+            onChange={(e) => setPatientId(e.target.value)}
+            disabled={patientType === "regular" || !shouldEnableEditing}
+            placeholder={patientType === "regular" ? "Select patient first" : "Enter Patient ID"}
           />
-        </div>
-        <div>
-          <Label htmlFor="documentDate" className="mb-1 block">
-            Document Date:
-          </Label>
-          <Input
-            id="documentDate"
-            className="h-9"
-            type="date"
-            value={documentDate}
-            onChange={(e) => setDocumentDate(e.target.value)}
-            disabled={!isEditable}
-          />
+          {patientType === "regular" && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="icon"
+              onClick={onSearchPatientClick}
+              disabled={!isEditable}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
-    </>
+
+      {/* Patient Name */}
+      <div className="space-y-2">
+        <Label htmlFor="patientName">Patient Name</Label>
+        <Input
+          id="patientName"
+          value={patientName}
+          onChange={(e) => setPatientName(e.target.value)}
+          disabled={patientType === "regular" || !shouldEnableEditing}
+          placeholder={patientType === "regular" ? "Select patient first" : "Enter Patient Name"}
+        />
+      </div>
+    </div>
   );
 }
