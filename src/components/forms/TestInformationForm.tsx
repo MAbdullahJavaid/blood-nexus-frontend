@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,10 +24,15 @@ interface TestInformationFormProps {
   categories?: string[];
 }
 
-const TestInformationForm = ({ 
+interface FormRef {
+  clearForm: () => void;
+  handleSave?: () => Promise<{success: boolean, error?: any}>;
+}
+
+const TestInformationForm = forwardRef<FormRef, TestInformationFormProps>(({ 
   isEditable = false, 
   isSearchEnabled = false
-}: TestInformationFormProps) => {
+}, ref) => {
   const [testId, setTestId] = useState<number | null>(null);
   const [testType, setTestType] = useState<'single' | 'full' | 'other'>('single');
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
@@ -50,6 +55,21 @@ const TestInformationForm = ({
   };
   
   const [formValues, setFormValues] = useState(defaultValues);
+
+  const clearForm = () => {
+    setFormValues(defaultValues);
+    setCurrentTestId(null);
+    setTestType('single');
+    setTestId(null);
+    fetchNextTestId();
+  };
+
+  useImperativeHandle(ref, () => ({
+    clearForm,
+    handleSave: async () => {
+      return await handleSaveTest();
+    }
+  }));
   
   useEffect(() => {
     fetchCategories();
@@ -91,20 +111,19 @@ const TestInformationForm = ({
   const handleSaveTest = async () => {
     if (!formValues.testName) {
       toast.error('Test name is required');
-      return;
+      return { success: false, error: 'Test name is required' };
     }
 
     if (!formValues.categoryId) {
       toast.error('Category is required');
-      return;
+      return { success: false, error: 'Category is required' };
     }
 
     setLoading(true);
 
     try {
-      // Prepare the metadata to store in the description JSON field
+      // Prepare the metadata to store in the description JSON field (excluding test_type and is_active)
       const metadata = {
-        type: testType,
         value_remarks: formValues.valueRemarks,
         remarks: formValues.remarks,
         measuring_unit: formValues.measuringUnit,
@@ -119,8 +138,9 @@ const TestInformationForm = ({
 
       const testData = {
         name: formValues.testName,
-        category_id: formValues.categoryId, // Ensure this is a number
+        category_id: formValues.categoryId,
         price: formValues.testRate,
+        test_type: testType, // Use the new column
         description: JSON.stringify(metadata) // Store metadata as JSON string
       };
 
@@ -155,27 +175,26 @@ const TestInformationForm = ({
         toast.success('Test saved successfully');
         
         // Reset form and get next test ID
-        resetForm();
-        fetchNextTestId();
+        clearForm();
       }
+
+      return { success: true };
     } catch (error) {
       console.error('Error saving test:', error);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
-  };
-
-  const resetForm = () => {
-    setFormValues(defaultValues);
-    setCurrentTestId(null);
-    setTestType('single');
   };
 
   const handleTestSelect = (test: TestInformation) => {
     setCurrentTestId(test.id);
     
     // We need to manually set the testId for display purposes
-    setTestId(test.id); // Now we can directly use the id as it's already a number
+    setTestId(test.id);
+    
+    // Set test type from the new column
+    setTestType(test.test_type || 'single');
     
     // Parse the description field to get the test metadata
     let metadata: any = {};
@@ -188,17 +207,14 @@ const TestInformationForm = ({
       metadata = {};
     }
     
-    // Set test type from metadata or default to 'single'
-    setTestType(metadata.type || 'single');
-    
     // Map the database fields to our form
     setFormValues({
       testName: test.name,
       valueRemarks: metadata.value_remarks || '',
       remarks: metadata.remarks || '',
       measuringUnit: metadata.measuring_unit || '',
-      testRate: test.price, // Use price from database 
-      active: metadata.is_active !== false, // Consider active if not explicitly false
+      testRate: test.price,
+      active: metadata.is_active !== false,
       categoryId: test.category_id,
       male: { 
         lowValue: metadata.male_low_value || 0, 
@@ -479,7 +495,7 @@ const TestInformationForm = ({
             <div className="col-span-2 mt-4 flex justify-end gap-2">
               <Button 
                 variant="outline" 
-                onClick={resetForm}
+                onClick={clearForm}
                 disabled={loading}
               >
                 Clear
@@ -502,6 +518,8 @@ const TestInformationForm = ({
       />
     </>
   );
-};
+});
+
+TestInformationForm.displayName = "TestInformationForm";
 
 export default TestInformationForm;

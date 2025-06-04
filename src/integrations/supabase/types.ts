@@ -533,6 +533,7 @@ export type Database = {
           id: number
           name: string
           price: number
+          test_type: string
           updated_at: string | null
         }
         Insert: {
@@ -543,6 +544,7 @@ export type Database = {
           id?: number
           name: string
           price: number
+          test_type?: string
           updated_at?: string | null
         }
         Update: {
@@ -553,6 +555,7 @@ export type Database = {
           id?: number
           name?: string
           price?: number
+          test_type?: string
           updated_at?: string | null
         }
         Relationships: [

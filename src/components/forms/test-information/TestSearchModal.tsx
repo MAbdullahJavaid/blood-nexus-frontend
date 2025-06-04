@@ -130,6 +130,7 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                 <TableHead className="w-[80px]">Test ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead className="w-[100px]">Type</TableHead>
                 <TableHead className="w-[100px]">Rate</TableHead>
                 <TableHead className="w-[80px]">Status</TableHead>
               </TableRow>
@@ -145,13 +146,14 @@ const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) =>
                     <TableCell>{testIds[test.id] || '-'}</TableCell>
                     <TableCell>{test.name}</TableCell>
                     <TableCell>{test.category?.name || 'N/A'}</TableCell>
+                    <TableCell>{test.test_type || 'single'}</TableCell>
                     <TableCell>{test.price}</TableCell>
                     <TableCell>{getActiveStatus(test) ? 'Active' : 'Inactive'}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     {loading ? 'Loading...' : 'No tests found'}
                   </TableCell>
                 </TableRow>

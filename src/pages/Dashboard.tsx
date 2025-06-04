@@ -18,7 +18,7 @@ interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
-  clearForm: () => void; // Make clearForm required to match form component interfaces
+  clearForm: () => void;
 }
 
 const Dashboard = () => {
@@ -31,7 +31,7 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<string[]>([]);
   
   const activeFormRef = useRef<FormRef>({
-    clearForm: () => {} // Provide default implementation
+    clearForm: () => {}
   });
   
   const handleFormButtonClick = (formType: FormType) => {
@@ -43,7 +43,7 @@ const Dashboard = () => {
     setIsDeleting(false);
     
     activeFormRef.current = {
-      clearForm: () => {} // Reset to default
+      clearForm: () => {}
     };
   };
 
@@ -89,6 +89,7 @@ const Dashboard = () => {
         setIsAdding(false);
         setIsDeleting(false);
         setIsSearchEnabled(false);
+        clearActiveForm(); // Clear form after successful save
       }
     } else {
       toast({
@@ -99,6 +100,7 @@ const Dashboard = () => {
       setIsAdding(false);
       setIsDeleting(false);
       setIsSearchEnabled(false);
+      clearActiveForm(); // Clear form after successful save
     }
   };
 
@@ -117,6 +119,7 @@ const Dashboard = () => {
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
+    clearActiveForm(); // Clear form when closing
   };
 
   const handleAddItemClick = () => {
@@ -167,7 +170,12 @@ const Dashboard = () => {
       case 'category':
         return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'testInformation':
-        return <TestInformationForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} categories={categories} />;
+        return <TestInformationForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable} 
+                 categories={categories}
+                 ref={activeFormRef as any}
+               />;
       default:
         return null;
     }
