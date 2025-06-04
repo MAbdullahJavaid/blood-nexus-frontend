@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -23,7 +22,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [bloodGroup, setBloodGroup] = useState<string>("N/A");
     const [rhType, setRhType] = useState<string>("N/A");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
-    const [bottleRequired, setBottleRequired] = useState<number>(1);
+    const [bottleRequired, setBottleRequired] = useState<number>(0);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -48,6 +47,33 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
 
+    const clearForm = () => {
+      setPatientType("regular");
+      setDocumentNo("");
+      setBloodGroup("N/A");
+      setRhType("N/A");
+      setBloodCategory("FWB");
+      setBottleRequired(0);
+      setBottleUnitType("bag");
+      setItems([]);
+      setDiscount(0);
+      setReceivedAmount(0);
+      setTotalAmount(0);
+      setSelectedItemIndex(null);
+      setCurrentTestIndex(null);
+      setSelectedPatient(null);
+      setDocumentDate(new Date().toISOString().split('T')[0]);
+      setPatientID("");
+      setPatientName("");
+      setPhoneNo("");
+      setAge(null);
+      setDob("");
+      setReferences("");
+      setHospital("");
+      setGender("male");
+      setExDonor("");
+    };
+
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
         handleAddItem();
@@ -57,7 +83,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       },
       handleSave: async () => {
         return await handleSave();
-      }
+      },
+      clearForm: clearForm
     }));
 
     useEffect(() => {
@@ -258,7 +285,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           setBloodGroup(invoiceData.blood_group_separate || "N/A");
           setRhType(invoiceData.rh_factor || "N/A");
           setBloodCategory(invoiceData.blood_category || "FWB");
-          setBottleRequired(invoiceData.bottle_quantity || 1);
+          setBottleRequired(invoiceData.bottle_quantity || 0);
           setBottleUnitType(invoiceData.bottle_unit || "bag");
 
           // Load invoice items
@@ -465,7 +492,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           patientType={patientType}
           documentNo={documentNo}
           selectedPatient={selectedPatient}
-          isEditable={isEditable}
+          isEditable={false}
           isAdding={isAdding}
           onPatientTypeChange={handlePatientTypeChange}
           onSearchPatientClick={handleSearchPatient}
@@ -511,13 +538,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           rhType={rhType}
           bloodCategory={bloodCategory}
           bottleRequired={bottleRequired}
-          bottleUnitType={bottleUnitType}
           isEditable={isEditable}
           onBloodGroupChange={setBloodGroup}
           onRhTypeChange={setRhType}
           onBloodCategoryChange={setBloodCategory}
           onBottleRequiredChange={setBottleRequired}
           onBottleUnitTypeChange={setBottleUnitType}
+          bottleUnitType={bottleUnitType}
         />
 
         <TestsSection
