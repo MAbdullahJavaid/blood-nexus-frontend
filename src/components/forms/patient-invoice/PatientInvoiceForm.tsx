@@ -1,7 +1,6 @@
 
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem, Patient } from "./types";
-import { mockPatients, mockTests, mockInvoices } from "./mock-data";
 import { PatientSearchModal } from "./PatientSearchModal";
 import { TestSearchModal } from "./TestSearchModal";
 import { DocumentSearchModal } from "./DocumentSearchModal";
@@ -304,27 +303,97 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
-    const handleDocumentSelect = (docNum: string) => {
-      const invoice = mockInvoices.find(inv => inv.documentNo === docNum);
-      if (invoice) {
-        setDocumentNo(invoice.documentNo);
-        const patient = mockPatients.find(p => p.id === invoice.patientId);
-        
-        if (patient) {
-          if (patientType === "regular") {
-            setRegularPatient(patient);
-          } else {
-            setOpdPatientData(prev => ({
-              ...prev,
-              name: patient.name,
-              phone: patient.phoneNo || "",
-              age: patient.age,
-              hospital: patient.hospital || "",
-              gender: patient.gender || "male"
-            }));
+    const handleDocumentSelect = async (docNum: string) => {
+      try {
+        // Load invoice data from patient_invoices table
+        const { data: invoiceData, error: invoiceError } = await supabase
+          .from('patient_invoices')
+          .select('*')
+          .eq('document_no', docNum)
+          .single();
+
+        if (invoiceError) throw invoiceError;
+
+        if (invoiceData) {
+          setDocumentNo(invoiceData.document_no);
+          setDocumentDate(invoiceData.document_date);
+          setTotalAmount(invoiceData.total_amount || 0);
+          setDiscount(invoiceData.discount_amount || 0);
+          setReceivedAmount(invoiceData.amount_received || 0);
+          setReferences(invoiceData.reference_notes || "");
+          setExDonor(invoiceData.ex_donor || "");
+          setPatientType(invoiceData.patient_type || "regular");
+          
+          // Set blood details
+          setBloodGroup(invoiceData.blood_group_separate || "N/A");
+          setRhType(invoiceData.rh_factor || "N/A");
+          setBloodCategory(invoiceData.blood_category || "FWB");
+          setBottleRequired(invoiceData.bottle_quantity || 1);
+          setBottleUnitType(invoiceData.bottle_unit || "bag");
+
+          // Load patient data based on type
+          if (invoiceData.patient_type === "regular" && invoiceData.patient_id) {
+            const { data: patientData, error: patientError } = await supabase
+              .from('patients')
+              .select('*')
+              .eq('id', invoiceData.patient_id)
+              .single();
+
+            if (!patientError && patientData) {
+              const patient: Patient = {
+                id: patientData.id,
+                patient_id: patientData.patient_id,
+                name: patientData.name,
+                hospital: patientData.hospital || "",
+                gender: patientData.gender || "male",
+                phoneNo: patientData.phone || "",
+                phone: patientData.phone || "",
+                age: patientData.age || 0,
+                date_of_birth: patientData.date_of_birth || "",
+                blood_group: patientData.blood_group || "O+"
+              };
+              setRegularPatient(patient);
+            }
+          } else if (invoiceData.patient_type === "opd") {
+            // For OPD, use invoice data directly
+            setOpdPatientData({
+              patientId: invoiceData.patient_id || "",
+              name: invoiceData.patient_name || "",
+              phone: invoiceData.phone_no || "",
+              age: invoiceData.age || null,
+              dob: invoiceData.dob || "",
+              hospital: invoiceData.hospital_name || "",
+              gender: invoiceData.gender || "male",
+              bloodGroup: invoiceData.blood_group_separate || "N/A",
+              rhType: invoiceData.rh_factor || "N/A"
+            });
           }
+
+          // Load invoice items
+          const { data: itemsData, error: itemsError } = await supabase
+            .from('invoice_items')
+            .select('*')
+            .eq('invoice_id', invoiceData.id);
+
+          if (!itemsError && itemsData) {
+            const invoiceItems: InvoiceItem[] = itemsData.map((item, index) => ({
+              id: item.id,
+              testId: parseInt(item.item_id),
+              testName: `Test ${item.item_id}`, // You may want to fetch test name from test_information table
+              qty: item.quantity,
+              rate: item.unit_price,
+              amount: item.total_price
+            }));
+            setItems(invoiceItems);
+          }
+
+          toast.success("Invoice loaded successfully");
         }
+      } catch (error) {
+        console.error("Error loading invoice:", error);
+        toast.error("Failed to load invoice");
       }
+      
       setIsDocumentSearchModalOpen(false);
     };
 
@@ -446,26 +515,26 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
           .insert({
-            invoice_number: documentNo,
-            invoice_date: documentDate,
+            document_no: documentNo,
+            document_date: documentDate,
             patient_id: patientId,
             total_amount: totalAmount,
             patient_type: patientType,
-            blood_group_type: bloodGroup,
-            rh_type: rhType,
+            blood_group_separate: bloodGroup,
+            rh_factor: rhType,
             blood_category: bloodCategory,
-            bottle_required: bottleRequired,
-            bottle_unit_type: bottleUnitType,
+            bottle_quantity: bottleRequired,
+            bottle_unit: bottleUnitType,
             ex_donor: exDonor,
-            patient_references: references,
+            reference_notes: references,
             hospital_name: currentData.hospital,
-            patient_age: currentData.age,
-            patient_dob: currentData.dob || null,
-            patient_phone: currentData.phone,
-            patient_gender: currentData.gender,
+            age: currentData.age,
+            dob: currentData.dob || null,
+            phone_no: currentData.phone,
+            gender: currentData.gender,
             discount_amount: discount,
             amount_received: receivedAmount,
-            status: receivedAmount >= totalAmount ? "Paid" : "Pending"
+            patient_name: currentData.name
           })
           .select('id')
           .single();

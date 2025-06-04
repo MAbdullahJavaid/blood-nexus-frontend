@@ -178,6 +178,30 @@ export type Database = {
           },
         ]
       }
+      document_sequences: {
+        Row: {
+          created_at: string
+          id: string
+          sequence_number: number
+          updated_at: string
+          year_month: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sequence_number?: number
+          updated_at?: string
+          year_month: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sequence_number?: number
+          updated_at?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       donors: {
         Row: {
           address: string | null
@@ -235,7 +259,6 @@ export type Database = {
       invoice_items: {
         Row: {
           created_at: string | null
-          created_by: string | null
           id: string
           invoice_id: string
           item_id: string
@@ -247,19 +270,17 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          created_by?: string | null
           id?: string
           invoice_id: string
           item_id: string
-          item_type: string
-          quantity: number
-          total_price: number
-          unit_price: number
+          item_type?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          created_by?: string | null
           id?: string
           invoice_id?: string
           item_id?: string
@@ -269,9 +290,42 @@ export type Database = {
           unit_price?: number
           updated_at?: string | null
         }
+        Relationships: []
+      }
+      patient_invoice_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          quantity: number
+          test_id: number | null
+          test_name: string
+          test_rate: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          test_id?: number | null
+          test_name: string
+          test_rate?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          test_id?: number | null
+          test_name?: string
+          test_rate?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "invoice_items_invoice_id_fkey"
+            foreignKeyName: "patient_invoice_items_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "patient_invoices"
@@ -281,111 +335,84 @@ export type Database = {
       }
       patient_invoices: {
         Row: {
+          age: number | null
           amount_received: number | null
           blood_category: string | null
-          blood_group: string | null
-          blood_group_type: string | null
-          bottle_required: number | null
-          bottle_unit_type: string | null
-          created_at: string | null
+          blood_group_separate: string | null
+          bottle_quantity: number | null
+          bottle_unit: string | null
+          created_at: string
           created_by: string | null
           discount_amount: number | null
+          dob: string | null
+          document_date: string
+          document_no: string
           ex_donor: string | null
+          gender: string | null
           hospital_name: string | null
           id: string
-          invoice_date: string
-          invoice_number: string
-          patient_age: number | null
-          patient_dob: string | null
-          patient_gender: string | null
-          patient_id: string
+          patient_id: string | null
           patient_name: string | null
-          patient_phone: string | null
-          patient_references: string | null
-          patient_reg_id: string | null
-          patient_type: string | null
-          remarks: string | null
-          rh_type: string | null
-          status: string | null
-          total_amount: number
-          updated_at: string | null
+          patient_type: string
+          phone_no: string | null
+          reference_notes: string | null
+          rh_factor: string | null
+          total_amount: number | null
+          updated_at: string
         }
         Insert: {
+          age?: number | null
           amount_received?: number | null
           blood_category?: string | null
-          blood_group?: string | null
-          blood_group_type?: string | null
-          bottle_required?: number | null
-          bottle_unit_type?: string | null
-          created_at?: string | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit?: string | null
+          created_at?: string
           created_by?: string | null
           discount_amount?: number | null
+          dob?: string | null
+          document_date?: string
+          document_no: string
           ex_donor?: string | null
+          gender?: string | null
           hospital_name?: string | null
           id?: string
-          invoice_date: string
-          invoice_number: string
-          patient_age?: number | null
-          patient_dob?: string | null
-          patient_gender?: string | null
-          patient_id: string
+          patient_id?: string | null
           patient_name?: string | null
-          patient_phone?: string | null
-          patient_references?: string | null
-          patient_reg_id?: string | null
-          patient_type?: string | null
-          remarks?: string | null
-          rh_type?: string | null
-          status?: string | null
-          total_amount: number
-          updated_at?: string | null
+          patient_type: string
+          phone_no?: string | null
+          reference_notes?: string | null
+          rh_factor?: string | null
+          total_amount?: number | null
+          updated_at?: string
         }
         Update: {
+          age?: number | null
           amount_received?: number | null
           blood_category?: string | null
-          blood_group?: string | null
-          blood_group_type?: string | null
-          bottle_required?: number | null
-          bottle_unit_type?: string | null
-          created_at?: string | null
+          blood_group_separate?: string | null
+          bottle_quantity?: number | null
+          bottle_unit?: string | null
+          created_at?: string
           created_by?: string | null
           discount_amount?: number | null
+          dob?: string | null
+          document_date?: string
+          document_no?: string
           ex_donor?: string | null
+          gender?: string | null
           hospital_name?: string | null
           id?: string
-          invoice_date?: string
-          invoice_number?: string
-          patient_age?: number | null
-          patient_dob?: string | null
-          patient_gender?: string | null
-          patient_id?: string
+          patient_id?: string | null
           patient_name?: string | null
-          patient_phone?: string | null
-          patient_references?: string | null
-          patient_reg_id?: string | null
-          patient_type?: string | null
-          remarks?: string | null
-          rh_type?: string | null
-          status?: string | null
-          total_amount?: number
-          updated_at?: string | null
+          patient_type?: string
+          phone_no?: string | null
+          reference_notes?: string | null
+          rh_factor?: string | null
+          total_amount?: number | null
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "patient_invoices_patient_reg_id_fkey"
-            columns: ["patient_reg_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["patient_id"]
-          },
-          {
-            foreignKeyName: "patient_invoices_patient_reg_id_fkey"
-            columns: ["patient_reg_id"]
-            isOneToOne: false
-            referencedRelation: "patients_with_combined_blood_group"
-            referencedColumns: ["patient_id"]
-          },
-        ]
+        Relationships: []
       }
       patients: {
         Row: {
@@ -701,6 +728,10 @@ export type Database = {
       }
     }
     Functions: {
+      generate_document_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
