@@ -62,6 +62,37 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       },
       handleSave: async () => {
         return await handleSave();
+      },
+      clearForm: () => {
+        // Clear all form data
+        setPatientType("regular");
+        setDocumentNo("");
+        setBloodGroup("N/A");
+        setRhType("N/A");
+        setBloodCategory("FWB");
+        setBottleRequired(1);
+        setBottleUnitType("bag");
+        setItems([]);
+        setDiscount(0);
+        setReceivedAmount(0);
+        setTotalAmount(0);
+        setSelectedItemIndex(null);
+        setCurrentTestIndex(null);
+        setRegularPatient(null);
+        setOpdPatientData({
+          patientId: "",
+          name: "",
+          phone: "",
+          age: null,
+          dob: "",
+          hospital: "",
+          gender: "male",
+          bloodGroup: "N/A",
+          rhType: "N/A"
+        });
+        setDocumentDate(new Date().toISOString().split('T')[0]);
+        setReferences("");
+        setExDonor("");
       }
     }));
 
@@ -369,17 +400,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             });
           }
 
-          // Load invoice items
+          // Load invoice items - fixed to use correct database fields
           const { data: itemsData, error: itemsError } = await supabase
             .from('invoice_items')
             .select('*')
             .eq('invoice_id', invoiceData.id);
 
           if (!itemsError && itemsData) {
-            const invoiceItems: InvoiceItem[] = itemsData.map((item, index) => ({
+            const invoiceItems: InvoiceItem[] = itemsData.map((item) => ({
               id: item.id,
-              testId: parseInt(item.item_id),
-              testName: `Test ${item.item_id}`, // You may want to fetch test name from test_information table
+              testId: item.test_id || 0,
+              testName: item.test_name,
               qty: item.quantity,
               rate: item.unit_price,
               amount: item.total_price
@@ -541,20 +572,23 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           
         if (invoiceError) throw invoiceError;
         
-        const invoiceItems = items.map(item => ({
-          invoice_id: invoiceData.id,
-          item_id: item.testId.toString(),
-          item_type: "test",
-          quantity: item.qty,
-          unit_price: item.rate,
-          total_price: item.amount
-        }));
-        
-        const { error: itemsError } = await supabase
-          .from('invoice_items')
-          .insert(invoiceItems);
+        // Create invoice items with correct field mapping
+        if (items.length > 0) {
+          const invoiceItems = items.map(item => ({
+            invoice_id: invoiceData.id,
+            test_id: item.testId || null,
+            test_name: item.testName,
+            quantity: item.qty,
+            unit_price: item.rate,
+            total_price: item.amount
+          }));
           
-        if (itemsError) throw itemsError;
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .insert(invoiceItems);
+            
+          if (itemsError) throw itemsError;
+        }
         
         toast.success("Invoice saved successfully");
         return { success: true, invoiceId: invoiceData.id };

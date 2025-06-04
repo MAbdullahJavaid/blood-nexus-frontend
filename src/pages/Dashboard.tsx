@@ -18,7 +18,7 @@ interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
-  clearForm?: () => void;
+  clearForm: () => void; // Make clearForm required to match form component interfaces
 }
 
 const Dashboard = () => {
@@ -30,7 +30,9 @@ const Dashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   
-  const activeFormRef = useRef<FormRef>({});
+  const activeFormRef = useRef<FormRef>({
+    clearForm: () => {} // Provide default implementation
+  });
   
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -40,7 +42,9 @@ const Dashboard = () => {
     setIsAdding(false);
     setIsDeleting(false);
     
-    activeFormRef.current = {};
+    activeFormRef.current = {
+      clearForm: () => {} // Reset to default
+    };
   };
 
   const clearActiveForm = () => {
@@ -136,21 +140,21 @@ const Dashboard = () => {
                  isSearchEnabled={isSearchEnabled} 
                  isEditable={isEditable}
                  isDeleting={isDeleting}
-                 ref={activeFormRef}
+                 ref={activeFormRef as any}
                />;
       case 'patient':
         return <PatientForm 
                  isSearchEnabled={isSearchEnabled} 
                  isEditable={isEditable}
                  isDeleting={isDeleting}
-                 ref={activeFormRef}
+                 ref={activeFormRef as any}
                />;
       case 'bleeding':
         return <BleedingForm 
                  isSearchEnabled={isSearchEnabled} 
                  isEditable={isEditable}
                  isDeleting={isDeleting}
-                 ref={activeFormRef}
+                 ref={activeFormRef as any}
                />;
       case 'crossmatch':
         return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
