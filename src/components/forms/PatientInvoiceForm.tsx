@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { mockPatients, mockTests, mockInvoices } from "./patient-invoice/mock-data";
@@ -322,26 +321,26 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
           .insert({
-            invoice_number: documentNo,
-            invoice_date: documentDate,
+            document_no: documentNo,
+            document_date: documentDate,
             patient_id: patientId,
             total_amount: totalAmount,
             patient_type: patientType,
-            blood_group_type: bloodGroup,
-            rh_type: rhType,
+            blood_group_separate: bloodGroup,
+            rh_factor: rhType,
             blood_category: bloodCategory,
-            bottle_required: bottleRequired,
-            bottle_unit_type: bottleUnitType,
+            bottle_quantity: bottleRequired,
+            bottle_unit: bottleUnitType,
             ex_donor: exDonor,
-            patient_references: references,
+            reference_notes: references,
             hospital_name: hospital,
-            patient_age: age,
-            patient_dob: dob || null,
-            patient_phone: phoneNo,
-            patient_gender: gender,
+            age: age,
+            dob: dob || null,
+            phone_no: phoneNo,
+            gender: gender,
             discount_amount: discount,
             amount_received: receivedAmount,
-            status: receivedAmount >= totalAmount ? "Paid" : "Pending"
+            patient_name: patientName
           })
           .select('id')
           .single();
