@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchIcon, PlusCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CrossmatchFormProps {
   isSearchEnabled?: boolean;
@@ -24,6 +25,16 @@ interface DonorItem {
   unit: string;
 }
 
+interface PreCrossmatchData {
+  document_no: string;
+  patient_name: string;
+  age: number | null;
+  sex: string | null;
+  blood_group: string | null;
+  rh: string | null;
+  hospital: string | null;
+}
+
 const mockDonors = [
   { id: "1", bagNo: "B001", pipeNo: "P121", name: "John Doe", bloodGroup: "A+", product: "F.W.B" },
   { id: "2", bagNo: "B002", pipeNo: "P122", name: "Jane Smith", bloodGroup: "O-", product: "F.W.B" },
@@ -34,15 +45,51 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDonorSearchModalOpen, setIsDonorSearchModalOpen] = useState(false);
   const [donorItems, setDonorItems] = useState<DonorItem[]>([]);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<PreCrossmatchData | null>(null);
+  const [crossmatchNo, setCrossmatchNo] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bloodCategory, setBloodCategory] = useState("");
+  const [albumin, setAlbumin] = useState("negative");
+  const [saline, setSaline] = useState("negative");
+  const [coomb, setCoomb] = useState("negative");
+  const [result, setResult] = useState("compatible");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [preCrossmatchData, setPreCrossmatchData] = useState<PreCrossmatchData[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (isSearchModalOpen) {
+      fetchPreCrossmatchData();
+    }
+  }, [isSearchModalOpen]);
+
+  const fetchPreCrossmatchData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pre_crossmatch')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setPreCrossmatchData(data || []);
+    } catch (error) {
+      console.error("Error fetching pre-crossmatch data:", error);
+      toast.error("Failed to fetch patient data");
+    }
+  };
 
   const handleSearchDocClick = () => {
     setIsSearchModalOpen(true);
   };
 
-  const handleInvoiceSelect = (invoice: any) => {
+  const handleInvoiceSelect = (invoice: PreCrossmatchData) => {
     setSelectedInvoice(invoice);
+    setCrossmatchNo(invoice.document_no);
     setIsSearchModalOpen(false);
+    toast.success(`Patient ${invoice.patient_name} selected`);
   };
 
   const handleAddDonor = () => {
@@ -64,6 +111,11 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     setIsDonorSearchModalOpen(false);
   };
 
+  const filteredData = preCrossmatchData.filter(item =>
+    item.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="bg-white p-4 rounded-md">
       <div className="grid grid-cols-3 gap-4 mb-4">
@@ -74,7 +126,8 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               id="caseNo" 
               className="h-9" 
               disabled={!isEditable} 
-              value={selectedInvoice?.documentNo || ""}
+              value={crossmatchNo}
+              onChange={(e) => setCrossmatchNo(e.target.value)}
             />
             {isEditable && (
               <button 
@@ -89,11 +142,25 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </div>
         <div>
           <Label htmlFor="quantity" className="mb-1 block">Quantity:</Label>
-          <Input id="quantity" className="h-9" type="number" defaultValue={1} disabled={!isEditable} />
+          <Input 
+            id="quantity" 
+            className="h-9" 
+            type="number" 
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            disabled={!isEditable} 
+          />
         </div>
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <Input id="date" className="h-9" type="date" defaultValue={new Date().toISOString().split('T')[0]} disabled={!isEditable} />
+          <Input 
+            id="date" 
+            className="h-9" 
+            type="date" 
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            disabled={!isEditable} 
+          />
         </div>
       </div>
 
@@ -104,7 +171,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
             id="patientName" 
             className="h-9" 
             disabled={true} 
-            value={selectedInvoice?.patientName || ""}
+            value={selectedInvoice?.patient_name || ""}
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -123,7 +190,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               id="sex" 
               className="h-9" 
               disabled={true} 
-              value={selectedInvoice?.gender || ""}
+              value={selectedInvoice?.sex || ""}
             />
           </div>
         </div>
@@ -133,7 +200,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         <div>
           <Label htmlFor="patientBloodGroup" className="mb-1 block">Patient Blood Group:</Label>
           <div className="flex gap-2">
-            <Select disabled={true} value={selectedInvoice?.bloodGroup || "A"}>
+            <Select disabled={true} value={selectedInvoice?.blood_group || "A"}>
               <SelectTrigger className="h-9 flex-1">
                 <SelectValue />
               </SelectTrigger>
@@ -142,7 +209,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
                 <SelectItem value="B">B</SelectItem>
                 <SelectItem value="O">O</SelectItem>
                 <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="--">--</SelectItem>
+                <SelectItem value="N/A">N/A</SelectItem>
               </SelectContent>
             </Select>
             <Select disabled={true} value={selectedInvoice?.rh || "+ve"}>
@@ -152,7 +219,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               <SelectContent>
                 <SelectItem value="+ve">+ve</SelectItem>
                 <SelectItem value="-ve">-ve</SelectItem>
-                <SelectItem value="--">--</SelectItem>
+                <SelectItem value="N/A">N/A</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -168,14 +235,20 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </div>
         <div>
           <Label htmlFor="bloodCate" className="mb-1 block">Blood Category:</Label>
-          <Input id="bloodCate" className="h-9" disabled={!isEditable} />
+          <Input 
+            id="bloodCate" 
+            className="h-9" 
+            value={bloodCategory}
+            onChange={(e) => setBloodCategory(e.target.value)}
+            disabled={!isEditable} 
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="albumin" className="mb-1 block">Albumin:</Label>
-          <Select defaultValue="negative" disabled={!isEditable}>
+          <Select value={albumin} onValueChange={setAlbumin} disabled={!isEditable}>
             <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
@@ -188,7 +261,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </div>
         <div>
           <Label htmlFor="saline" className="mb-1 block">Saline:</Label>
-          <Select defaultValue="negative" disabled={!isEditable}>
+          <Select value={saline} onValueChange={setSaline} disabled={!isEditable}>
             <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
@@ -201,7 +274,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </div>
         <div>
           <Label htmlFor="coomb" className="mb-1 block">Coomb:</Label>
-          <Select defaultValue="negative" disabled={!isEditable}>
+          <Select value={coomb} onValueChange={setCoomb} disabled={!isEditable}>
             <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
@@ -217,7 +290,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <Label htmlFor="result" className="mb-1 block">Result:</Label>
-          <Select defaultValue="compatible" disabled={!isEditable}>
+          <Select value={result} onValueChange={setResult} disabled={!isEditable}>
             <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
@@ -230,14 +303,27 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </div>
         <div>
           <Label htmlFor="expiryDate" className="mb-1 block">Expiry Date:</Label>
-          <Input id="expiryDate" className="h-9" type="date" disabled={!isEditable} />
+          <Input 
+            id="expiryDate" 
+            className="h-9" 
+            type="date" 
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            disabled={!isEditable} 
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-6">
         <div>
           <Label htmlFor="remarks" className="mb-1 block">Remarks:</Label>
-          <Input id="remarks" className="h-9" disabled={!isEditable} />
+          <Input 
+            id="remarks" 
+            className="h-9" 
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            disabled={!isEditable} 
+          />
         </div>
       </div>
 
@@ -290,34 +376,40 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         </Table>
       </div>
 
-      {/* Search Crossmatch Modal */}
+      {/* Search Invoice Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Select Invoice</DialogTitle>
+            <DialogTitle>Select Patient Invoice</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input placeholder="Search by document number or patient name" />
+            <Input 
+              placeholder="Search by document number or patient name" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <div className="h-64 border mt-4 overflow-y-auto">
-              {[
-                { documentNo: "230001", patientName: "John Smith", age: 35, gender: "Male", bloodGroup: "A", rh: "+ve", hospital: "City Hospital" },
-                { documentNo: "230002", patientName: "Sarah Johnson", age: 42, gender: "Female", bloodGroup: "O", rh: "-ve", hospital: "General Hospital" },
-                { documentNo: "230003", patientName: "Robert Brown", age: 28, gender: "Male", bloodGroup: "B", rh: "+ve", hospital: "Memorial Hospital" }
-              ].map((invoice) => (
-                <div 
-                  key={invoice.documentNo} 
-                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleInvoiceSelect(invoice)}
-                >
-                  <div className="font-medium">Doc #: {invoice.documentNo}</div>
-                  <div className="text-sm text-gray-600">
-                    Patient: {invoice.patientName}, {invoice.gender}, {invoice.age} yrs
+              {filteredData.length > 0 ? (
+                filteredData.map((invoice) => (
+                  <div 
+                    key={invoice.document_no} 
+                    className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleInvoiceSelect(invoice)}
+                  >
+                    <div className="font-medium">Doc #: {invoice.document_no}</div>
+                    <div className="text-sm text-gray-600">
+                      Patient: {invoice.patient_name}, {invoice.sex}, {invoice.age} yrs
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Blood Group: {invoice.blood_group}{invoice.rh}, Hospital: {invoice.hospital}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Blood Group: {invoice.bloodGroup}{invoice.rh}, Hospital: {invoice.hospital}
-                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  No patient invoices found
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </DialogContent>

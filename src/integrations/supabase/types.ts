@@ -441,6 +441,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_crossmatch: {
+        Row: {
+          age: number | null
+          blood_group: string | null
+          created_at: string | null
+          document_no: string
+          hospital: string | null
+          patient_name: string
+          rh: string | null
+          sex: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          blood_group?: string | null
+          created_at?: string | null
+          document_no: string
+          hospital?: string | null
+          patient_name: string
+          rh?: string | null
+          sex?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          blood_group?: string | null
+          created_at?: string | null
+          document_no?: string
+          hospital?: string | null
+          patient_name?: string
+          rh?: string | null
+          sex?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           bag_no: string
