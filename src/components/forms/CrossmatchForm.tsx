@@ -62,12 +62,6 @@ interface CrossmatchRecord {
   product_id: string | null;
 }
 
-const mockDonors = [
-  { id: "1", bagNo: "B001", pipeNo: "P121", name: "John Doe", bloodGroup: "A+", product: "F.W.B" },
-  { id: "2", bagNo: "B002", pipeNo: "P122", name: "Jane Smith", bloodGroup: "O-", product: "F.W.B" },
-  { id: "3", bagNo: "B003", pipeNo: "P123", name: "Robert Brown", bloodGroup: "B+", product: "F.W.B" },
-];
-
 const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: CrossmatchFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDonorSearchModalOpen, setIsDonorSearchModalOpen] = useState(false);
@@ -892,5 +886,3 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
 };
 
 export default CrossmatchForm;
-
-</initial_code>
