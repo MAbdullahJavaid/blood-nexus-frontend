@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon, PlusCircle, Save } from "lucide-react";
+import { SearchIcon, PlusCircle, Save, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,27 @@ interface ProductData {
   product: string;
 }
 
+interface CrossmatchRecord {
+  id: string;
+  crossmatch_no: string;
+  quantity: number;
+  date: string;
+  patient_name: string;
+  age: number | null;
+  sex: string | null;
+  blood_group: string | null;
+  rh: string | null;
+  hospital: string | null;
+  blood_category: string | null;
+  albumin: string;
+  saline: string;
+  coomb: string;
+  result: string;
+  expiry_date: string | null;
+  remarks: string | null;
+  product_id: string | null;
+}
+
 const mockDonors = [
   { id: "1", bagNo: "B001", pipeNo: "P121", name: "John Doe", bloodGroup: "A+", product: "F.W.B" },
   { id: "2", bagNo: "B002", pipeNo: "P122", name: "Jane Smith", bloodGroup: "O-", product: "F.W.B" },
@@ -50,6 +71,7 @@ const mockDonors = [
 const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: CrossmatchFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDonorSearchModalOpen, setIsDonorSearchModalOpen] = useState(false);
+  const [isCrossmatchSearchModalOpen, setIsCrossmatchSearchModalOpen] = useState(false);
   const [donorItems, setDonorItems] = useState<DonorItem[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<PreCrossmatchData | null>(null);
   const [crossmatchNo, setCrossmatchNo] = useState("");
@@ -64,9 +86,13 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const [remarks, setRemarks] = useState("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
   const [preCrossmatchData, setPreCrossmatchData] = useState<PreCrossmatchData[]>([]);
   const [productsData, setProductsData] = useState<ProductData[]>([]);
+  const [crossmatchRecords, setCrossmatchRecords] = useState<CrossmatchRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [donorSearchTerm, setDonorSearchTerm] = useState("");
+  const [crossmatchSearchTerm, setCrossmatchSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<CrossmatchRecord | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (isSearchModalOpen) {
@@ -79,6 +105,12 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       fetchProductsData();
     }
   }, [isDonorSearchModalOpen]);
+
+  useEffect(() => {
+    if (isCrossmatchSearchModalOpen) {
+      fetchCrossmatchRecords();
+    }
+  }, [isCrossmatchSearchModalOpen]);
 
   const fetchPreCrossmatchData = async () => {
     try {
@@ -112,8 +144,28 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     }
   };
 
+  const fetchCrossmatchRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('crossmatch_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCrossmatchRecords(data || []);
+    } catch (error) {
+      console.error("Error fetching crossmatch records:", error);
+      toast.error("Failed to fetch crossmatch records");
+    }
+  };
+
   const handleSearchDocClick = () => {
     setIsSearchModalOpen(true);
+  };
+
+  const handleSearchCrossmatchClick = () => {
+    setIsCrossmatchSearchModalOpen(true);
   };
 
   const handleInvoiceSelect = (invoice: PreCrossmatchData) => {
@@ -143,8 +195,63 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     toast.success(`Donor ${product.donor_name} added`);
   };
 
+  const handleRemoveDonor = (donorId: string) => {
+    setDonorItems(donorItems.filter(donor => donor.id !== donorId));
+    toast.success("Donor removed");
+  };
+
+  const handleEditCrossmatch = (record: CrossmatchRecord) => {
+    setEditingRecord(record);
+    setIsEditing(true);
+    setCrossmatchNo(record.crossmatch_no);
+    setQuantity(record.quantity);
+    setDate(record.date);
+    setBloodCategory(record.blood_category || "");
+    setAlbumin(record.albumin);
+    setSaline(record.saline);
+    setCoomb(record.coomb);
+    setResult(record.result);
+    setExpiryDate(record.expiry_date || "");
+    setRemarks(record.remarks || "");
+    
+    // Set patient data
+    setSelectedInvoice({
+      document_no: record.crossmatch_no,
+      patient_name: record.patient_name,
+      age: record.age,
+      sex: record.sex,
+      blood_group: record.blood_group,
+      rh: record.rh,
+      hospital: record.hospital
+    });
+
+    setIsCrossmatchSearchModalOpen(false);
+    toast.success("Record loaded for editing");
+  };
+
+  const handleDeleteCrossmatch = async (recordId: string) => {
+    if (!confirm("Are you sure you want to delete this crossmatch record?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('crossmatch_records')
+        .delete()
+        .eq('id', recordId);
+
+      if (error) throw error;
+
+      toast.success("Crossmatch record deleted successfully");
+      fetchCrossmatchRecords(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting crossmatch record:", error);
+      toast.error("Failed to delete crossmatch record");
+    }
+  };
+
   const handleSaveCrossmatch = async () => {
-    if (!selectedInvoice) {
+    if (!selectedInvoice && !isEditing) {
       toast.error("Please select a patient first");
       return;
     }
@@ -154,77 +261,143 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       return;
     }
 
+    if (donorItems.length === 0 && !isEditing) {
+      toast.error("Please add at least one donor");
+      return;
+    }
+
     setIsSaving(true);
     
     try {
-      const crossmatchData = {
-        crossmatch_no: crossmatchNo,
-        quantity: quantity,
-        date: date,
-        patient_name: selectedInvoice.patient_name,
-        age: selectedInvoice.age,
-        sex: selectedInvoice.sex,
-        blood_group: selectedInvoice.blood_group,
-        rh: selectedInvoice.rh,
-        hospital: selectedInvoice.hospital,
-        blood_category: bloodCategory,
-        albumin: albumin,
-        saline: saline,
-        coomb: coomb,
-        result: result,
-        expiry_date: expiryDate || null,
-        remarks: remarks,
-        pre_crossmatch_doc_no: selectedInvoice.document_no
-      };
+      if (donorItems.length > 1) {
+        // Handle multiple donors - create separate records for each
+        for (const donor of donorItems) {
+          const crossmatchData = {
+            crossmatch_no: `${crossmatchNo}-${donor.bagNo}`,
+            quantity: quantity,
+            date: date,
+            patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
+            age: selectedInvoice?.age || editingRecord?.age,
+            sex: selectedInvoice?.sex || editingRecord?.sex,
+            blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
+            rh: selectedInvoice?.rh || editingRecord?.rh,
+            hospital: selectedInvoice?.hospital || editingRecord?.hospital,
+            blood_category: bloodCategory,
+            albumin: albumin,
+            saline: saline,
+            coomb: coomb,
+            result: result,
+            expiry_date: expiryDate || null,
+            remarks: remarks,
+            product_id: donor.bagNo, // Store bag number in product_id
+            pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
+          };
 
-      const { error: crossmatchError } = await supabase
-        .from('crossmatch_records')
-        .insert(crossmatchData);
+          const { error: crossmatchError } = await supabase
+            .from('crossmatch_records')
+            .insert(crossmatchData);
 
-      if (crossmatchError) throw crossmatchError;
+          if (crossmatchError) throw crossmatchError;
+        }
+      } else if (donorItems.length === 1) {
+        // Handle single donor
+        const crossmatchData = {
+          crossmatch_no: crossmatchNo,
+          quantity: quantity,
+          date: date,
+          patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
+          age: selectedInvoice?.age || editingRecord?.age,
+          sex: selectedInvoice?.sex || editingRecord?.sex,
+          blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
+          rh: selectedInvoice?.rh || editingRecord?.rh,
+          hospital: selectedInvoice?.hospital || editingRecord?.hospital,
+          blood_category: bloodCategory,
+          albumin: albumin,
+          saline: saline,
+          coomb: coomb,
+          result: result,
+          expiry_date: expiryDate || null,
+          remarks: remarks,
+          product_id: donorItems[0].bagNo, // Store bag number in product_id
+          pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
+        };
 
-      // Delete the selected row from pre_crossmatch table
-      const { error: preCrossmatchDeleteError } = await supabase
-        .from('pre_crossmatch')
-        .delete()
-        .eq('document_no', selectedInvoice.document_no);
+        if (isEditing && editingRecord) {
+          // Update existing record
+          const { error: updateError } = await supabase
+            .from('crossmatch_records')
+            .update(crossmatchData)
+            .eq('id', editingRecord.id);
 
-      if (preCrossmatchDeleteError) {
-        console.error("Error deleting pre-crossmatch record:", preCrossmatchDeleteError);
-        toast.error("Failed to delete pre-crossmatch record");
-        return;
+          if (updateError) throw updateError;
+        } else {
+          // Insert new record
+          const { error: crossmatchError } = await supabase
+            .from('crossmatch_records')
+            .insert(crossmatchData);
+
+          if (crossmatchError) throw crossmatchError;
+        }
+      } else if (isEditing && editingRecord) {
+        // Update existing record without donor changes
+        const crossmatchData = {
+          crossmatch_no: crossmatchNo,
+          quantity: quantity,
+          date: date,
+          patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
+          age: selectedInvoice?.age || editingRecord?.age,
+          sex: selectedInvoice?.sex || editingRecord?.sex,
+          blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
+          rh: selectedInvoice?.rh || editingRecord?.rh,
+          hospital: selectedInvoice?.hospital || editingRecord?.hospital,
+          blood_category: bloodCategory,
+          albumin: albumin,
+          saline: saline,
+          coomb: coomb,
+          result: result,
+          expiry_date: expiryDate || null,
+          remarks: remarks
+        };
+
+        const { error: updateError } = await supabase
+          .from('crossmatch_records')
+          .update(crossmatchData)
+          .eq('id', editingRecord.id);
+
+        if (updateError) throw updateError;
       }
 
-      // Delete selected products
-      if (donorItems.length > 0) {
-        const productIds = donorItems.map(item => item.id);
-        const { error: productDeleteError } = await supabase
-          .from('products')
-          .delete()
-          .in('id', productIds);
+      // Only delete pre_crossmatch and products if this is a new record (not editing)
+      if (!isEditing) {
+        if (selectedInvoice) {
+          const { error: preCrossmatchDeleteError } = await supabase
+            .from('pre_crossmatch')
+            .delete()
+            .eq('document_no', selectedInvoice.document_no);
 
-        if (productDeleteError) {
-          console.error("Error deleting product records:", productDeleteError);
-          toast.error("Failed to delete product records");
-          return;
+          if (preCrossmatchDeleteError) {
+            console.error("Error deleting pre-crossmatch record:", preCrossmatchDeleteError);
+          }
+        }
+
+        // Delete selected products
+        if (donorItems.length > 0) {
+          const productIds = donorItems.map(item => item.id);
+          const { error: productDeleteError } = await supabase
+            .from('products')
+            .delete()
+            .in('id', productIds);
+
+          if (productDeleteError) {
+            console.error("Error deleting product records:", productDeleteError);
+          }
         }
       }
 
-      toast.success("Crossmatch record saved successfully and related records deleted");
+      toast.success(isEditing ? "Crossmatch record updated successfully" : "Crossmatch record saved successfully");
       
       // Reset form after successful save
-      setSelectedInvoice(null);
-      setCrossmatchNo("");
-      setQuantity(1);
-      setDate(new Date().toISOString().split('T')[0]);
-      setBloodCategory("");
-      setAlbumin("negative");
-      setSaline("negative");
-      setCoomb("negative");
-      setResult("compatible");
-      setExpiryDate("");
-      setRemarks("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
-      setDonorItems([]);
+      resetForm();
       
     } catch (error) {
       console.error("Error saving crossmatch record:", error);
@@ -232,6 +405,23 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const resetForm = () => {
+    setSelectedInvoice(null);
+    setEditingRecord(null);
+    setIsEditing(false);
+    setCrossmatchNo("");
+    setQuantity(1);
+    setDate(new Date().toISOString().split('T')[0]);
+    setBloodCategory("");
+    setAlbumin("negative");
+    setSaline("negative");
+    setCoomb("negative");
+    setResult("compatible");
+    setExpiryDate("");
+    setRemarks("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
+    setDonorItems([]);
   };
 
   const filteredData = preCrossmatchData.filter(item =>
@@ -243,6 +433,11 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     product.bag_no.toLowerCase().includes(donorSearchTerm.toLowerCase()) ||
     product.donor_name.toLowerCase().includes(donorSearchTerm.toLowerCase()) ||
     product.product.toLowerCase().includes(donorSearchTerm.toLowerCase())
+  );
+
+  const filteredCrossmatchRecords = crossmatchRecords.filter(record =>
+    record.crossmatch_no.toLowerCase().includes(crossmatchSearchTerm.toLowerCase()) ||
+    record.patient_name.toLowerCase().includes(crossmatchSearchTerm.toLowerCase())
   );
 
   return (
@@ -259,13 +454,22 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               onChange={(e) => setCrossmatchNo(e.target.value)}
             />
             {isEditable && (
-              <button 
-                onClick={handleSearchDocClick}
-                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-                aria-label="Search crossmatch"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </button>
+              <div className="flex gap-1">
+                <button 
+                  onClick={handleSearchDocClick}
+                  className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                  aria-label="Search crossmatch"
+                >
+                  <SearchIcon className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={handleSearchCrossmatchClick}
+                  className="bg-blue-200 p-1 rounded hover:bg-blue-300"
+                  aria-label="Search existing crossmatch records"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -480,6 +684,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
               <TableHead>Product</TableHead>
               <TableHead className="w-[60px] text-right">Qty</TableHead>
               <TableHead className="w-[60px]">Unit</TableHead>
+              {isEditable && <TableHead className="w-[80px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -492,11 +697,23 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
                   <TableCell>{donor.product}</TableCell>
                   <TableCell className="text-right">{donor.quantity.toFixed(2)}</TableCell>
                   <TableCell>{donor.unit}</TableCell>
+                  {isEditable && (
+                    <TableCell>
+                      <Button
+                        onClick={() => handleRemoveDonor(donor.id)}
+                        size="sm"
+                        variant="destructive"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                <TableCell colSpan={isEditable ? 7 : 6} className="text-center py-4 text-gray-500">
                   No donors added yet
                 </TableCell>
               </TableRow>
@@ -507,14 +724,23 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
 
       {/* Save Button */}
       {isEditable && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {isEditing && (
+            <Button 
+              onClick={resetForm}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              Cancel Edit
+            </Button>
+          )}
           <Button 
             onClick={handleSaveCrossmatch}
-            disabled={isSaving || !selectedInvoice}
+            disabled={isSaving}
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {isSaving ? "Saving..." : "Save Crossmatch"}
+            {isSaving ? "Saving..." : (isEditing ? "Update Crossmatch" : "Save Crossmatch")}
           </Button>
         </div>
       )}
@@ -596,8 +822,75 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Crossmatch Records Search Modal */}
+      <Dialog open={isCrossmatchSearchModalOpen} onOpenChange={setIsCrossmatchSearchModalOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Manage Crossmatch Records</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              placeholder="Search by crossmatch number or patient name" 
+              value={crossmatchSearchTerm}
+              onChange={(e) => setCrossmatchSearchTerm(e.target.value)}
+            />
+            <div className="h-96 border mt-4 overflow-y-auto">
+              {filteredCrossmatchRecords.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Crossmatch No</TableHead>
+                      <TableHead>Patient Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Result</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCrossmatchRecords.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{record.crossmatch_no}</TableCell>
+                        <TableCell>{record.patient_name}</TableCell>
+                        <TableCell>{record.date}</TableCell>
+                        <TableCell>{record.result}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleEditCrossmatch(record)}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteCrossmatch(record.id)}
+                              size="sm"
+                              variant="destructive"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  No crossmatch records found
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default CrossmatchForm;
+
+</initial_code>
