@@ -110,7 +110,8 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     toast.success("Donor removed");
   };
 
-  const handleEditCrossmatch = (record: CrossmatchRecord) => {
+  const handleEditCrossmatch = async (record: CrossmatchRecord) => {
+    console.log("Loading crossmatch record for editing:", record);
     setEditingRecord(record);
     setIsEditing(true);
     setCrossmatchNo(record.crossmatch_no);
@@ -134,6 +135,32 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       rh: record.rh,
       hospital: record.hospital
     });
+
+    // Load donor information if product_id exists
+    if (record.product_id) {
+      try {
+        const { data: productData, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('bag_no', record.product_id)
+          .single();
+
+        if (productData && !error) {
+          const donorItem: DonorItem = {
+            id: productData.id,
+            bagNo: productData.bag_no,
+            pipeNo: "",
+            name: productData.donor_name,
+            product: productData.product,
+            quantity: 1.0,
+            unit: "Bag"
+          };
+          setDonorItems([donorItem]);
+        }
+      } catch (error) {
+        console.error("Error loading donor data for editing:", error);
+      }
+    }
 
     setIsCrossmatchSearchModalOpen(false);
     toast.success("Record loaded for editing");
@@ -173,6 +200,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       return;
     }
 
+    // For new records, require at least one donor
     if (donorItems.length === 0 && !isEditing) {
       toast.error("Please add at least one donor");
       return;
@@ -183,117 +211,89 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     try {
       console.log("Selected invoice:", selectedInvoice);
       console.log("Donor items:", donorItems);
+      console.log("Is editing:", isEditing);
       
-      if (donorItems.length > 1) {
-        // Handle multiple donors - create separate records for each
-        for (const donor of donorItems) {
-          const crossmatchData = {
-            crossmatch_no: `${crossmatchNo}-${donor.bagNo}`,
-            quantity: quantity,
-            date: date,
-            patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
-            age: selectedInvoice?.age || editingRecord?.age,
-            sex: selectedInvoice?.sex || editingRecord?.sex,
-            blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
-            rh: selectedInvoice?.rh || editingRecord?.rh,
-            hospital: selectedInvoice?.hospital || editingRecord?.hospital,
-            blood_category: bloodCategory,
-            albumin: albumin,
-            saline: saline,
-            coomb: coomb,
-            result: result,
-            expiry_date: expiryDate || null,
-            remarks: remarks,
-            product_id: donor.bagNo,
-            pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
-          };
+      // Prepare base crossmatch data
+      const baseCrossmatchData = {
+        crossmatch_no: crossmatchNo,
+        quantity: quantity,
+        date: date,
+        patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
+        age: selectedInvoice?.age || editingRecord?.age,
+        sex: selectedInvoice?.sex || editingRecord?.sex,
+        blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
+        rh: selectedInvoice?.rh || editingRecord?.rh,
+        hospital: selectedInvoice?.hospital || editingRecord?.hospital,
+        blood_category: bloodCategory,
+        albumin: albumin,
+        saline: saline,
+        coomb: coomb,
+        result: result,
+        expiry_date: expiryDate || null,
+        remarks: remarks,
+        pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
+      };
 
-          console.log("Inserting crossmatch data for multiple donors:", crossmatchData);
-
-          const { error: crossmatchError } = await supabase
-            .from('crossmatch_records')
-            .insert(crossmatchData);
-
-          if (crossmatchError) {
-            console.error("Error inserting crossmatch record:", crossmatchError);
-            throw crossmatchError;
-          }
-        }
-      } else if (donorItems.length === 1) {
-        // Handle single donor
-        const crossmatchData = {
-          crossmatch_no: crossmatchNo,
-          quantity: quantity,
-          date: date,
-          patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
-          age: selectedInvoice?.age || editingRecord?.age,
-          sex: selectedInvoice?.sex || editingRecord?.sex,
-          blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
-          rh: selectedInvoice?.rh || editingRecord?.rh,
-          hospital: selectedInvoice?.hospital || editingRecord?.hospital,
-          blood_category: bloodCategory,
-          albumin: albumin,
-          saline: saline,
-          coomb: coomb,
-          result: result,
-          expiry_date: expiryDate || null,
-          remarks: remarks,
-          product_id: donorItems[0].bagNo,
-          pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
+      if (isEditing && editingRecord) {
+        // Update existing record
+        const updateData = {
+          ...baseCrossmatchData,
+          product_id: donorItems.length > 0 ? donorItems[0].bagNo : editingRecord.product_id
         };
 
-        console.log("Inserting crossmatch data for single donor:", crossmatchData);
-
-        if (isEditing && editingRecord) {
-          // Update existing record
-          const { error: updateError } = await supabase
-            .from('crossmatch_records')
-            .update(crossmatchData)
-            .eq('id', editingRecord.id);
-
-          if (updateError) throw updateError;
-        } else {
-          // Insert new record
-          const { error: crossmatchError } = await supabase
-            .from('crossmatch_records')
-            .insert(crossmatchData);
-
-          if (crossmatchError) {
-            console.error("Error inserting crossmatch record:", crossmatchError);
-            throw crossmatchError;
-          }
-        }
-      } else if (isEditing && editingRecord) {
-        // Update existing record without donor changes
-        const crossmatchData = {
-          crossmatch_no: crossmatchNo,
-          quantity: quantity,
-          date: date,
-          patient_name: selectedInvoice?.patient_name || editingRecord?.patient_name || "",
-          age: selectedInvoice?.age || editingRecord?.age,
-          sex: selectedInvoice?.sex || editingRecord?.sex,
-          blood_group: selectedInvoice?.blood_group || editingRecord?.blood_group,
-          rh: selectedInvoice?.rh || editingRecord?.rh,
-          hospital: selectedInvoice?.hospital || editingRecord?.hospital,
-          blood_category: bloodCategory,
-          albumin: albumin,
-          saline: saline,
-          coomb: coomb,
-          result: result,
-          expiry_date: expiryDate || null,
-          remarks: remarks
-        };
+        console.log("Updating crossmatch data:", updateData);
 
         const { error: updateError } = await supabase
           .from('crossmatch_records')
-          .update(crossmatchData)
+          .update(updateData)
           .eq('id', editingRecord.id);
 
-        if (updateError) throw updateError;
-      }
+        if (updateError) {
+          console.error("Update error:", updateError);
+          throw updateError;
+        }
+      } else {
+        // Create new record(s)
+        if (donorItems.length > 1) {
+          // Handle multiple donors - create separate records for each
+          for (const donor of donorItems) {
+            const crossmatchData = {
+              ...baseCrossmatchData,
+              crossmatch_no: `${crossmatchNo}-${donor.bagNo}`,
+              product_id: donor.bagNo
+            };
 
-      // Only delete pre_crossmatch and products if this is a new record (not editing)
-      if (!isEditing) {
+            console.log("Inserting crossmatch data for multiple donors:", crossmatchData);
+
+            const { error: crossmatchError } = await supabase
+              .from('crossmatch_records')
+              .insert(crossmatchData);
+
+            if (crossmatchError) {
+              console.error("Error inserting crossmatch record:", crossmatchError);
+              throw crossmatchError;
+            }
+          }
+        } else if (donorItems.length === 1) {
+          // Handle single donor
+          const crossmatchData = {
+            ...baseCrossmatchData,
+            product_id: donorItems[0].bagNo
+          };
+
+          console.log("Inserting crossmatch data for single donor:", crossmatchData);
+
+          const { error: crossmatchError } = await supabase
+            .from('crossmatch_records')
+            .insert(crossmatchData);
+
+          if (crossmatchError) {
+            console.error("Error inserting crossmatch record:", crossmatchError);
+            throw crossmatchError;
+          }
+        }
+
+        // Only delete pre_crossmatch and products if this is a new record (not editing)
         if (selectedInvoice) {
           console.log("Deleting pre_crossmatch record with document_no:", selectedInvoice.document_no);
           const { error: preCrossmatchDeleteError } = await supabase
@@ -329,7 +329,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       
     } catch (error) {
       console.error("Error saving crossmatch record:", error);
-      toast.error("Failed to save crossmatch record");
+      toast.error(`Failed to save crossmatch record: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
