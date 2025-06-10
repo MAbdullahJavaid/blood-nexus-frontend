@@ -37,6 +37,12 @@ interface PreReport {
   updated_at: string;
 }
 
+interface TestCategory {
+  id: number;
+  name: string;
+  description: string | null;
+}
+
 interface ReportDataEntryFormProps {
   isSearchEnabled?: boolean;
   isEditable?: boolean;
@@ -48,6 +54,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
+  const [testCategories, setTestCategories] = useState<TestCategory[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchReports = async () => {
@@ -68,7 +75,22 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
     }
   };
 
+  const fetchTestCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('test_categories')
+        .select('id, name, description')
+        .order('name');
+
+      if (error) throw error;
+      setTestCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching test categories:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchTestCategories();
     if (isSearchEnabled) {
       fetchReports();
     }
@@ -80,11 +102,9 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
   );
 
   const handleSearchClick = () => {
-    if (isSearchEnabled) {
-      setIsSearchModalOpen(true);
-      if (reports.length === 0) {
-        fetchReports();
-      }
+    setIsSearchModalOpen(true);
+    if (reports.length === 0) {
+      fetchReports();
     }
   };
 
@@ -146,7 +166,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
                 variant="outline"
                 size="sm"
                 onClick={handleSearchClick}
-                disabled={!isSearchEnabled}
                 className="px-3"
               >
                 <Search className="h-4 w-4" />
@@ -351,6 +370,22 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
           </div>
         </div>
       </div>
+
+      {/* Test Categories Blue Bar */}
+      {testCategories.length > 0 && (
+        <div className="bg-blue-500 text-white p-3 rounded-md">
+          <div className="flex flex-wrap gap-4">
+            {testCategories.map((category) => (
+              <div key={category.id} className="flex items-center space-x-2">
+                <span className="font-medium">{category.name}</span>
+                {category.description && (
+                  <span className="text-blue-100 text-sm">({category.description})</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Test Results Table */}
       <div className="space-y-2">
