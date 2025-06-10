@@ -42,13 +42,14 @@ interface ReportDataEntryFormProps {
   isEditable?: boolean;
 }
 
-const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: ReportDataEntryFormProps) => {
+const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: ReportDataEntryFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
+  const [testCategories, setTestCategories] = useState<string[]>([]);
 
   const fetchReports = async () => {
     try {
@@ -68,11 +69,35 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
     }
   };
 
-  useEffect(() => {
-    if (isSearchEnabled) {
-      fetchReports();
+  const fetchTestCategories = async (testIds: number[]) => {
+    if (testIds.length === 0) {
+      setTestCategories([]);
+      return;
     }
-  }, [isSearchEnabled]);
+
+    try {
+      const { data, error } = await supabase
+        .from('test_information')
+        .select(`
+          id,
+          test_categories!inner(name)
+        `)
+        .in('id', testIds);
+
+      if (error) throw error;
+
+      const categories = data?.map(item => item.test_categories?.name).filter(Boolean) || [];
+      const uniqueCategories = [...new Set(categories)] as string[];
+      setTestCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error fetching test categories:', error);
+      setTestCategories([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
 
   const filteredReports = reports.filter(report =>
     report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,15 +105,13 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
   );
 
   const handleSearchClick = () => {
-    if (isSearchEnabled) {
-      setIsSearchModalOpen(true);
-      if (reports.length === 0) {
-        fetchReports();
-      }
+    setIsSearchModalOpen(true);
+    if (reports.length === 0) {
+      fetchReports();
     }
   };
 
-  const handleReportSelect = (report: PreReport) => {
+  const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
     
     // Parse tests from JSON string
@@ -96,12 +119,18 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
       try {
         const tests = JSON.parse(report.tests_type);
         setTestResults(tests || []);
+        
+        // Fetch test categories for the selected tests
+        const testIds = tests.map((test: TestResult) => test.test_id).filter(Boolean);
+        await fetchTestCategories(testIds);
       } catch (error) {
         console.error('Error parsing tests:', error);
         setTestResults([]);
+        setTestCategories([]);
       }
     } else {
       setTestResults([]);
+      setTestCategories([]);
     }
     
     setIsSearchModalOpen(false);
@@ -127,6 +156,14 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
         <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
       </div>
 
+      {/* Test Categories Blue Bar */}
+      {testCategories.length > 0 && (
+        <div className="bg-blue-500 text-white p-3 rounded-md">
+          <div className="font-medium">Test Categories:</div>
+          <div className="text-sm">{testCategories.join(', ')}</div>
+        </div>
+      )}
+
       {/* Patient Information Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* First Column */}
@@ -146,7 +183,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
                 variant="outline"
                 size="sm"
                 onClick={handleSearchClick}
-                disabled={!isSearchEnabled}
                 className="px-3"
               >
                 <Search className="h-4 w-4" />
