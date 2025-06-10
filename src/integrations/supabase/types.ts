@@ -114,69 +114,77 @@ export type Database = {
           },
         ]
       }
-      crossmatch: {
+      crossmatch_records: {
         Row: {
-          bag_id: string
+          age: number | null
+          albumin: string
+          blood_category: string | null
+          blood_group: string | null
+          coomb: string
           created_at: string | null
-          created_by: string | null
+          crossmatch_no: string
+          date: string
+          expiry_date: string | null
+          hospital: string | null
           id: string
-          patient_id: string
-          patient_reg_id: string | null
+          patient_name: string
+          pre_crossmatch_doc_no: string | null
+          product_id: string | null
+          quantity: number
           remarks: string | null
           result: string
-          technician: string | null
-          test_date: string
+          rh: string | null
+          saline: string
+          sex: string | null
           updated_at: string | null
         }
         Insert: {
-          bag_id: string
+          age?: number | null
+          albumin?: string
+          blood_category?: string | null
+          blood_group?: string | null
+          coomb?: string
           created_at?: string | null
-          created_by?: string | null
+          crossmatch_no: string
+          date?: string
+          expiry_date?: string | null
+          hospital?: string | null
           id?: string
-          patient_id: string
-          patient_reg_id?: string | null
+          patient_name: string
+          pre_crossmatch_doc_no?: string | null
+          product_id?: string | null
+          quantity?: number
           remarks?: string | null
-          result: string
-          technician?: string | null
-          test_date: string
+          result?: string
+          rh?: string | null
+          saline?: string
+          sex?: string | null
           updated_at?: string | null
         }
         Update: {
-          bag_id?: string
+          age?: number | null
+          albumin?: string
+          blood_category?: string | null
+          blood_group?: string | null
+          coomb?: string
           created_at?: string | null
-          created_by?: string | null
+          crossmatch_no?: string
+          date?: string
+          expiry_date?: string | null
+          hospital?: string | null
           id?: string
-          patient_id?: string
-          patient_reg_id?: string | null
+          patient_name?: string
+          pre_crossmatch_doc_no?: string | null
+          product_id?: string | null
+          quantity?: number
           remarks?: string | null
           result?: string
-          technician?: string | null
-          test_date?: string
+          rh?: string | null
+          saline?: string
+          sex?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "crossmatch_bag_id_fkey"
-            columns: ["bag_id"]
-            isOneToOne: false
-            referencedRelation: "blood_inventory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crossmatch_patient_reg_id_fkey"
-            columns: ["patient_reg_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["patient_id"]
-          },
-          {
-            foreignKeyName: "crossmatch_patient_reg_id_fkey"
-            columns: ["patient_reg_id"]
-            isOneToOne: false
-            referencedRelation: "patients_with_combined_blood_group"
-            referencedColumns: ["patient_id"]
-          },
-        ]
+        Relationships: []
       }
       document_sequences: {
         Row: {

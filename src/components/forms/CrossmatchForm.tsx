@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon, PlusCircle } from "lucide-react";
+import { SearchIcon, PlusCircle, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -55,9 +55,10 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const [coomb, setCoomb] = useState("negative");
   const [result, setResult] = useState("compatible");
   const [expiryDate, setExpiryDate] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [remarks, setRemarks] = useState("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
   const [preCrossmatchData, setPreCrossmatchData] = useState<PreCrossmatchData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isSearchModalOpen) {
@@ -109,6 +110,70 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     
     setDonorItems([...donorItems, newDonorItem]);
     setIsDonorSearchModalOpen(false);
+  };
+
+  const handleSaveCrossmatch = async () => {
+    if (!selectedInvoice) {
+      toast.error("Please select a patient first");
+      return;
+    }
+
+    if (!crossmatchNo.trim()) {
+      toast.error("Crossmatch number is required");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const crossmatchData = {
+        crossmatch_no: crossmatchNo,
+        quantity: quantity,
+        date: date,
+        patient_name: selectedInvoice.patient_name,
+        age: selectedInvoice.age,
+        sex: selectedInvoice.sex,
+        blood_group: selectedInvoice.blood_group,
+        rh: selectedInvoice.rh,
+        hospital: selectedInvoice.hospital,
+        blood_category: bloodCategory,
+        albumin: albumin,
+        saline: saline,
+        coomb: coomb,
+        result: result,
+        expiry_date: expiryDate || null,
+        remarks: remarks,
+        pre_crossmatch_doc_no: selectedInvoice.document_no
+      };
+
+      const { error } = await supabase
+        .from('crossmatch_records')
+        .insert(crossmatchData);
+
+      if (error) throw error;
+
+      toast.success("Crossmatch record saved successfully");
+      
+      // Reset form after successful save
+      setSelectedInvoice(null);
+      setCrossmatchNo("");
+      setQuantity(1);
+      setDate(new Date().toISOString().split('T')[0]);
+      setBloodCategory("");
+      setAlbumin("negative");
+      setSaline("negative");
+      setCoomb("negative");
+      setResult("compatible");
+      setExpiryDate("");
+      setRemarks("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
+      setDonorItems([]);
+      
+    } catch (error) {
+      console.error("Error saving crossmatch record:", error);
+      toast.error("Failed to save crossmatch record");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const filteredData = preCrossmatchData.filter(item =>
@@ -375,6 +440,20 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
           </TableBody>
         </Table>
       </div>
+
+      {/* Save Button */}
+      {isEditable && (
+        <div className="flex justify-end">
+          <Button 
+            onClick={handleSaveCrossmatch}
+            disabled={isSaving || !selectedInvoice}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? "Saving..." : "Save Crossmatch"}
+          </Button>
+        </div>
+      )}
 
       {/* Search Invoice Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
