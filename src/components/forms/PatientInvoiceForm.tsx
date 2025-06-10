@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -23,7 +22,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [bloodGroup, setBloodGroup] = useState<string>("N/A");
     const [rhType, setRhType] = useState<string>("N/A");
     const [bloodCategory, setBloodCategory] = useState<string>("FWB");
-    const [bottleRequired, setBottleRequired] = useState<number>(1);
+    const [bottleRequired, setBottleRequired] = useState<number>(0);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -60,29 +59,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }));
 
-    useEffect(() => {
-      if (isEditable && isAdding) {
-        generateDocumentNo();
-      }
-    }, [isEditable]);
+    // Don't generate document number on component mount when in add mode
+    // Document number will be generated only when saving
 
-    const isAdding = !documentNo;
+    const isAdding = !documentNo && isEditable;
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
-    
-    const generateDocumentNo = async () => {
-      try {
-        const { data, error } = await supabase.rpc('generate_invoice_number');
-        if (error) throw error;
-        setDocumentNo(data);
-      } catch (error) {
-        console.error('Error generating document number:', error);
-        const date = new Date();
-        const year = date.getFullYear().toString().slice(-2);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const sequence = "0001";
-        setDocumentNo(`${year}${month}${sequence}`);
-      }
-    };
 
     const handlePatientTypeChange = (value: string) => {
       setPatientType(value);
@@ -149,6 +130,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleTestSelect = async (testId: number) => {
+      // ... keep existing code (test selection logic)
       try {
         const { data, error } = await supabase
           .from('test_information')
@@ -180,6 +162,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handlePatientSelect = async (patientDbId: string) => {
+      // ... keep existing code (patient selection logic)
       try {
         const { data: patient, error } = await supabase
           .from('patients')
@@ -226,6 +209,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleDocumentSelect = async (docNum: string) => {
+      // ... keep existing code (document selection logic)
       try {
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
@@ -258,7 +242,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           setBloodGroup(invoiceData.blood_group_separate || "N/A");
           setRhType(invoiceData.rh_factor || "N/A");
           setBloodCategory(invoiceData.blood_category || "FWB");
-          setBottleRequired(invoiceData.bottle_quantity || 1);
+          setBottleRequired(invoiceData.bottle_quantity || 0);
           setBottleUnitType(invoiceData.bottle_unit || "bag");
 
           // Load invoice items
@@ -357,6 +341,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           return { success: false, error: "Patient ID is required" };
         }
 
+        // Generate document number only at the time of saving if it's a new document
+        let finalDocumentNo = documentNo;
+        if (!documentNo) {
+          try {
+            const { data, error } = await supabase.rpc('generate_invoice_number');
+            if (error) throw error;
+            finalDocumentNo = data;
+            setDocumentNo(data); // Update the state with the generated number
+          } catch (error) {
+            console.error('Error generating document number:', error);
+            const date = new Date();
+            const year = date.getFullYear().toString().slice(-2);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const sequence = "0001";
+            finalDocumentNo = `${year}${month}${sequence}`;
+            setDocumentNo(finalDocumentNo);
+          }
+        }
+
         // For OPD patients, create a new patient record first if needed
         let finalPatientId = patientID;
         
@@ -404,7 +407,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
           .insert({
-            document_no: documentNo,
+            document_no: finalDocumentNo,
             document_date: documentDate,
             patient_id: finalPatientId, // This is now a string for both types
             patient_type: patientType,
@@ -566,3 +569,5 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
 
 export default PatientInvoiceForm;
+
+</edits_to_apply>
