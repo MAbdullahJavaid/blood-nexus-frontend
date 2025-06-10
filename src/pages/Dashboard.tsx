@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -10,9 +9,10 @@ import BleedingForm from "@/components/forms/BleedingForm";
 import PatientInvoiceForm from "@/components/forms/PatientInvoiceForm";
 import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
+import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
 
-type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | null;
+type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | null;
 
 interface FormRef {
   handleAddItem?: () => void;
@@ -176,6 +176,8 @@ const Dashboard = () => {
                  categories={categories}
                  ref={activeFormRef as any}
                />;
+      case 'reportDataEntry':
+        return <ReportDataEntryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       default:
         return null;
     }

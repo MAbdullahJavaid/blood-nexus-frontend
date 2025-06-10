@@ -166,7 +166,11 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="flex flex-col gap-1">
-                <SidebarItem icon={FileTextIcon} label="Report Data Entry" />
+                <SidebarItem 
+                  icon={FileTextIcon} 
+                  label="Report Data Entry" 
+                  onClick={() => handleFormClick('reportDataEntry')}
+                />
                 <SidebarItem 
                   icon={ReceiptIcon} 
                   label="Patient Invoice"
