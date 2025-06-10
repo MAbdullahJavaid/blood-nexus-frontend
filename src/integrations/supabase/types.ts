@@ -485,6 +485,69 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_report: {
+        Row: {
+          age: number | null
+          blood_category: string | null
+          blood_group: string | null
+          bottle_required: number | null
+          created_at: string | null
+          dob: string | null
+          document_no: string
+          gender: string | null
+          hospital_name: string | null
+          patient_id: string | null
+          patient_name: string
+          phone: string | null
+          reference: string | null
+          registration_date: string | null
+          rh: string | null
+          tests_type: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          blood_category?: string | null
+          blood_group?: string | null
+          bottle_required?: number | null
+          created_at?: string | null
+          dob?: string | null
+          document_no: string
+          gender?: string | null
+          hospital_name?: string | null
+          patient_id?: string | null
+          patient_name: string
+          phone?: string | null
+          reference?: string | null
+          registration_date?: string | null
+          rh?: string | null
+          tests_type?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          blood_category?: string | null
+          blood_group?: string | null
+          bottle_required?: number | null
+          created_at?: string | null
+          dob?: string | null
+          document_no?: string
+          gender?: string | null
+          hospital_name?: string | null
+          patient_id?: string | null
+          patient_name?: string
+          phone?: string | null
+          reference?: string | null
+          registration_date?: string | null
+          rh?: string | null
+          tests_type?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           bag_no: string

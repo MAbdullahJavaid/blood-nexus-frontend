@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,34 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface TestResult {
-  testId: string;
-  testName: string;
-  mju: string;
-  lowValue: string;
-  highValue: string;
-  value: string;
+  test_id: number;
+  test_name: string;
+  quantity: number;
 }
 
-interface ReportData {
-  documentNo: string;
-  patientId: string;
-  patientName: string;
-  hospitalName: string;
-  phoneNo: string;
-  age: string;
-  bloodGroup: string;
-  rh: string;
-  type: string;
-  gender: string;
-  dob: string;
-  documentDate: string;
-  registrationDate: string;
-  references: string;
-  bloodCategory: string;
-  bottleRequired: string;
-  testResults: TestResult[];
+interface PreReport {
+  document_no: string;
+  patient_id: string | null;
+  patient_name: string;
+  type: string | null;
+  registration_date: string;
+  hospital_name: string | null;
+  gender: string | null;
+  dob: string | null;
+  phone: string | null;
+  age: number | null;
+  reference: string | null;
+  blood_group: string | null;
+  rh: string | null;
+  blood_category: string | null;
+  bottle_required: number | null;
+  tests_type: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ReportDataEntryFormProps {
@@ -45,62 +45,79 @@ interface ReportDataEntryFormProps {
 const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: ReportDataEntryFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedReport, setSelectedReport] = useState<ReportData | null>(null);
+  const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [reports, setReports] = useState<PreReport[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data for search results
-  const mockReports: ReportData[] = [
-    {
-      documentNo: "25010001",
-      patientId: "P001",
-      patientName: "John Doe",
-      hospitalName: "General Hospital",
-      phoneNo: "123-456-7890",
-      age: "35",
-      bloodGroup: "A",
-      rh: "+ve",
-      type: "Regular",
-      gender: "Male",
-      dob: "09/01/89",
-      documentDate: "10/06/2025",
-      registrationDate: "10/06/25 08:58:15 PM",
-      references: "REF001",
-      bloodCategory: "F.W.B",
-      bottleRequired: "2",
-      testResults: [
-        {
-          testId: "T001",
-          testName: "Complete Blood Count",
-          mju: "cells/mcL",
-          lowValue: "4000",
-          highValue: "11000",
-          value: "7500"
-        },
-        {
-          testId: "T002",
-          testName: "Hemoglobin",
-          mju: "g/dL",
-          lowValue: "12.0",
-          highValue: "16.0",
-          value: "14.2"
-        }
-      ]
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('pre_report')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReports(data || []);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      toast.error('Failed to fetch reports');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredReports = mockReports.filter(report =>
-    report.documentNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.patientName.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    if (isSearchEnabled) {
+      fetchReports();
+    }
+  }, [isSearchEnabled]);
+
+  const filteredReports = reports.filter(report =>
+    report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSearchClick = () => {
     if (isSearchEnabled) {
       setIsSearchModalOpen(true);
+      if (reports.length === 0) {
+        fetchReports();
+      }
     }
   };
 
-  const handleReportSelect = (report: ReportData) => {
+  const handleReportSelect = (report: PreReport) => {
     setSelectedReport(report);
+    
+    // Parse tests from JSON string
+    if (report.tests_type) {
+      try {
+        const tests = JSON.parse(report.tests_type);
+        setTestResults(tests || []);
+      } catch (error) {
+        console.error('Error parsing tests:', error);
+        setTestResults([]);
+      }
+    } else {
+      setTestResults([]);
+    }
+    
     setIsSearchModalOpen(false);
+    toast.success(`Report for ${report.patient_name} loaded successfully`);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+  };
+
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleString('en-GB'); // DD/MM/YYYY HH:MM:SS format
   };
 
   return (
@@ -121,7 +138,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             <div className="flex gap-2">
               <Input
                 id="documentNo"
-                value={selectedReport?.documentNo || ""}
+                value={selectedReport?.document_no || ""}
                 readOnly
                 className="bg-gray-50"
               />
@@ -143,7 +160,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="patientName"
-              value={selectedReport?.patientName || ""}
+              value={selectedReport?.patient_name || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -155,7 +172,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="hospitalName"
-              value={selectedReport?.hospitalName || ""}
+              value={selectedReport?.hospital_name || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -167,7 +184,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="phoneNo"
-              value={selectedReport?.phoneNo || ""}
+              value={selectedReport?.phone || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -179,7 +196,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="bloodGroup"
-              value={selectedReport?.bloodGroup || ""}
+              value={selectedReport?.blood_group || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -194,7 +211,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="patientId"
-              value={selectedReport?.patientId || ""}
+              value={selectedReport?.patient_id || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -210,7 +227,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="regular">Regular</SelectItem>
-                <SelectItem value="emergency">Emergency</SelectItem>
+                <SelectItem value="opd">OPD</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -261,11 +278,12 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             <Label htmlFor="documentDate" className="text-sm font-medium">
               Document Date:
             </Label>
-            <Select disabled>
-              <SelectTrigger className="bg-gray-50">
-                <SelectValue placeholder={selectedReport?.documentDate || "10/06/2025"} />
-              </SelectTrigger>
-            </Select>
+            <Input
+              id="documentDate"
+              value={formatDate(selectedReport?.created_at)}
+              readOnly
+              className="bg-gray-50"
+            />
           </div>
           
           <div>
@@ -274,7 +292,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="registrationDate"
-              value={selectedReport?.registrationDate || ""}
+              value={formatDateTime(selectedReport?.registration_date)}
               readOnly
               className="bg-gray-50"
             />
@@ -284,11 +302,12 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             <Label htmlFor="dob" className="text-sm font-medium">
               DOB:
             </Label>
-            <Select disabled>
-              <SelectTrigger className="bg-gray-50">
-                <SelectValue placeholder={selectedReport?.dob || "09/01/00"} />
-              </SelectTrigger>
-            </Select>
+            <Input
+              id="dob"
+              value={formatDate(selectedReport?.dob)}
+              readOnly
+              className="bg-gray-50"
+            />
           </div>
           
           <div>
@@ -297,7 +316,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </Label>
             <Input
               id="references"
-              value={selectedReport?.references || ""}
+              value={selectedReport?.reference || ""}
               readOnly
               className="bg-gray-50"
             />
@@ -310,7 +329,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
               </Label>
               <Input
                 id="bloodCategory"
-                value={selectedReport?.bloodCategory || ""}
+                value={selectedReport?.blood_category || ""}
                 readOnly
                 className="bg-gray-50"
               />
@@ -322,11 +341,11 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
               <div className="flex gap-1">
                 <Input
                   id="bottleRequired"
-                  value={selectedReport?.bottleRequired || ""}
+                  value={selectedReport?.bottle_required || ""}
                   readOnly
                   className="bg-gray-50"
                 />
-                <span className="text-sm text-gray-600 flex items-center">ml</span>
+                <span className="text-sm text-gray-600 flex items-center">bag</span>
               </div>
             </div>
           </div>
@@ -347,28 +366,30 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
             </TableRow>
           </TableHeader>
           <TableBody>
-            {selectedReport?.testResults?.map((test, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Input value={test.testId} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-                <TableCell>
-                  <Input value={test.testName} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-                <TableCell>
-                  <Input value={test.mju} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-                <TableCell>
-                  <Input value={test.lowValue} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-                <TableCell>
-                  <Input value={test.highValue} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-                <TableCell>
-                  <Input value={test.value} readOnly className="bg-gray-50 h-8" />
-                </TableCell>
-              </TableRow>
-            )) || (
+            {testResults.length > 0 ? (
+              testResults.map((test, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Input value={test.test_id || ""} readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value={test.test_name || ""} readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value="" readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value="" readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value="" readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value="" readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                   No test results available. Please select a document to view test data.
@@ -381,7 +402,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
 
       {/* Search Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Select Document</DialogTitle>
           </DialogHeader>
@@ -392,25 +413,32 @@ const ReportDataEntryForm = ({ isSearchEnabled = false, isEditable = false }: Re
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="h-64 border mt-4 overflow-y-auto">
-              {filteredReports.length > 0 ? (
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">
+                  Loading reports...
+                </div>
+              ) : filteredReports.length > 0 ? (
                 filteredReports.map((report) => (
                   <div 
-                    key={report.documentNo} 
+                    key={report.document_no} 
                     className="p-2 border-b hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleReportSelect(report)}
                   >
-                    <div className="font-medium">Doc #: {report.documentNo}</div>
+                    <div className="font-medium">Doc #: {report.document_no}</div>
                     <div className="text-sm text-gray-600">
-                      Patient: {report.patientName}, {report.gender}, {report.age} yrs
+                      Patient: {report.patient_name}, {report.gender}, {report.age} yrs
                     </div>
                     <div className="text-sm text-gray-600">
-                      Hospital: {report.hospitalName}
+                      Hospital: {report.hospital_name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Date: {formatDate(report.created_at)}
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="p-4 text-center text-gray-500">
-                  No documents found
+                  No reports found
                 </div>
               )}
             </div>
