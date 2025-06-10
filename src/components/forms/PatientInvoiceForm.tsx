@@ -1,3 +1,4 @@
+
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -130,7 +131,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleTestSelect = async (testId: number) => {
-      // ... keep existing code (test selection logic)
       try {
         const { data, error } = await supabase
           .from('test_information')
@@ -162,7 +162,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handlePatientSelect = async (patientDbId: string) => {
-      // ... keep existing code (patient selection logic)
       try {
         const { data: patient, error } = await supabase
           .from('patients')
@@ -209,7 +208,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     const handleDocumentSelect = async (docNum: string) => {
-      // ... keep existing code (document selection logic)
       try {
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('patient_invoices')
@@ -569,5 +567,3 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
 
 export default PatientInvoiceForm;
-
-</edits_to_apply>
