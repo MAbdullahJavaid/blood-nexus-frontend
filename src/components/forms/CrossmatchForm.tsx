@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +34,13 @@ interface PreCrossmatchData {
   hospital: string | null;
 }
 
+interface ProductData {
+  id: string;
+  bag_no: string;
+  donor_name: string;
+  product: string;
+}
+
 const mockDonors = [
   { id: "1", bagNo: "B001", pipeNo: "P121", name: "John Doe", bloodGroup: "A+", product: "F.W.B" },
   { id: "2", bagNo: "B002", pipeNo: "P122", name: "Jane Smith", bloodGroup: "O-", product: "F.W.B" },
@@ -57,7 +63,9 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const [expiryDate, setExpiryDate] = useState("");
   const [remarks, setRemarks] = useState("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
   const [preCrossmatchData, setPreCrossmatchData] = useState<PreCrossmatchData[]>([]);
+  const [productsData, setProductsData] = useState<ProductData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [donorSearchTerm, setDonorSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -65,6 +73,12 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       fetchPreCrossmatchData();
     }
   }, [isSearchModalOpen]);
+
+  useEffect(() => {
+    if (isDonorSearchModalOpen) {
+      fetchProductsData();
+    }
+  }, [isDonorSearchModalOpen]);
 
   const fetchPreCrossmatchData = async () => {
     try {
@@ -79,6 +93,22 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     } catch (error) {
       console.error("Error fetching pre-crossmatch data:", error);
       toast.error("Failed to fetch patient data");
+    }
+  };
+
+  const fetchProductsData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProductsData(data || []);
+    } catch (error) {
+      console.error("Error fetching products data:", error);
+      toast.error("Failed to fetch donor products data");
     }
   };
 
@@ -97,19 +127,20 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     setIsDonorSearchModalOpen(true);
   };
 
-  const handleDonorSelect = (donor: any) => {
+  const handleDonorSelect = (product: ProductData) => {
     const newDonorItem: DonorItem = {
-      id: donor.id,
-      bagNo: donor.bagNo,
-      pipeNo: donor.pipeNo || "",
-      name: donor.name,
-      product: donor.product,
+      id: product.id,
+      bagNo: product.bag_no,
+      pipeNo: "",
+      name: product.donor_name,
+      product: product.product,
       quantity: 1.0,
       unit: "Bag"
     };
     
     setDonorItems([...donorItems, newDonorItem]);
     setIsDonorSearchModalOpen(false);
+    toast.success(`Donor ${product.donor_name} added`);
   };
 
   const handleSaveCrossmatch = async () => {
@@ -146,13 +177,40 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         pre_crossmatch_doc_no: selectedInvoice.document_no
       };
 
-      const { error } = await supabase
+      const { error: crossmatchError } = await supabase
         .from('crossmatch_records')
         .insert(crossmatchData);
 
-      if (error) throw error;
+      if (crossmatchError) throw crossmatchError;
 
-      toast.success("Crossmatch record saved successfully");
+      // Delete the selected row from pre_crossmatch table
+      const { error: preCrossmatchDeleteError } = await supabase
+        .from('pre_crossmatch')
+        .delete()
+        .eq('document_no', selectedInvoice.document_no);
+
+      if (preCrossmatchDeleteError) {
+        console.error("Error deleting pre-crossmatch record:", preCrossmatchDeleteError);
+        toast.error("Failed to delete pre-crossmatch record");
+        return;
+      }
+
+      // Delete selected products
+      if (donorItems.length > 0) {
+        const productIds = donorItems.map(item => item.id);
+        const { error: productDeleteError } = await supabase
+          .from('products')
+          .delete()
+          .in('id', productIds);
+
+        if (productDeleteError) {
+          console.error("Error deleting product records:", productDeleteError);
+          toast.error("Failed to delete product records");
+          return;
+        }
+      }
+
+      toast.success("Crossmatch record saved successfully and related records deleted");
       
       // Reset form after successful save
       setSelectedInvoice(null);
@@ -179,6 +237,12 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const filteredData = preCrossmatchData.filter(item =>
     item.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredProducts = productsData.filter(product =>
+    product.bag_no.toLowerCase().includes(donorSearchTerm.toLowerCase()) ||
+    product.donor_name.toLowerCase().includes(donorSearchTerm.toLowerCase()) ||
+    product.product.toLowerCase().includes(donorSearchTerm.toLowerCase())
   );
 
   return (
@@ -498,26 +562,36 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       <Dialog open={isDonorSearchModalOpen} onOpenChange={setIsDonorSearchModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Select Donor</DialogTitle>
+            <DialogTitle>Select Donor Product</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input placeholder="Search by bag number or donor name" />
+            <Input 
+              placeholder="Search by bag number, donor name, or product" 
+              value={donorSearchTerm}
+              onChange={(e) => setDonorSearchTerm(e.target.value)}
+            />
             <div className="h-64 border mt-4 overflow-y-auto">
-              {mockDonors.map((donor) => (
-                <div 
-                  key={donor.id} 
-                  className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleDonorSelect(donor)}
-                >
-                  <div className="font-medium">Bag #: {donor.bagNo}</div>
-                  <div className="text-sm text-gray-600">
-                    Donor: {donor.name}, Blood Group: {donor.bloodGroup}
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleDonorSelect(product)}
+                  >
+                    <div className="font-medium">Bag #: {product.bag_no}</div>
+                    <div className="text-sm text-gray-600">
+                      Donor: {product.donor_name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Product: {product.product}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Product: {donor.product}, Pipe #: {donor.pipeNo}
-                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  No donor products found
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </DialogContent>
