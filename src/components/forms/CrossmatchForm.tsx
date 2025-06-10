@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon, PlusCircle, Save, Edit, Trash2 } from "lucide-react";
+import { SearchIcon, PlusCircle, Save, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -42,30 +42,29 @@ interface ProductData {
 }
 
 interface CrossmatchRecord {
-  id: string;
-  crossmatch_no: string;
-  quantity: number;
-  date: string;
-  patient_name: string;
-  age: number | null;
-  sex: string | null;
-  blood_group: string | null;
-  rh: string | null;
-  hospital: string | null;
-  blood_category: string | null;
-  albumin: string;
-  saline: string;
-  coomb: string;
-  result: string;
-  expiry_date: string | null;
-  remarks: string | null;
-  product_id: string | null;
+    id: string;
+    crossmatch_no: string;
+    quantity: number;
+    date: string;
+    patient_name: string;
+    age: number | null;
+    sex: string | null;
+    blood_group: string | null;
+    rh: string | null;
+    hospital: string | null;
+    blood_category: string | null;
+    albumin: string;
+    saline: string;
+    coomb: string;
+    result: string;
+    expiry_date: string | null;
+    remarks: string | null;
+    product_id: string | null;
 }
 
 const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: CrossmatchFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDonorSearchModalOpen, setIsDonorSearchModalOpen] = useState(false);
-  const [isCrossmatchSearchModalOpen, setIsCrossmatchSearchModalOpen] = useState(false);
   const [donorItems, setDonorItems] = useState<DonorItem[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<PreCrossmatchData | null>(null);
   const [crossmatchNo, setCrossmatchNo] = useState("");
@@ -80,11 +79,12 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const [remarks, setRemarks] = useState("Donor red cells are compatible with patient Serum/Plasma. Donor ELISA screening is negative and blood is ready for transfusion.");
   const [preCrossmatchData, setPreCrossmatchData] = useState<PreCrossmatchData[]>([]);
   const [productsData, setProductsData] = useState<ProductData[]>([]);
-  const [crossmatchRecords, setCrossmatchRecords] = useState<CrossmatchRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [donorSearchTerm, setDonorSearchTerm] = useState("");
-  const [crossmatchSearchTerm, setCrossmatchSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [crossmatchRecords, setCrossmatchRecords] = useState<CrossmatchRecord[]>([]);
+  const [crossmatchSearchTerm, setCrossmatchSearchTerm] = useState("");
+  const [isCrossmatchSearchModalOpen, setIsCrossmatchSearchModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CrossmatchRecord | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -245,6 +245,8 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   };
 
   const handleSaveCrossmatch = async () => {
+    console.log("Starting crossmatch save process...");
+    
     if (!selectedInvoice && !isEditing) {
       toast.error("Please select a patient first");
       return;
@@ -263,6 +265,9 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
     setIsSaving(true);
     
     try {
+      console.log("Selected invoice:", selectedInvoice);
+      console.log("Donor items:", donorItems);
+      
       if (donorItems.length > 1) {
         // Handle multiple donors - create separate records for each
         for (const donor of donorItems) {
@@ -287,11 +292,16 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
             pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
           };
 
+          console.log("Inserting crossmatch data for multiple donors:", crossmatchData);
+
           const { error: crossmatchError } = await supabase
             .from('crossmatch_records')
             .insert(crossmatchData);
 
-          if (crossmatchError) throw crossmatchError;
+          if (crossmatchError) {
+            console.error("Error inserting crossmatch record:", crossmatchError);
+            throw crossmatchError;
+          }
         }
       } else if (donorItems.length === 1) {
         // Handle single donor
@@ -316,6 +326,8 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
           pre_crossmatch_doc_no: selectedInvoice?.document_no || editingRecord?.crossmatch_no
         };
 
+        console.log("Inserting crossmatch data for single donor:", crossmatchData);
+
         if (isEditing && editingRecord) {
           // Update existing record
           const { error: updateError } = await supabase
@@ -330,7 +342,10 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
             .from('crossmatch_records')
             .insert(crossmatchData);
 
-          if (crossmatchError) throw crossmatchError;
+          if (crossmatchError) {
+            console.error("Error inserting crossmatch record:", crossmatchError);
+            throw crossmatchError;
+          }
         }
       } else if (isEditing && editingRecord) {
         // Update existing record without donor changes
@@ -364,6 +379,7 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
       // Only delete pre_crossmatch and products if this is a new record (not editing)
       if (!isEditing) {
         if (selectedInvoice) {
+          console.log("Deleting pre_crossmatch record with document_no:", selectedInvoice.document_no);
           const { error: preCrossmatchDeleteError } = await supabase
             .from('pre_crossmatch')
             .delete()
@@ -377,6 +393,8 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
         // Delete selected products
         if (donorItems.length > 0) {
           const productIds = donorItems.map(item => item.id);
+          console.log("Deleting products with IDs:", productIds);
+          
           const { error: productDeleteError } = await supabase
             .from('products')
             .delete()
@@ -455,13 +473,6 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
                   aria-label="Search crossmatch"
                 >
                   <SearchIcon className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={handleSearchCrossmatchClick}
-                  className="bg-blue-200 p-1 rounded hover:bg-blue-300"
-                  aria-label="Search existing crossmatch records"
-                >
-                  <Edit className="h-4 w-4" />
                 </button>
               </div>
             )}
