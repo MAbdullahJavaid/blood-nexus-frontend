@@ -269,15 +269,28 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionTrigger>
                     <AccordionContent className="pl-4">
                       <div className="flex flex-col gap-1">
-                        <SidebarItem icon={DropletIcon} label="Blood Issue Record" />
+                        <SidebarItem 
+                          icon={DropletIcon} 
+                          label="Blood Issue Record" 
+                        />
                         <SidebarItem 
                           icon={TestTubeIcon} 
                           label="Test Report Detail" 
                           onClick={() => handleReportNavigate('/reports/lab/test-report-detail')}
                           active={activePage === '/reports/lab/test-report-detail'}
                         />
-                        <SidebarItem icon={FileTextIcon} label="Product Wise Blood Issue" />
-                        <SidebarItem icon={ReceiptIcon} label="Patient Wise Blood Issue" />
+                        <SidebarItem 
+                          icon={FileTextIcon} 
+                          label="Product Wise Blood Issue" 
+                          onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
+                          active={activePage === '/reports/lab/product-wise-blood-issue'}
+                        />
+                        <SidebarItem 
+                          icon={ReceiptIcon} 
+                          label="Patient Wise Blood Issue" 
+                          onClick={() => handleReportNavigate('/reports/lab/patient-wise-blood-issue')}
+                          active={activePage === '/reports/lab/patient-wise-blood-issue'}
+                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
