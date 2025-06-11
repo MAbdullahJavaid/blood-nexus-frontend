@@ -1,17 +1,23 @@
 
 import { useState } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Search, FileText, Calendar as CalendarIcon } from "lucide-react";
 import { DocumentSearchModal } from "@/components/forms/patient-invoice/DocumentSearchModal";
+import { cn } from "@/lib/utils";
 
 const PatientRequestReportFilter = () => {
   const [invoiceNoFrom, setInvoiceNoFrom] = useState("");
   const [invoiceNoTo, setInvoiceNoTo] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [fromDate, setFromDate] = useState<Date>();
+  const [toDate, setToDate] = useState<Date>();
   const [isFromModalOpen, setIsFromModalOpen] = useState(false);
   const [isToModalOpen, setIsToModalOpen] = useState(false);
 
@@ -29,7 +35,9 @@ const PatientRequestReportFilter = () => {
     console.log("Applying filters:", {
       invoiceNoFrom,
       invoiceNoTo,
-      dateFilter
+      dateFilter,
+      fromDate,
+      toDate
     });
     // This will be connected to actual data fetching later
   };
@@ -38,6 +46,8 @@ const PatientRequestReportFilter = () => {
     setInvoiceNoFrom("");
     setInvoiceNoTo("");
     setDateFilter("");
+    setFromDate(undefined);
+    setToDate(undefined);
   };
 
   return (
@@ -48,7 +58,7 @@ const PatientRequestReportFilter = () => {
       </div>
 
       {/* Filter Card */}
-      <Card className="max-w-2xl mx-auto">
+      <Card className="max-w-4xl mx-auto">
         <CardHeader className="bg-yellow-100 border-b">
           <CardTitle className="flex items-center gap-2 text-lg">
             <span>📊</span>
@@ -118,7 +128,7 @@ const PatientRequestReportFilter = () => {
               </div>
 
               {/* Dates Row */}
-              <div className="grid grid-cols-3">
+              <div className="grid grid-cols-3 border-b">
                 <div className="p-3 border-r bg-gray-50">
                   <Label className="font-medium">Dates:</Label>
                 </div>
@@ -138,6 +148,76 @@ const PatientRequestReportFilter = () => {
                 </div>
                 <div className="p-3">
                   {/* Empty cell for date range end */}
+                </div>
+              </div>
+
+              {/* From Date Row */}
+              <div className="grid grid-cols-3 border-b">
+                <div className="p-3 border-r bg-gray-50">
+                  <Label className="font-medium">From Date:</Label>
+                </div>
+                <div className="p-3 border-r">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !fromDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fromDate}
+                        onSelect={setFromDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="p-3">
+                  {/* Empty cell */}
+                </div>
+              </div>
+
+              {/* To Date Row */}
+              <div className="grid grid-cols-3">
+                <div className="p-3 border-r bg-gray-50">
+                  <Label className="font-medium">To Date:</Label>
+                </div>
+                <div className="p-3 border-r">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !toDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={toDate}
+                        onSelect={setToDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="p-3">
+                  {/* Empty cell */}
                 </div>
               </div>
             </div>
