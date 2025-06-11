@@ -52,3 +52,12 @@ export interface Test {
   name: string;
   rate: number;
 }
+
+export interface TestResult {
+  id: string;
+  testId: number;
+  testName: string;
+  result: string;
+  type?: string;
+  category?: string;
+}
