@@ -8,6 +8,7 @@ import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTestResults } from "./hooks/useTestResults";
 
 interface TestResult {
   test_id: number;
@@ -48,9 +49,10 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const { testCategories, loading: testsLoading, loadTestsForDocument } = useTestResults();
 
   const fetchReports = async () => {
     try {
@@ -89,17 +91,11 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
     
-    // Parse tests from JSON string
+    // Load tests using the new hook
     if (report.tests_type) {
-      try {
-        const tests = JSON.parse(report.tests_type);
-        setTestResults(tests || []);
-      } catch (error) {
-        console.error('Error parsing tests:', error);
-        setTestResults([]);
-      }
+      await loadTestsForDocument(report.tests_type);
     } else {
-      setTestResults([]);
+      await loadTestsForDocument('[]');
     }
     
     setIsSearchModalOpen(false);
@@ -368,59 +364,71 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       </div>
 
       {/* Test Results Table */}
-      <div className="space-y-2">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">Test ID</TableHead>
-              <TableHead>Test Name</TableHead>
-              <TableHead className="w-20">Type</TableHead>
-              <TableHead className="w-20">Category</TableHead>
-              <TableHead className="w-20">M/U</TableHead>
-              <TableHead className="w-24">Low Value</TableHead>
-              <TableHead className="w-24">High Value</TableHead>
-              <TableHead className="w-24">Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {testResults.length > 0 ? (
-              testResults.map((test, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Input value={test.test_id || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.test_name || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.type || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.category || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-gray-500 py-8">
-                  No test results available. Please select a document to view test data.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      <div className="space-y-4">
+        {testsLoading ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Loading test information...</div>
+          </div>
+        ) : testCategories.length > 0 ? (
+          testCategories.map((categoryGroup, categoryIndex) => (
+            <div key={categoryIndex} className="space-y-2">
+              {/* Category Heading */}
+              <div className="bg-gray-100 px-4 py-2 rounded-md">
+                <h3 className="font-semibold text-gray-800">{categoryGroup.category}</h3>
+              </div>
+              
+              {/* Tests Table for this Category */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Test ID</TableHead>
+                    <TableHead>Test Name</TableHead>
+                    <TableHead className="w-20">Type</TableHead>
+                    <TableHead className="w-20">Category</TableHead>
+                    <TableHead className="w-20">M/U</TableHead>
+                    <TableHead className="w-24">Low Value</TableHead>
+                    <TableHead className="w-24">High Value</TableHead>
+                    <TableHead className="w-24">Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoryGroup.tests.map((test, testIndex) => (
+                    <TableRow key={`${categoryIndex}-${testIndex}`}>
+                      <TableCell>
+                        <Input value={test.test_id || ""} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.test_name || ""} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.type || ""} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.category || ""} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value="" readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value="" readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value="" readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value="" readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-500 py-8">
+            No test results available. Please select a document to view test data.
+          </div>
+        )}
       </div>
 
       {/* Search Modal */}
