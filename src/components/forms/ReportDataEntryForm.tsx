@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,6 @@ import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import PatientRequestFilter from "./PatientRequestFilter";
 
 interface TestResult {
   test_id: number;
@@ -67,9 +67,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [loadedTestResults, setLoadedTestResults] = useState<LoadedTestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
-  const [filteredReports, setFilteredReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filterApplied, setFilterApplied] = useState(false);
 
   const fetchReports = async () => {
     try {
@@ -81,7 +79,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
 
       if (error) throw error;
       setReports(data || []);
-      setFilteredReports(data || []);
     } catch (error) {
       console.error('Error fetching reports:', error);
       toast.error('Failed to fetch reports');
@@ -94,40 +91,10 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
     fetchReports();
   }, []);
 
-  const handleApplyFilter = (fromDocNo: string, toDocNo: string) => {
-    if (!fromDocNo && !toDocNo) {
-      setFilteredReports(reports);
-      setFilterApplied(false);
-      return;
-    }
-
-    const filtered = reports.filter(report => {
-      const docNo = report.document_no;
-      
-      if (fromDocNo && toDocNo) {
-        return docNo >= fromDocNo && docNo <= toDocNo;
-      } else if (fromDocNo) {
-        return docNo >= fromDocNo;
-      } else if (toDocNo) {
-        return docNo <= toDocNo;
-      }
-      
-      return true;
-    });
-
-    setFilteredReports(filtered);
-    setFilterApplied(true);
-    toast.success(`Filter applied: ${filtered.length} reports found`);
-  };
-
-  const getDisplayReports = () => {
-    if (!searchTerm) return filteredReports;
-    
-    return filteredReports.filter(report =>
-      report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
+  const filteredReports = reports.filter(report =>
+    report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const loadTestsBasedOnType = async (selectedTests: TestResult[]) => {
     try {
@@ -292,23 +259,9 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
 
   return (
     <div className="bg-white p-6 rounded-md space-y-6">
-      {/* Header with Filter */}
+      {/* Header */}
       <div className="border-b pb-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
-          <div className="flex items-center gap-2">
-            <PatientRequestFilter onApplyFilter={handleApplyFilter} />
-            {filterApplied && (
-              <Button
-                variant="ghost"
-                onClick={() => handleApplyFilter("", "")}
-                className="text-sm text-gray-600"
-              >
-                Clear Filter
-              </Button>
-            )}
-          </div>
-        </div>
+        <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
       </div>
 
       {/* Test Categories and Type Blue Bar */}
@@ -634,8 +587,8 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
                 <div className="p-4 text-center text-gray-500">
                   Loading reports...
                 </div>
-              ) : getDisplayReports().length > 0 ? (
-                getDisplayReports().map((report) => (
+              ) : filteredReports.length > 0 ? (
+                filteredReports.map((report) => (
                   <div 
                     key={report.document_no} 
                     className="p-2 border-b hover:bg-gray-100 cursor-pointer"
@@ -655,7 +608,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
                 ))
               ) : (
                 <div className="p-4 text-center text-gray-500">
-                  {filterApplied ? "No reports found matching the filter criteria" : "No reports found"}
+                  No reports found
                 </div>
               )}
             </div>
@@ -674,5 +627,3 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
 };
 
 export default ReportDataEntryForm;
-
-}
