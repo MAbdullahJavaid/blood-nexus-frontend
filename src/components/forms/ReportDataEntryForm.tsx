@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,11 +123,21 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
         <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
       </div>
 
-      {/* Test Categories Blue Bar */}
-      {selectedReport?.category && (
-        <div className="bg-blue-500 text-white p-3 rounded-md">
-          <div className="font-medium">Test Categories:</div>
-          <div className="text-sm">{selectedReport.category}</div>
+      {/* Test Categories and Type Blue Bar */}
+      {(selectedReport?.category || selectedReport?.type) && (
+        <div className="bg-blue-500 text-white p-3 rounded-md space-y-1">
+          {selectedReport.category && (
+            <div>
+              <span className="font-medium">Test Categories: </span>
+              <span className="text-sm">{selectedReport.category}</span>
+            </div>
+          )}
+          {selectedReport.type && (
+            <div>
+              <span className="font-medium">Test Types: </span>
+              <span className="text-sm">{selectedReport.type}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -363,6 +372,8 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
             <TableRow>
               <TableHead className="w-20">Test ID</TableHead>
               <TableHead>Test Name</TableHead>
+              <TableHead className="w-20">Type</TableHead>
+              <TableHead className="w-20">Category</TableHead>
               <TableHead className="w-20">M/U</TableHead>
               <TableHead className="w-24">Low Value</TableHead>
               <TableHead className="w-24">High Value</TableHead>
@@ -380,6 +391,12 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
                     <Input value={test.test_name || ""} readOnly className="bg-gray-50 h-8" />
                   </TableCell>
                   <TableCell>
+                    <Input value={test.type || ""} readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <Input value={test.category || ""} readOnly className="bg-gray-50 h-8" />
+                  </TableCell>
+                  <TableCell>
                     <Input value="" readOnly className="bg-gray-50 h-8" />
                   </TableCell>
                   <TableCell>
@@ -395,7 +412,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={8} className="text-center text-gray-500 py-8">
                   No test results available. Please select a document to view test data.
                 </TableCell>
               </TableRow>

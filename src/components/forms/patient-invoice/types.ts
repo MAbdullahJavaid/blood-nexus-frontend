@@ -1,4 +1,3 @@
-
 import { ForwardedRef } from "react";
 
 export interface PatientInvoiceFormProps {
@@ -34,6 +33,8 @@ export interface InvoiceItem {
   qty: number;
   rate: number;
   amount: number;
+  type?: string;
+  category?: string;
 }
 
 export interface Invoice {

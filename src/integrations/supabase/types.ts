@@ -266,6 +266,7 @@ export type Database = {
       }
       invoice_items: {
         Row: {
+          category: string | null
           created_at: string | null
           id: string
           invoice_id: string
@@ -273,9 +274,11 @@ export type Database = {
           test_id: number | null
           test_name: string
           total_price: number
+          type: string | null
           unit_price: number
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           id?: string
           invoice_id: string
@@ -283,9 +286,11 @@ export type Database = {
           test_id?: number | null
           test_name: string
           total_price?: number
+          type?: string | null
           unit_price?: number
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           id?: string
           invoice_id?: string
@@ -293,6 +298,7 @@ export type Database = {
           test_id?: number | null
           test_name?: string
           total_price?: number
+          type?: string | null
           unit_price?: number
         }
         Relationships: [

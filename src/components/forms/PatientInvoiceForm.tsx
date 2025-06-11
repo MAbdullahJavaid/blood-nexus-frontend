@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -134,7 +133,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       try {
         const { data, error } = await supabase
           .from('test_information')
-          .select('id, name, price')
+          .select(`
+            id, 
+            name, 
+            price, 
+            test_type,
+            test_categories!inner(name)
+          `)
           .eq('id', testId)
           .single();
         
@@ -147,7 +152,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             testId: data.id,
             testName: data.name,
             rate: data.price,
-            amount: data.price * updatedItems[currentTestIndex].qty
+            amount: data.price * updatedItems[currentTestIndex].qty,
+            type: data.test_type,
+            category: data.test_categories?.name
           };
           
           setItems(updatedItems);
@@ -243,7 +250,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           setBottleRequired(invoiceData.bottle_quantity || 0);
           setBottleUnitType(invoiceData.bottle_unit || "bag");
 
-          // Load invoice items
+          // Load invoice items with type and category
           const { data: itemsData, error: itemsError } = await supabase
             .from('invoice_items')
             .select('*')
@@ -256,7 +263,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               testName: item.test_name,
               qty: item.quantity,
               rate: item.unit_price,
-              amount: item.total_price
+              amount: item.total_price,
+              type: item.type,
+              category: item.category
             }));
             setItems(invoiceItems);
           }
@@ -431,7 +440,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           
         if (invoiceError) throw invoiceError;
         
-        // Create invoice items
+        // Create invoice items with type and category
         if (items.length > 0) {
           const invoiceItems = items.map(item => ({
             invoice_id: invoiceData.id,
@@ -439,7 +448,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             test_name: item.testName,
             quantity: item.qty,
             unit_price: item.rate,
-            total_price: item.amount
+            total_price: item.amount,
+            type: item.type,
+            category: item.category
           }));
           
           const { error: itemsError } = await supabase
@@ -567,3 +578,5 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
 
 export default PatientInvoiceForm;
+
+}
