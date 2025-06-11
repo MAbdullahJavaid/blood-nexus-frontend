@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import PatientRequestReport from "./pages/PatientRequestReport";
+import PatientRequestSummaryReport from "./pages/PatientRequestSummaryReport";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PatientRequestReport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/reception/patient-request-summary" 
+              element={
+                <ProtectedRoute>
+                  <PatientRequestSummaryReport />
                 </ProtectedRoute>
               } 
             />

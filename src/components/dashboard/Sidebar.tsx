@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -217,7 +216,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           onClick={() => handleReportNavigate('/reports/reception/patient-request')}
                           active={activePage === '/reports/reception/patient-request'}
                         />
-                        <SidebarItem icon={ReceiptIcon} label="Patient Request Summary" />
+                        <SidebarItem 
+                          icon={ReceiptIcon} 
+                          label="Patient Request Summary" 
+                          onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
+                          active={activePage === '/reports/reception/patient-request-summary'}
+                        />
                         <SidebarItem icon={HistoryIcon} label="Patient Transfusion History" />
                       </div>
                     </AccordionContent>
