@@ -15,6 +15,9 @@ import NotFound from "./pages/NotFound";
 import PatientRequestReport from "./pages/PatientRequestReport";
 import PatientRequestSummaryReport from "./pages/PatientRequestSummaryReport";
 import PatientTransfusionHistory from "./pages/PatientTransfusionHistory";
+import BloodBleedRecordReport from "./pages/BloodBleedRecordReport";
+import RecordGroupWiseReport from "./pages/RecordGroupWiseReport";
+import TestPositiveReport from "./pages/TestPositiveReport";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +61,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PatientTransfusionHistory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/blood-bleed-record" 
+              element={
+                <ProtectedRoute>
+                  <BloodBleedRecordReport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/record-group-wise" 
+              element={
+                <ProtectedRoute>
+                  <RecordGroupWiseReport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/test-positive" 
+              element={
+                <ProtectedRoute>
+                  <TestPositiveReport />
                 </ProtectedRoute>
               } 
             />

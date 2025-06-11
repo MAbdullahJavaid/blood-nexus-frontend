@@ -238,9 +238,24 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionTrigger>
                     <AccordionContent className="pl-4">
                       <div className="flex flex-col gap-1">
-                        <SidebarItem icon={DropletIcon} label="Blood Bleeded Record" />
-                        <SidebarItem icon={GroupIcon} label="Record Group Wise" />
-                        <SidebarItem icon={TestTubeIcon} label="Test Positive Report" />
+                        <SidebarItem 
+                          icon={DropletIcon} 
+                          label="Blood Bleeded Record" 
+                          onClick={() => handleReportNavigate('/reports/bds/blood-bleed-record')}
+                          active={activePage === '/reports/bds/blood-bleed-record'}
+                        />
+                        <SidebarItem 
+                          icon={GroupIcon} 
+                          label="Record Group Wise" 
+                          onClick={() => handleReportNavigate('/reports/bds/record-group-wise')}
+                          active={activePage === '/reports/bds/record-group-wise'}
+                        />
+                        <SidebarItem 
+                          icon={TestTubeIcon} 
+                          label="Test Positive Report" 
+                          onClick={() => handleReportNavigate('/reports/bds/test-positive')}
+                          active={activePage === '/reports/bds/test-positive'}
+                        />
                         <SidebarItem icon={CheckIcon} label="Donor Screening" />
                         <SidebarItem icon={ReceiptIcon} label="Donor Bleeded Summary" />
                         <SidebarItem icon={FileTextIcon} label="Bag Bleeded Summary" />
