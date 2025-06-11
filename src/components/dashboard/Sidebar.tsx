@@ -73,6 +73,11 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     navigate(`/${path}`);
   };
 
+  const handleReportNavigate = (path: string) => {
+    setActivePage(path);
+    navigate(path);
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -206,7 +211,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionTrigger>
                     <AccordionContent className="pl-4">
                       <div className="flex flex-col gap-1">
-                        <SidebarItem icon={FileTextIcon} label="Patient Request" />
+                        <SidebarItem 
+                          icon={FileTextIcon} 
+                          label="Patient Request" 
+                          onClick={() => handleReportNavigate('/reports/reception/patient-request')}
+                          active={activePage === '/reports/reception/patient-request'}
+                        />
                         <SidebarItem icon={ReceiptIcon} label="Patient Request Summary" />
                         <SidebarItem icon={HistoryIcon} label="Patient Transfusion History" />
                       </div>

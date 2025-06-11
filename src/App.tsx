@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import PatientRequestReport from "./pages/PatientRequestReport";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/reception/patient-request" 
+              element={
+                <ProtectedRoute>
+                  <PatientRequestReport />
                 </ProtectedRoute>
               } 
             />
