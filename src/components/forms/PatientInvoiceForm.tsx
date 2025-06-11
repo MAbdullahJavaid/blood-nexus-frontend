@@ -59,9 +59,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }));
 
-    // Don't generate document number on component mount when in add mode
-    // Document number will be generated only when saving
-
     const isAdding = !documentNo && isEditable;
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
 
@@ -578,5 +575,3 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
 
 export default PatientInvoiceForm;
-
-}

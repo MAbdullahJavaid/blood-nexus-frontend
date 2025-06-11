@@ -1,3 +1,4 @@
+
 import { ForwardedRef } from "react";
 
 export interface PatientInvoiceFormProps {
@@ -9,6 +10,7 @@ export interface FormRefObject {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  clearForm?: () => void;
 }
 
 export interface Patient {
