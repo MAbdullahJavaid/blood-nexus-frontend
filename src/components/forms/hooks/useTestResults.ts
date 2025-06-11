@@ -41,7 +41,7 @@ export const useTestResults = () => {
       for (const invoiceTest of invoiceTests) {
         if (!invoiceTest.test_id) continue;
 
-        // Fetch test details from test_information table
+        // Fetch test details from test_information table with proper join
         const { data: testInfo, error: testError } = await supabase
           .from('test_information')
           .select(`
@@ -49,7 +49,9 @@ export const useTestResults = () => {
             name,
             test_type,
             category_id,
-            test_categories!inner(name as category_name)
+            test_categories (
+              name
+            )
           `)
           .eq('id', invoiceTest.test_id)
           .single();
@@ -59,7 +61,7 @@ export const useTestResults = () => {
           continue;
         }
 
-        const categoryName = testInfo.test_categories?.category_name || 'Uncategorized';
+        const categoryName = testInfo.test_categories?.name || 'Uncategorized';
 
         if (testInfo.test_type === 'single') {
           // For single tests, just add the test itself
@@ -82,7 +84,9 @@ export const useTestResults = () => {
               id,
               name,
               test_type,
-              test_categories!inner(name as category_name)
+              test_categories (
+                name
+              )
             `)
             .eq('category_id', testInfo.category_id);
 
