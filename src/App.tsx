@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import PatientRequestReport from "./pages/PatientRequestReport";
 import PatientRequestSummaryReport from "./pages/PatientRequestSummaryReport";
+import PatientTransfusionHistory from "./pages/PatientTransfusionHistory";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PatientRequestSummaryReport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/reception/patient-transfusion-history" 
+              element={
+                <ProtectedRoute>
+                  <PatientTransfusionHistory />
                 </ProtectedRoute>
               } 
             />

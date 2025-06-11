@@ -222,7 +222,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
                           active={activePage === '/reports/reception/patient-request-summary'}
                         />
-                        <SidebarItem icon={HistoryIcon} label="Patient Transfusion History" />
+                        <SidebarItem 
+                          icon={HistoryIcon} 
+                          label="Patient Transfusion History" 
+                          onClick={() => handleReportNavigate('/reports/reception/patient-transfusion-history')}
+                          active={activePage === '/reports/reception/patient-transfusion-history'}
+                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
