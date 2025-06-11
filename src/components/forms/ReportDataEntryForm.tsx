@@ -33,6 +33,7 @@ interface PreReport {
   blood_category: string | null;
   bottle_required: number | null;
   tests_type: string | null;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -49,7 +50,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
-  const [testCategories, setTestCategories] = useState<string[]>([]);
 
   const fetchReports = async () => {
     try {
@@ -66,32 +66,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       toast.error('Failed to fetch reports');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTestCategories = async (testIds: number[]) => {
-    if (testIds.length === 0) {
-      setTestCategories([]);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('test_information')
-        .select(`
-          id,
-          test_categories!inner(name)
-        `)
-        .in('id', testIds);
-
-      if (error) throw error;
-
-      const categories = data?.map(item => item.test_categories?.name).filter(Boolean) || [];
-      const uniqueCategories = [...new Set(categories)] as string[];
-      setTestCategories(uniqueCategories);
-    } catch (error) {
-      console.error('Error fetching test categories:', error);
-      setTestCategories([]);
     }
   };
 
@@ -119,18 +93,12 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       try {
         const tests = JSON.parse(report.tests_type);
         setTestResults(tests || []);
-        
-        // Fetch test categories for the selected tests
-        const testIds = tests.map((test: TestResult) => test.test_id).filter(Boolean);
-        await fetchTestCategories(testIds);
       } catch (error) {
         console.error('Error parsing tests:', error);
         setTestResults([]);
-        setTestCategories([]);
       }
     } else {
       setTestResults([]);
-      setTestCategories([]);
     }
     
     setIsSearchModalOpen(false);
@@ -157,10 +125,10 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       </div>
 
       {/* Test Categories Blue Bar */}
-      {testCategories.length > 0 && (
+      {selectedReport?.category && (
         <div className="bg-blue-500 text-white p-3 rounded-md">
           <div className="font-medium">Test Categories:</div>
-          <div className="text-sm">{testCategories.join(', ')}</div>
+          <div className="text-sm">{selectedReport.category}</div>
         </div>
       )}
 

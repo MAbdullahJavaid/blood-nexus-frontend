@@ -491,6 +491,7 @@ export type Database = {
           blood_category: string | null
           blood_group: string | null
           bottle_required: number | null
+          category: string | null
           created_at: string | null
           dob: string | null
           document_no: string
@@ -511,6 +512,7 @@ export type Database = {
           blood_category?: string | null
           blood_group?: string | null
           bottle_required?: number | null
+          category?: string | null
           created_at?: string | null
           dob?: string | null
           document_no: string
@@ -531,6 +533,7 @@ export type Database = {
           blood_category?: string | null
           blood_group?: string | null
           bottle_required?: number | null
+          category?: string | null
           created_at?: string | null
           dob?: string | null
           document_no?: string
