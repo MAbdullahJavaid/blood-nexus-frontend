@@ -751,5 +751,3 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
 
 export default PatientInvoiceForm;
-
-}
