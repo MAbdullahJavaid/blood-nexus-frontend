@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,21 @@ interface TestResult {
   quantity: number;
   type?: string;
   category?: string;
+  measuring_unit?: string;
+  low_value?: string;
+  high_value?: string;
+  user_value?: string;
+}
+
+interface LoadedTestResult {
+  test_id: number;
+  test_name: string;
+  measuring_unit: string;
+  low_value: string;
+  high_value: string;
+  user_value: string;
+  category: string;
+  is_category_header?: boolean;
 }
 
 interface PreReport {
@@ -49,6 +65,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [loadedTestResults, setLoadedTestResults] = useState<LoadedTestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -79,10 +96,115 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
     report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSearchClick = () => {
-    setIsSearchModalOpen(true);
-    if (reports.length === 0) {
-      fetchReports();
+  const loadTestsBasedOnType = async (selectedTests: TestResult[]) => {
+    try {
+      const allLoadedTests: LoadedTestResult[] = [];
+      const processedCategories = new Set<string>();
+
+      for (const selectedTest of selectedTests) {
+        console.log('Processing test:', selectedTest);
+        
+        // Get test information from database to check type
+        const { data: testInfo, error } = await supabase
+          .from('test_information')
+          .select(`
+            id,
+            name,
+            test_type,
+            category_id,
+            test_categories (
+              name
+            )
+          `)
+          .eq('id', selectedTest.test_id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching test info:', error);
+          continue;
+        }
+
+        const categoryName = testInfo.test_categories?.name || 'Unknown Category';
+        
+        if (testInfo.test_type === 'full') {
+          // Load all tests with the same category
+          if (!processedCategories.has(categoryName)) {
+            const { data: categoryTests, error: categoryError } = await supabase
+              .from('test_information')
+              .select(`
+                id,
+                name,
+                test_categories (
+                  name
+                )
+              `)
+              .eq('category_id', testInfo.category_id);
+
+            if (categoryError) {
+              console.error('Error fetching category tests:', categoryError);
+              continue;
+            }
+
+            // Add category header
+            allLoadedTests.push({
+              test_id: 0,
+              test_name: categoryName,
+              measuring_unit: '',
+              low_value: '',
+              high_value: '',
+              user_value: '',
+              category: categoryName,
+              is_category_header: true
+            });
+
+            // Add all tests in this category
+            categoryTests?.forEach(test => {
+              allLoadedTests.push({
+                test_id: test.id,
+                test_name: test.name,
+                measuring_unit: '', // This would come from test details if available
+                low_value: '', // This would come from test reference ranges if available
+                high_value: '', // This would come from test reference ranges if available
+                user_value: '',
+                category: categoryName
+              });
+            });
+
+            processedCategories.add(categoryName);
+          }
+        } else {
+          // Load only the single test
+          if (!processedCategories.has(categoryName)) {
+            // Add category header
+            allLoadedTests.push({
+              test_id: 0,
+              test_name: categoryName,
+              measuring_unit: '',
+              low_value: '',
+              high_value: '',
+              user_value: '',
+              category: categoryName,
+              is_category_header: true
+            });
+            processedCategories.add(categoryName);
+          }
+
+          allLoadedTests.push({
+            test_id: testInfo.id,
+            test_name: testInfo.name,
+            measuring_unit: '', // This would come from test details if available
+            low_value: '', // This would come from test reference ranges if available
+            high_value: '', // This would come from test reference ranges if available
+            user_value: '',
+            category: categoryName
+          });
+        }
+      }
+
+      setLoadedTestResults(allLoadedTests);
+    } catch (error) {
+      console.error('Error loading tests:', error);
+      toast.error('Failed to load test details');
     }
   };
 
@@ -94,16 +216,33 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       try {
         const tests = JSON.parse(report.tests_type);
         setTestResults(tests || []);
+        
+        // Load tests based on their type
+        if (tests && tests.length > 0) {
+          await loadTestsBasedOnType(tests);
+        }
       } catch (error) {
         console.error('Error parsing tests:', error);
         setTestResults([]);
+        setLoadedTestResults([]);
       }
     } else {
       setTestResults([]);
+      setLoadedTestResults([]);
     }
     
     setIsSearchModalOpen(false);
     toast.success(`Report for ${report.patient_name} loaded successfully`);
+  };
+
+  const handleValueChange = (testId: number, value: string) => {
+    setLoadedTestResults(prev => 
+      prev.map(test => 
+        test.test_id === testId 
+          ? { ...test, user_value: value }
+          : test
+      )
+    );
   };
 
   const formatDate = (dateString: string | null) => {
@@ -374,47 +513,55 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
             <TableRow>
               <TableHead className="w-20">Test ID</TableHead>
               <TableHead>Test Name</TableHead>
-              <TableHead className="w-20">Type</TableHead>
-              <TableHead className="w-20">Category</TableHead>
-              <TableHead className="w-20">M/U</TableHead>
+              <TableHead className="w-24">M/U</TableHead>
               <TableHead className="w-24">Low Value</TableHead>
               <TableHead className="w-24">High Value</TableHead>
-              <TableHead className="w-24">Value</TableHead>
+              <TableHead className="w-32">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {testResults.length > 0 ? (
-              testResults.map((test, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Input value={test.test_id || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.test_name || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.type || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={test.category || ""} readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value="" readOnly className="bg-gray-50 h-8" />
-                  </TableCell>
+            {loadedTestResults.length > 0 ? (
+              loadedTestResults.map((test, index) => (
+                <TableRow 
+                  key={`${test.test_id}-${index}`}
+                  className={test.is_category_header ? "bg-blue-500 text-white" : ""}
+                >
+                  {test.is_category_header ? (
+                    <TableCell colSpan={6} className="font-medium text-center py-2">
+                      {test.test_name}
+                    </TableCell>
+                  ) : (
+                    <>
+                      <TableCell>
+                        <Input value={test.test_id.toString()} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.test_name} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.measuring_unit} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.low_value} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input value={test.high_value} readOnly className="bg-gray-50 h-8" />
+                      </TableCell>
+                      <TableCell>
+                        <Input 
+                          value={test.user_value} 
+                          onChange={(e) => handleValueChange(test.test_id, e.target.value)}
+                          className="h-8" 
+                          placeholder="Enter value"
+                        />
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                   No test results available. Please select a document to view test data.
                 </TableCell>
               </TableRow>
@@ -470,6 +617,13 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       </Dialog>
     </div>
   );
+
+  function handleSearchClick() {
+    setIsSearchModalOpen(true);
+    if (reports.length === 0) {
+      fetchReports();
+    }
+  }
 };
 
 export default ReportDataEntryForm;
