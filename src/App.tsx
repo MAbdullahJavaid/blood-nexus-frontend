@@ -18,6 +18,7 @@ import PatientTransfusionHistory from "./pages/PatientTransfusionHistory";
 import BloodBleedRecordReport from "./pages/BloodBleedRecordReport";
 import RecordGroupWiseReport from "./pages/RecordGroupWiseReport";
 import TestPositiveReport from "./pages/TestPositiveReport";
+import TestReportDetail from "./pages/TestReportDetail";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TestPositiveReport />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/lab/test-report-detail" 
+              element={
+                <ProtectedRoute>
+                  <TestReportDetail />
                 </ProtectedRoute>
               } 
             />
