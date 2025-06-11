@@ -13,6 +13,8 @@ interface TestResult {
   test_id: number;
   test_name: string;
   quantity: number;
+  type?: string;
+  category?: string;
 }
 
 interface PreReport {
