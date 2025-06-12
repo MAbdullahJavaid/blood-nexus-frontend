@@ -107,7 +107,7 @@ const PatientRequestReportFilter = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <FileText className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Patient Request Summary Report</h1>
+        <h1 className="text-2xl font-bold">Patient Request Filter</h1>
       </div>
 
       {/* Filter Card */}
