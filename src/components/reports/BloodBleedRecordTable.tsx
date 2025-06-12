@@ -18,7 +18,6 @@ interface BleedingRecord {
   id: string;
   bag_id: string;
   bleeding_date: string;
-  remarks: string | null;
   technician: string | null;
   hbsag: number | null;
   hcv: number | null;
@@ -49,7 +48,6 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
           id,
           bag_id,
           bleeding_date,
-          remarks,
           technician,
           hbsag,
           hcv,
@@ -173,7 +171,6 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
                 <TableHead className="border border-gray-300 text-center font-bold text-black">Bag Type</TableHead>
                 <TableHead className="border border-gray-300 text-center font-bold text-black">Blood Group</TableHead>
                 <TableHead className="border border-gray-300 text-center font-bold text-black" colSpan={5}>Screening Results</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Remarks</TableHead>
               </TableRow>
               <TableRow className="bg-gray-100">
                 <TableHead className="border border-gray-300"></TableHead>
@@ -191,7 +188,6 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
                 <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HCV</TableHead>
                 <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HIV</TableHead>
                 <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">HB</TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -242,9 +238,6 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
                   </TableCell>
                   <TableCell className="border border-gray-300 text-center text-sm">
                     {record.hb !== null ? record.hb.toFixed(1) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-sm">
-                    {record.remarks || 'c/d'}
                   </TableCell>
                 </TableRow>
               ))}
