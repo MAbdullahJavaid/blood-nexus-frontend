@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +14,10 @@ import { DocumentSearchModal } from "@/components/forms/patient-invoice/Document
 import { cn } from "@/lib/utils";
 
 const PatientTransfusionHistoryFilter = () => {
+  const navigate = useNavigate();
   const [patientIdFrom, setPatientIdFrom] = useState("");
   const [patientIdTo, setPatientIdTo] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [fiscalYear, setFiscalYear] = useState("2024-25");
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
   const [isFromModalOpen, setIsFromModalOpen] = useState(false);
@@ -31,11 +33,20 @@ const PatientTransfusionHistoryFilter = () => {
     }
   };
 
+  const handleFiscalYearChange = (year: string) => {
+    setFiscalYear(year);
+    // Auto-adjust dates based on fiscal year
+    const startYear = parseInt(year.split('-')[0]);
+    const endYear = startYear + 1;
+    setFromDate(new Date(startYear, 3, 1)); // April 1st
+    setToDate(new Date(endYear, 2, 31)); // March 31st
+  };
+
   const handleOK = () => {
     console.log("Applying filters:", {
       patientIdFrom,
       patientIdTo,
-      dateFilter,
+      fiscalYear,
       fromDate,
       toDate
     });
@@ -45,9 +56,18 @@ const PatientTransfusionHistoryFilter = () => {
   const handleCancel = () => {
     setPatientIdFrom("");
     setPatientIdTo("");
-    setDateFilter("");
+    setFiscalYear("2024-25");
     setFromDate(undefined);
     setToDate(undefined);
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -127,27 +147,27 @@ const PatientTransfusionHistoryFilter = () => {
                 </div>
               </div>
 
-              {/* Dates Row */}
+              {/* Fiscal Year Row */}
               <div className="grid grid-cols-3 border-b">
                 <div className="p-3 border-r bg-gray-50">
-                  <Label className="font-medium">Dates:</Label>
+                  <Label className="font-medium">Fiscal Year:</Label>
                 </div>
                 <div className="p-3 border-r">
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <Select value={fiscalYear} onValueChange={handleFiscalYearChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="This Fiscal Year" />
+                      <SelectValue placeholder="Select fiscal year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="yesterday">Yesterday</SelectItem>
-                      <SelectItem value="this-week">This Week</SelectItem>
-                      <SelectItem value="this-month">This Month</SelectItem>
-                      <SelectItem value="this-fiscal-year">This Fiscal Year</SelectItem>
+                      <SelectItem value="2024-25">2024-25</SelectItem>
+                      <SelectItem value="2023-24">2023-24</SelectItem>
+                      <SelectItem value="2022-23">2022-23</SelectItem>
+                      <SelectItem value="2021-22">2021-22</SelectItem>
+                      <SelectItem value="2020-21">2020-21</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="p-3">
-                  {/* Empty cell for date range end */}
+                  {/* Empty cell for fiscal year end */}
                 </div>
               </div>
 
@@ -229,6 +249,12 @@ const PatientTransfusionHistoryFilter = () => {
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>
