@@ -287,6 +287,8 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                         <SidebarItem 
                           icon={DropletIcon} 
                           label="Blood Issue Record" 
+                          onClick={() => handleReportNavigate('/reports/lab/blood-issue-record')}
+                          active={activePage === '/reports/lab/blood-issue-record'}
                         />
                         <SidebarItem 
                           icon={TestTubeIcon} 

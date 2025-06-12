@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +23,7 @@ import ProductWiseBloodIssue from "./pages/ProductWiseBloodIssue";
 import DonorScreening from "./pages/DonorScreening";
 import DonorBleedSummary from "./pages/DonorBleedSummary";
 import BagBleedSummary from "./pages/BagBleedSummary";
+import BloodIssueRecord from "./pages/BloodIssueRecord";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +139,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProductWiseBloodIssue />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/lab/blood-issue-record" 
+              element={
+                <ProtectedRoute>
+                  <BloodIssueRecord />
                 </ProtectedRoute>
               } 
             />
