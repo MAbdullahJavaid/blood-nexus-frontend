@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BloodBleedRecordTable from "./BloodBleedRecordTable";
 
 interface BDSReportFilterProps {
   title: string;
@@ -20,6 +21,7 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
   const [dateFilter, setDateFilter] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
+  const [showResults, setShowResults] = useState(false);
 
   const getDateForOption = (option: string) => {
     const today = new Date();
@@ -59,13 +61,14 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
       fromDate,
       toDate
     });
-    // This will be connected to actual data fetching later
+    setShowResults(true);
   };
 
   const handleCancel = () => {
     setDateFilter("This Fiscal Year");
     setFromDate(undefined);
     setToDate(undefined);
+    setShowResults(false);
   };
 
   const handleExport = () => {
@@ -198,18 +201,22 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
         </CardContent>
       </Card>
 
-      {/* Results Table Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No results found. Use the filters above to generate the report.</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Results Table */}
+      {showResults ? (
+        <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Report Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No results found. Use the filters above to generate the report.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
