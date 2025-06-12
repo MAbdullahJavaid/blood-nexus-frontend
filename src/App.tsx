@@ -22,6 +22,8 @@ import TestReportDetail from "./pages/TestReportDetail";
 import PatientWiseBloodIssue from "./pages/PatientWiseBloodIssue";
 import ProductWiseBloodIssue from "./pages/ProductWiseBloodIssue";
 import DonorScreening from "./pages/DonorScreening";
+import DonorBleedSummary from "./pages/DonorBleedSummary";
+import BagBleedSummary from "./pages/BagBleedSummary";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +99,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DonorScreening />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/donor-bleed-summary" 
+              element={
+                <ProtectedRoute>
+                  <DonorBleedSummary />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/bag-bleed-summary" 
+              element={
+                <ProtectedRoute>
+                  <BagBleedSummary />
                 </ProtectedRoute>
               } 
             />
