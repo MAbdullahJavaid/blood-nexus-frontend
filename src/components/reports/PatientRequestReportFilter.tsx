@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -18,6 +17,7 @@ const PatientRequestReportFilter = () => {
   const [invoiceNoFrom, setInvoiceNoFrom] = useState("");
   const [invoiceNoTo, setInvoiceNoTo] = useState("");
   const [fiscalYear, setFiscalYear] = useState("2024-25");
+  const [datePreset, setDatePreset] = useState("");
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
   const [isFromModalOpen, setIsFromModalOpen] = useState(false);
@@ -35,11 +35,43 @@ const PatientRequestReportFilter = () => {
 
   const handleFiscalYearChange = (year: string) => {
     setFiscalYear(year);
+    setDatePreset(""); // Clear preset when fiscal year changes
     // Auto-adjust dates based on fiscal year
     const startYear = parseInt(year.split('-')[0]);
     const endYear = startYear + 1;
     setFromDate(new Date(startYear, 3, 1)); // April 1st
     setToDate(new Date(endYear, 2, 31)); // March 31st
+  };
+
+  const handleDatePresetChange = (preset: string) => {
+    setDatePreset(preset);
+    const today = new Date();
+    
+    switch (preset) {
+      case "today":
+        setFromDate(today);
+        setToDate(today);
+        break;
+      case "yesterday":
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        setFromDate(yesterday);
+        setToDate(yesterday);
+        break;
+      case "this-week":
+        const startOfWeek = new Date(today);
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust for Sunday
+        startOfWeek.setDate(diff);
+        setFromDate(startOfWeek);
+        setToDate(today);
+        break;
+      case "this-month":
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        setFromDate(startOfMonth);
+        setToDate(today);
+        break;
+    }
   };
 
   const handleOK = () => {
@@ -57,6 +89,7 @@ const PatientRequestReportFilter = () => {
     setInvoiceNoFrom("");
     setInvoiceNoTo("");
     setFiscalYear("2024-25");
+    setDatePreset("");
     setFromDate(undefined);
     setToDate(undefined);
   };
@@ -102,6 +135,43 @@ const PatientRequestReportFilter = () => {
                 <div className="p-3 text-center font-medium">To</div>
               </div>
 
+              {/* Fiscal Year Row */}
+              <div className="grid grid-cols-3 border-b">
+                <div className="p-3 border-r bg-gray-50">
+                  <Label className="font-medium">Fiscal Year:</Label>
+                </div>
+                <div className="p-3 border-r">
+                  <div className="space-y-2">
+                    <Select value={fiscalYear} onValueChange={handleFiscalYearChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select fiscal year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2024-25">2024-25</SelectItem>
+                        <SelectItem value="2023-24">2023-24</SelectItem>
+                        <SelectItem value="2022-23">2022-23</SelectItem>
+                        <SelectItem value="2021-22">2021-22</SelectItem>
+                        <SelectItem value="2020-21">2020-21</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={datePreset} onValueChange={handleDatePresetChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Quick date selection" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="yesterday">Yesterday</SelectItem>
+                        <SelectItem value="this-week">This Week</SelectItem>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="p-3">
+                  {/* Empty cell for fiscal year end */}
+                </div>
+              </div>
+
               {/* Invoice No Row */}
               <div className="grid grid-cols-3 border-b">
                 <div className="p-3 border-r bg-gray-50">
@@ -144,30 +214,6 @@ const PatientRequestReportFilter = () => {
                       <Search className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </div>
-
-              {/* Fiscal Year Row */}
-              <div className="grid grid-cols-3 border-b">
-                <div className="p-3 border-r bg-gray-50">
-                  <Label className="font-medium">Fiscal Year:</Label>
-                </div>
-                <div className="p-3 border-r">
-                  <Select value={fiscalYear} onValueChange={handleFiscalYearChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select fiscal year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2024-25">2024-25</SelectItem>
-                      <SelectItem value="2023-24">2023-24</SelectItem>
-                      <SelectItem value="2022-23">2022-23</SelectItem>
-                      <SelectItem value="2021-22">2021-22</SelectItem>
-                      <SelectItem value="2020-21">2020-21</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="p-3">
-                  {/* Empty cell for fiscal year end */}
                 </div>
               </div>
 
