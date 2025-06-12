@@ -20,6 +20,11 @@ interface BleedingRecord {
   bleeding_date: string;
   remarks: string | null;
   technician: string | null;
+  hbsag: number | null;
+  hcv: number | null;
+  hiv: number | null;
+  vdrl: number | null;
+  hb: number | null;
   donors: {
     name: string;
     phone: string | null;
@@ -46,6 +51,11 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
           bleeding_date,
           remarks,
           technician,
+          hbsag,
+          hcv,
+          hiv,
+          vdrl,
+          hb,
           donors!inner (
             name,
             phone,
@@ -217,12 +227,22 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
                   <TableCell className="border border-gray-300 text-center text-sm">
                     {getBloodGroup(record)}
                   </TableCell>
-                  {/* Screening Results - Mock data for now */}
-                  <TableCell className="border border-gray-300 text-center text-sm">0.04</TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">0.26</TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">0.10</TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">0.21</TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">14.9</TableCell>
+                  {/* Screening Results from database columns */}
+                  <TableCell className="border border-gray-300 text-center text-sm">
+                    {record.vdrl !== null ? record.vdrl.toFixed(2) : 'N/A'}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 text-center text-sm">
+                    {record.hbsag !== null ? record.hbsag.toFixed(2) : 'N/A'}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 text-center text-sm">
+                    {record.hcv !== null ? record.hcv.toFixed(2) : 'N/A'}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 text-center text-sm">
+                    {record.hiv !== null ? record.hiv.toFixed(2) : 'N/A'}
+                  </TableCell>
+                  <TableCell className="border border-gray-300 text-center text-sm">
+                    {record.hb !== null ? record.hb.toFixed(1) : 'N/A'}
+                  </TableCell>
                   <TableCell className="border border-gray-300 text-sm">
                     {record.remarks || 'c/d'}
                   </TableCell>

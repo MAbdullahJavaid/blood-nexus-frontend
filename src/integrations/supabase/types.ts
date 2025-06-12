@@ -16,10 +16,15 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           donor_id: string
+          hb: number | null
+          hbsag: number | null
+          hcv: number | null
+          hiv: number | null
           id: string
           remarks: string | null
           technician: string | null
           updated_at: string | null
+          vdrl: number | null
         }
         Insert: {
           bag_id?: string
@@ -27,10 +32,15 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           donor_id: string
+          hb?: number | null
+          hbsag?: number | null
+          hcv?: number | null
+          hiv?: number | null
           id?: string
           remarks?: string | null
           technician?: string | null
           updated_at?: string | null
+          vdrl?: number | null
         }
         Update: {
           bag_id?: string
@@ -38,10 +48,15 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           donor_id?: string
+          hb?: number | null
+          hbsag?: number | null
+          hcv?: number | null
+          hiv?: number | null
           id?: string
           remarks?: string | null
           technician?: string | null
           updated_at?: string | null
+          vdrl?: number | null
         }
         Relationships: [
           {

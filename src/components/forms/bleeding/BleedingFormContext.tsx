@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -148,6 +147,19 @@ export const BleedingFormProvider: React.FC<{
         const formattedBleedingDate = `${bleedingDateObj.getDate().toString().padStart(2, '0')}/${(bleedingDateObj.getMonth() + 1).toString().padStart(2, '0')}/${bleedingDateObj.getFullYear()}`;
         setBleedingDate(formattedBleedingDate);
 
+        // Load screening results from the database columns
+        if (bleedingRecord.hbsag !== null || bleedingRecord.hcv !== null || 
+            bleedingRecord.hiv !== null || bleedingRecord.vdrl !== null || 
+            bleedingRecord.hb !== null) {
+          setDonorPatientValues({
+            hepB: bleedingRecord.hbsag?.toString() || '',
+            hepC: bleedingRecord.hcv?.toString() || '',
+            hiv: bleedingRecord.hiv?.toString() || '',
+            vdrl: bleedingRecord.vdrl?.toString() || '',
+            hb: bleedingRecord.hb?.toString() || '',
+          });
+        }
+
         // Load product information if available
         try {
           const { data: products, error: productError } = await supabase
@@ -194,7 +206,12 @@ export const BleedingFormProvider: React.FC<{
         donor_id: selectedDonor.id,
         bleeding_date: formattedBleedingDate,
         technician: "Current User",
-        remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+        hbsag: parseFloat(donorPatientValues.hepB) || null,
+        hcv: parseFloat(donorPatientValues.hepC) || null,
+        hiv: parseFloat(donorPatientValues.hiv) || null,
+        vdrl: parseFloat(donorPatientValues.vdrl) || null,
+        hb: parseFloat(donorPatientValues.hb) || null,
+        remarks: `Test Results - HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
       });
       
       // Save to bleeding_records table - let the database generate the bag_id from sequence
@@ -204,7 +221,12 @@ export const BleedingFormProvider: React.FC<{
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
           technician: "Current User", // You might want to get this from user context
-          remarks: `HB: ${donorPatientValues.hb}, HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
+          hbsag: parseFloat(donorPatientValues.hepB) || null,
+          hcv: parseFloat(donorPatientValues.hepC) || null,
+          hiv: parseFloat(donorPatientValues.hiv) || null,
+          vdrl: parseFloat(donorPatientValues.vdrl) || null,
+          hb: parseFloat(donorPatientValues.hb) || null,
+          remarks: `Test Results - HepB: ${results.hepB}, HepC: ${results.hepC}, HIV: ${results.hiv}, VDRL: ${results.vdrl}`
         })
         .select('bag_id')
         .single();
