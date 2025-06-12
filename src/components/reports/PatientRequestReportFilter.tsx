@@ -224,7 +224,7 @@ const PatientRequestReportFilter = () => {
         <body>
           <div class="report-container">
             <div class="header">
-              <h1>SUNDAS FOUNDATION</h1>
+              <h1>BLOOD CARE FOUNDATION</h1>
               <h2>PATIENT RECEIPT</h2>
             </div>
             
@@ -272,7 +272,7 @@ const PatientRequestReportFilter = () => {
                 </div>
                 <div class="info-row">
                   <span class="info-label">Registration Loc:</span>
-                  <span>Blood Care Foundation</span>
+                  <span>Blood Care</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">References:</span>
@@ -325,7 +325,7 @@ const PatientRequestReportFilter = () => {
             
             <div class="signature">
               <div style="margin-top: 40px;">
-                <strong>Registered By : Blood Care Foundation</strong>
+                <strong>Registered By : BLOOD CARE</strong>
               </div>
             </div>
           </div>
@@ -600,7 +600,7 @@ const PatientRequestReportFilter = () => {
               <div className="border-2 border-gray-800 p-6 bg-white max-w-4xl mx-auto" style={{ fontFamily: 'Arial, sans-serif' }}>
                 {/* Header */}
                 <div className="text-center mb-6">
-                  <h1 className="text-xl font-bold mb-2">SUNDAS FOUNDATION</h1>
+                  <h1 className="text-xl font-bold mb-2">Blood Care Foundation</h1>
                   <h2 className="text-lg italic underline">PATIENT RECEIPT</h2>
                 </div>
                 
