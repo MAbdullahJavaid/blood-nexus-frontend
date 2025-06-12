@@ -272,7 +272,7 @@ const PatientRequestReportFilter = () => {
                 </div>
                 <div class="info-row">
                   <span class="info-label">Registration Loc:</span>
-                  <span>SUNDAS FOUNDATION</span>
+                  <span>Blood Care Foundation</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">References:</span>
@@ -325,7 +325,7 @@ const PatientRequestReportFilter = () => {
             
             <div class="signature">
               <div style="margin-top: 40px;">
-                <strong>Registered By : SUNDAS FOUNDATION</strong>
+                <strong>Registered By : Blood Care Foundation</strong>
               </div>
             </div>
           </div>
