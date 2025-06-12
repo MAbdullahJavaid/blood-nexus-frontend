@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,9 +16,42 @@ interface BDSReportFilterProps {
 }
 
 const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
-  const [dateFilter, setDateFilter] = useState("");
+  const navigate = useNavigate();
+  const [dateFilter, setDateFilter] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
+
+  const getDateForOption = (option: string) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    switch (option) {
+      case "today":
+        return { from: today, to: today };
+      case "yesterday":
+        return { from: yesterday, to: yesterday };
+      case "this week":
+        return { from: startOfWeek, to: today };
+      case "this month":
+        return { from: startOfMonth, to: endOfMonth };
+      default:
+        return { from: new Date(2024, 6, 1), to: new Date(2025, 5, 30) };
+    }
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateFilter(value);
+    const dates = getDateForOption(value);
+    setFromDate(dates.from);
+    setToDate(dates.to);
+  };
 
   const handleOK = () => {
     console.log("Applying filters:", {
@@ -29,9 +63,18 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
   };
 
   const handleCancel = () => {
-    setDateFilter("");
+    setDateFilter("This Fiscal Year");
     setFromDate(undefined);
     setToDate(undefined);
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -68,48 +111,45 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
 
               {/* Dates Row */}
               <div className="grid grid-cols-3">
-                <div className="p-3 border-r bg-gray-50">
+                <div className="p-3 border-r bg-gray-50 flex items-center">
                   <Label className="font-medium">Dates:</Label>
+                  <Select value={dateFilter} onValueChange={handleDateRangeChange}>
+                    <SelectTrigger className="ml-2 w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="yesterday">Yesterday</SelectItem>
+                      <SelectItem value="this week">This Week</SelectItem>
+                      <SelectItem value="this month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="p-3 border-r">
-                  <div className="space-y-2">
-                    <Select value={dateFilter} onValueChange={setDateFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="This Fiscal Year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="yesterday">Yesterday</SelectItem>
-                        <SelectItem value="this-week">This Week</SelectItem>
-                        <SelectItem value="this-month">This Month</SelectItem>
-                        <SelectItem value="this-fiscal-year">This Fiscal Year</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !fromDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>01/07/2024</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={fromDate}
-                          onSelect={setFromDate}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !fromDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>01/07/2024</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fromDate}
+                        onSelect={setFromDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="p-3">
                   <Popover>
@@ -146,6 +186,12 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -11,10 +12,47 @@ interface BloodIssueRecordFilterProps {
 }
 
 const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
+  const navigate = useNavigate();
   const [category, setCategory] = useState("All");
   const [dateRange, setDateRange] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState("01/07/2024");
   const [toDate, setToDate] = useState("30/06/2025");
+
+  const getDateForOption = (option: string) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString('en-GB').replace(/\//g, '/');
+    };
+
+    switch (option) {
+      case "today":
+        return { from: formatDate(today), to: formatDate(today) };
+      case "yesterday":
+        return { from: formatDate(yesterday), to: formatDate(yesterday) };
+      case "this week":
+        return { from: formatDate(startOfWeek), to: formatDate(today) };
+      case "this month":
+        return { from: formatDate(startOfMonth), to: formatDate(endOfMonth) };
+      default:
+        return { from: "01/07/2024", to: "30/06/2025" };
+    }
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value);
+    const dates = getDateForOption(value);
+    setFromDate(dates.from);
+    setToDate(dates.to);
+  };
 
   const handleOK = () => {
     console.log("Applying filters:", {
@@ -31,6 +69,15 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
     setDateRange("This Fiscal Year");
     setFromDate("01/07/2024");
     setToDate("30/06/2025");
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -95,44 +142,38 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
               <div className="grid grid-cols-3">
                 <div className="p-3 border-r bg-gray-50 flex items-center">
                   <Label className="font-medium">Dates:</Label>
+                  <Select value={dateRange} onValueChange={handleDateRangeChange}>
+                    <SelectTrigger className="ml-2 w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="yesterday">Yesterday</SelectItem>
+                      <SelectItem value="this week">This Week</SelectItem>
+                      <SelectItem value="this month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="p-3 border-r">
-                  <div className="space-y-2">
-                    <Select value={dateRange} onValueChange={setDateRange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
-                        <SelectItem value="Custom Range">Custom Range</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={fromDate} onValueChange={setFromDate}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="01/07/2024">01/07/2024</SelectItem>
-                        <SelectItem value="01/01/2024">01/01/2024</SelectItem>
-                        <SelectItem value="01/04/2024">01/04/2024</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={fromDate} onValueChange={setFromDate}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={fromDate}>{fromDate}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="p-3">
-                  <div className="space-y-2">
-                    <span className="text-gray-400">?</span>
-                    <Select value={toDate} onValueChange={setToDate}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30/06/2025">30/06/2025</SelectItem>
-                        <SelectItem value="31/12/2024">31/12/2024</SelectItem>
-                        <SelectItem value="31/03/2025">31/03/2025</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={toDate} onValueChange={setToDate}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={toDate}>{toDate}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -144,6 +185,12 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ interface LABReportFilterProps {
 }
 
 const LABReportFilter = ({ title }: LABReportFilterProps) => {
+  const navigate = useNavigate();
   const [codeFrom, setCodeFrom] = useState("");
   const [codeTo, setCodeTo] = useState("");
 
@@ -25,6 +27,15 @@ const LABReportFilter = ({ title }: LABReportFilterProps) => {
   const handleCancel = () => {
     setCodeFrom("");
     setCodeTo("");
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -90,6 +101,12 @@ const LABReportFilter = ({ title }: LABReportFilterProps) => {
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>

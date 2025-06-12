@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ interface DonorScreeningReportFilterProps {
 }
 
 const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) => {
+  const navigate = useNavigate();
   const [fromRegistrationNo, setFromRegistrationNo] = useState("");
   const [toRegistrationNo, setToRegistrationNo] = useState("");
 
@@ -25,6 +27,15 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
   const handleCancel = () => {
     setFromRegistrationNo("");
     setToRegistrationNo("");
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -92,6 +103,12 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>

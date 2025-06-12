@@ -1,10 +1,12 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -14,11 +16,44 @@ interface LABDateReportFilterProps {
 }
 
 const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
+
+  const getDateForOption = (option: string) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    switch (option) {
+      case "today":
+        return { from: today, to: today };
+      case "yesterday":
+        return { from: yesterday, to: yesterday };
+      case "this week":
+        return { from: startOfWeek, to: today };
+      case "this month":
+        return { from: startOfMonth, to: endOfMonth };
+      default:
+        return { from: new Date(2024, 6, 1), to: new Date(2025, 5, 30) };
+    }
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value);
+    const dates = getDateForOption(value);
+    setFromDate(dates.from);
+    setToDate(dates.to);
+  };
 
   const handleOK = () => {
     console.log("Applying filters:", {
@@ -33,6 +68,15 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
     setDateRange("This Fiscal Year");
     setFromDate(undefined);
     setToDate(undefined);
+  };
+
+  const handleExport = () => {
+    console.log("Exporting report...");
+    // Export functionality will be implemented later
+  };
+
+  const handleExit = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -71,16 +115,18 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
               <div className="grid grid-cols-3">
                 <div className="p-3 border-r bg-gray-50 flex items-center">
                   <Label className="font-medium">Dates:</Label>
-                  <select 
-                    value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
-                    className="ml-2 bg-blue-600 text-white px-2 py-1 text-sm rounded border-0"
-                  >
-                    <option value="This Fiscal Year">This Fiscal Year</option>
-                    <option value="Last Month">Last Month</option>
-                    <option value="This Month">This Month</option>
-                    <option value="Custom Range">Custom Range</option>
-                  </select>
+                  <Select value={dateRange} onValueChange={handleDateRangeChange}>
+                    <SelectTrigger className="ml-2 w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="yesterday">Yesterday</SelectItem>
+                      <SelectItem value="this week">This Week</SelectItem>
+                      <SelectItem value="this month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="p-3 border-r">
                   <Popover open={fromOpen} onOpenChange={setFromOpen}>
@@ -105,6 +151,7 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
                           setFromOpen(false);
                         }}
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
@@ -132,6 +179,7 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
                           setToOpen(false);
                         }}
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
@@ -146,6 +194,12 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
+              </Button>
+              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleExit} className="px-8">
+                Exit
               </Button>
             </div>
           </div>
