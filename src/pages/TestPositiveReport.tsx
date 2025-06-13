@@ -1,10 +1,10 @@
 
-import TestPositiveReportFilter from "@/components/reports/TestPositiveReportFilter";
+import BDSReportFilter from "@/components/reports/BDSReportFilter";
 
 const TestPositiveReport = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <TestPositiveReportFilter title="Test Positive Report" />
+      <BDSReportFilter title="Test Positive Report" />
     </div>
   );
 };
