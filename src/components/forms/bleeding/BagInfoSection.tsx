@@ -72,7 +72,7 @@ const BagInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: Bag
       <BagSearchModal
         isOpen={isBagSearchOpen}
         onClose={() => setIsBagSearchOpen(false)}
-        onBagSelect={handleBagSelect}
+        onSelect={handleBagSelect}
       />
     </div>
   );
