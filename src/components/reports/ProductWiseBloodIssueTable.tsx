@@ -22,6 +22,7 @@ interface BloodCategoryData {
   FFP: number;
   PLT: number;
   CP: number;
+  MEGAUNIT: number;
   total: number;
 }
 
@@ -34,6 +35,7 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
     FFP: 0,
     PLT: 0,
     CP: 0,
+    MEGAUNIT: 0,
     total: 0
   });
 
@@ -59,7 +61,9 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         `)
         .gte('document_date', fromDate.split('T')[0])
         .lte('document_date', toDate.split('T')[0])
-        .not('blood_category', 'is', null);
+        .not('blood_category', 'is', null)
+        .not('bottle_quantity', 'is', null)
+        .order('document_date', { ascending: true });
 
       // Apply category filter if specified
       if (category && category !== "All") {
@@ -89,13 +93,15 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
             FFP: 0,
             PLT: 0,
             CP: 0,
+            MEGAUNIT: 0,
             total: 0
           };
         }
 
-        const quantity = record.bottle_quantity || 1;
+        const quantity = record.bottle_quantity || 0;
         const bloodCategory = record.blood_category?.toUpperCase();
 
+        // Sum the actual bottle quantities for each category
         switch (bloodCategory) {
           case 'WB':
             groupedData[dateKey].WB += quantity;
@@ -112,6 +118,9 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
           case 'CP':
             groupedData[dateKey].CP += quantity;
             break;
+          case 'MEGAUNIT':
+            groupedData[dateKey].MEGAUNIT += quantity;
+            break;
           default:
             // Handle other categories as needed
             break;
@@ -127,13 +136,14 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         return dateA.getTime() - dateB.getTime();
       });
 
-      // Calculate totals
+      // Calculate totals - sum all the quantities
       const newTotals = {
         WB: 0,
         PC: 0,
         FFP: 0,
         PLT: 0,
         CP: 0,
+        MEGAUNIT: 0,
         total: 0
       };
 
@@ -143,8 +153,12 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         newTotals.FFP += row.FFP;
         newTotals.PLT += row.PLT;
         newTotals.CP += row.CP;
+        newTotals.MEGAUNIT += row.MEGAUNIT;
         newTotals.total += row.total;
       });
+
+      console.log("Calculated totals:", newTotals);
+      console.log("Result array:", resultArray);
 
       setData(resultArray);
       setTotals(newTotals);
@@ -284,6 +298,9 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
                   <TableHead className="border-r-2 border-black text-center font-bold bg-gray-100 text-black p-2">
                     Cp
                   </TableHead>
+                  <TableHead className="border-r-2 border-black text-center font-bold bg-gray-100 text-black p-2">
+                    Megaunit
+                  </TableHead>
                   <TableHead className="text-center font-bold bg-gray-100 text-black p-2">
                     Total Bags
                   </TableHead>
@@ -310,6 +327,9 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
                     <TableCell className="border-r-2 border-black text-center text-sm p-2">
                       {row.CP}
                     </TableCell>
+                    <TableCell className="border-r-2 border-black text-center text-sm p-2">
+                      {row.MEGAUNIT}
+                    </TableCell>
                     <TableCell className="text-center text-sm p-2">
                       {row.total}
                     </TableCell>
@@ -334,6 +354,9 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
                   </TableCell>
                   <TableCell className="border-r-2 border-black text-center font-bold text-sm p-2">
                     {totals.CP}
+                  </TableCell>
+                  <TableCell className="border-r-2 border-black text-center font-bold text-sm p-2">
+                    {totals.MEGAUNIT}
                   </TableCell>
                   <TableCell className="text-center font-bold text-sm p-2">
                     {totals.total}
