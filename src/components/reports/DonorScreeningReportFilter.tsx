@@ -1,11 +1,16 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { FileText, SearchIcon, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import DonorScreeningSearchModal from "./DonorScreeningSearchModal";
+import DonorScreeningReportTable from "./DonorScreeningReportTable";
 
 interface DonorScreeningReportFilterProps {
   title: string;
@@ -15,27 +20,101 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
   const navigate = useNavigate();
   const [fromRegistrationNo, setFromRegistrationNo] = useState("");
   const [toRegistrationNo, setToRegistrationNo] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [selectedDonorIds, setSelectedDonorIds] = useState<string[]>([]);
+
+  const { data: screeningData, isLoading, refetch } = useQuery({
+    queryKey: ['donor-screening', fromRegistrationNo, toRegistrationNo, selectedDonorIds],
+    queryFn: async () => {
+      if (!showResults) return [];
+      
+      let query = supabase
+        .from('bleeding_records')
+        .select(`
+          *,
+          donors!inner (
+            id,
+            donor_id,
+            name,
+            phone,
+            address,
+            blood_group_separate,
+            rh_factor,
+            date_of_birth,
+            gender
+          )
+        `);
+
+      // Filter by registration number range
+      if (fromRegistrationNo) {
+        query = query.gte('donors.donor_id', fromRegistrationNo);
+      }
+      if (toRegistrationNo) {
+        query = query.lte('donors.donor_id', toRegistrationNo);
+      }
+
+      // Filter by selected donor IDs if any
+      if (selectedDonorIds.length > 0) {
+        query = query.in('donor_id', selectedDonorIds);
+      }
+
+      const { data, error } = await query.order('bleeding_date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching screening data:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    enabled: showResults
+  });
 
   const handleOK = () => {
     console.log("Applying filters:", {
       fromRegistrationNo,
-      toRegistrationNo
+      toRegistrationNo,
+      selectedDonorIds
     });
-    // This will be connected to actual data fetching later
+    setShowResults(true);
+    refetch();
   };
 
   const handleCancel = () => {
     setFromRegistrationNo("");
     setToRegistrationNo("");
+    setSelectedDonorIds([]);
+    setShowResults(false);
   };
 
-  const handleExport = () => {
-    console.log("Exporting report...");
-    // Export functionality will be implemented later
+  const handleExport = (format: 'pdf' | 'jpeg') => {
+    if (!screeningData || screeningData.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No screening data available for export.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Trigger export from the report table component
+    const event = new CustomEvent('exportDonorScreening', { 
+      detail: { format, data: screeningData } 
+    });
+    window.dispatchEvent(event);
   };
 
   const handleExit = () => {
     navigate("/dashboard");
+  };
+
+  const handleDonorSelect = (donorIds: string[]) => {
+    setSelectedDonorIds(donorIds);
+    toast({
+      title: "Donors Selected",
+      description: `Selected ${donorIds.length} donor(s) for screening report.`,
+    });
   };
 
   return (
@@ -74,6 +153,14 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
               <div className="grid grid-cols-3">
                 <div className="p-3 border-r bg-gray-50 flex items-center">
                   <Label className="font-medium">Registration No:</Label>
+                  <button 
+                    type="button"
+                    onClick={() => setIsSearchModalOpen(true)}
+                    className="ml-2 bg-gray-200 p-1 rounded hover:bg-gray-300"
+                    title="Search donors from bleeding records"
+                  >
+                    <SearchIcon className="h-4 w-4" />
+                  </button>
                 </div>
                 <div className="p-3 border-r">
                   <Input
@@ -96,16 +183,40 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
               </div>
             </div>
 
+            {/* Selected Donors Display */}
+            {selectedDonorIds.length > 0 && (
+              <div className="bg-blue-50 p-3 rounded border">
+                <Label className="font-medium">Selected Donors: {selectedDonorIds.length}</Label>
+                <div className="text-sm text-gray-600 mt-1">
+                  Click OK to generate screening reports for selected donors
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex justify-center gap-4 pt-4">
-              <Button onClick={handleOK} className="px-8">
-                OK
+              <Button onClick={handleOK} className="px-8" disabled={isLoading}>
+                {isLoading ? "Loading..." : "OK"}
               </Button>
               <Button variant="outline" onClick={handleCancel} className="px-8">
                 Cancel
               </Button>
-              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
-                Export
+              <Button 
+                onClick={() => handleExport('pdf')} 
+                className="px-8 bg-green-600 hover:bg-green-700"
+                disabled={!showResults || !screeningData || screeningData.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Button 
+                onClick={() => handleExport('jpeg')} 
+                variant="outline" 
+                className="px-8"
+                disabled={!showResults || !screeningData || screeningData.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export JPEG
               </Button>
               <Button variant="outline" onClick={handleExit} className="px-8">
                 Exit
@@ -115,18 +226,32 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
         </CardContent>
       </Card>
 
-      {/* Results Table Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No results found. Use the filters above to generate the report.</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Results Table */}
+      {showResults && screeningData ? (
+        <DonorScreeningReportTable 
+          data={screeningData} 
+          isLoading={isLoading}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Report Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No results found. Use the filters above to generate the screening report.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Donor Search Modal */}
+      <DonorScreeningSearchModal 
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleDonorSelect}
+      />
     </div>
   );
 };
