@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import BloodIssueRecordTable from "./BloodIssueRecordTable";
+import ProductWiseBloodIssueTable from "./ProductWiseBloodIssueTable";
 
 interface BloodIssueRecordFilterProps {
   title: string;
@@ -87,6 +87,27 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
   const convertToISODate = (dateStr: string) => {
     const [day, month, year] = dateStr.split('/');
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
+  // Determine which table component to render based on title
+  const renderResultsTable = () => {
+    if (title === "Product Wise Blood Issue") {
+      return (
+        <ProductWiseBloodIssueTable 
+          category={category}
+          fromDate={convertToISODate(fromDate)}
+          toDate={convertToISODate(toDate)}
+        />
+      );
+    } else {
+      return (
+        <BloodIssueRecordTable 
+          category={category}
+          fromDate={convertToISODate(fromDate)}
+          toDate={convertToISODate(toDate)}
+        />
+      );
+    }
   };
 
   return (
@@ -208,11 +229,7 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
 
       {/* Results Table */}
       {showResults ? (
-        <BloodIssueRecordTable 
-          category={category}
-          fromDate={convertToISODate(fromDate)}
-          toDate={convertToISODate(toDate)}
-        />
+        renderResultsTable()
       ) : (
         <Card>
           <CardHeader>
