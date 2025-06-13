@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface BloodBleedRecordTableProps {
   fromDate?: Date;
@@ -111,6 +114,61 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
   const getDonorType = () => "Call Donor"; // Default for now
   const getBagType = () => "Double Bag"; // Default for now
 
+  const exportToPDF = async () => {
+    const element = document.getElementById('blood-bleed-record-table');
+    if (!element) return;
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('l', 'mm', 'a4'); // landscape orientation for wide table
+    
+    const imgWidth = 295;
+    const pageHeight = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    
+    let position = 0;
+    
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    const dateRange = fromDate && toDate 
+      ? `${format(fromDate, 'dd-MM-yyyy')}_to_${format(toDate, 'dd-MM-yyyy')}`
+      : 'all_dates';
+    
+    pdf.save(`Blood_Bleeded_Record_${dateRange}.pdf`);
+  };
+
+  const exportToJPEG = async () => {
+    const element = document.getElementById('blood-bleed-record-table');
+    if (!element) return;
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    
+    const link = document.createElement('a');
+    link.download = `Blood_Bleeded_Record_${fromDate && toDate 
+      ? `${format(fromDate, 'dd-MM-yyyy')}_to_${format(toDate, 'dd-MM-yyyy')}`
+      : 'all_dates'}.jpeg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.9);
+    link.click();
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -135,9 +193,24 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
     <Card>
       <CardHeader className="text-center border-b">
         <div className="space-y-2">
-          <h1 className="text-xl font-bold">BLOOD CARE FOUNDATION</h1>
-          <h2 className="text-lg font-semibold">Blood Donor Register</h2>
-          <div className="text-right text-sm">Page 1 of {totalPages}</div>
+          <div className="flex justify-between items-center">
+            <div></div>
+            <div>
+              <h1 className="text-xl font-bold">BLOOD CARE FOUNDATION</h1>
+              <h2 className="text-lg font-semibold">Blood Donor Register</h2>
+              <div className="text-right text-sm">Page 1 of {totalPages}</div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={exportToPDF} className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+              <Button onClick={exportToJPEG} variant="outline" className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Export JPEG
+              </Button>
+            </div>
+          </div>
         </div>
       </CardHeader>
       
@@ -157,92 +230,94 @@ const BloodBleedRecordTable = ({ fromDate, toDate }: BloodBleedRecordTableProps)
 
         {/* Report Table */}
         <div className="overflow-x-auto">
-          <Table className="min-w-full border border-gray-300">
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                <TableHead className="border border-gray-300 text-center font-bold text-black">No</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Bag No</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Name</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Date</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Age</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Sex</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Phone No</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Donor Type</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Bag Type</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black">Blood Group</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black" colSpan={5}>Screening Results</TableHead>
-              </TableRow>
-              <TableRow className="bg-gray-100">
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300"></TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">V.D.R.L</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">HbsAg</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HCV</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HIV</TableHead>
-                <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">HB</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentRecords.map((record, index) => (
-                <TableRow key={record.id} className="hover:bg-gray-50">
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {startIndex + index + 1}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.bag_id}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-sm">
-                    {record.donors?.name || 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {format(new Date(record.bleeding_date), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.donors?.age || 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.donors?.gender || 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.donors?.phone || 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {getDonorType()}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {getBagType()}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {getBloodGroup(record)}
-                  </TableCell>
-                  {/* Screening Results from database columns */}
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.vdrl !== null ? record.vdrl.toFixed(2) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.hbsag !== null ? record.hbsag.toFixed(2) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.hcv !== null ? record.hcv.toFixed(2) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.hiv !== null ? record.hiv.toFixed(2) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 text-center text-sm">
-                    {record.hb !== null ? record.hb.toFixed(1) : 'N/A'}
-                  </TableCell>
+          <div id="blood-bleed-record-table" className="bg-white">
+            <Table className="min-w-full border border-gray-300">
+              <TableHeader>
+                <TableRow className="bg-gray-100">
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">No</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Bag No</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Name</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Date</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Age</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Sex</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Phone No</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Donor Type</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Bag Type</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black">Blood Group</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black" colSpan={5}>Screening Results</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                <TableRow className="bg-gray-100">
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300"></TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">V.D.R.L</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">HbsAg</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HCV</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">Anti HIV</TableHead>
+                  <TableHead className="border border-gray-300 text-center font-bold text-black text-xs">HB</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentRecords.map((record, index) => (
+                  <TableRow key={record.id} className="hover:bg-gray-50">
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {startIndex + index + 1}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.bag_id}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-sm">
+                      {record.donors?.name || 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {format(new Date(record.bleeding_date), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.donors?.age || 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.donors?.gender || 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.donors?.phone || 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {getDonorType()}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {getBagType()}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {getBloodGroup(record)}
+                    </TableCell>
+                    {/* Screening Results from database columns */}
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.vdrl !== null ? record.vdrl.toFixed(2) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.hbsag !== null ? record.hbsag.toFixed(2) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.hcv !== null ? record.hcv.toFixed(2) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.hiv !== null ? record.hiv.toFixed(2) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 text-center text-sm">
+                      {record.hb !== null ? record.hb.toFixed(1) : 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Pagination */}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -11,12 +10,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BloodBleedRecordTable from "./BloodBleedRecordTable";
+import RecordGroupWiseTable from "./RecordGroupWiseTable";
 
 interface BDSReportFilterProps {
   title: string;
+  reportType?: string;
 }
 
-const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
+const BDSReportFilter = ({ title, reportType }: BDSReportFilterProps) => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState<Date>();
@@ -78,6 +79,13 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
 
   const handleExit = () => {
     navigate("/dashboard");
+  };
+
+  const renderResultsTable = () => {
+    if (reportType === "group-wise") {
+      return <RecordGroupWiseTable fromDate={fromDate} toDate={toDate} />;
+    }
+    return <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />;
   };
 
   return (
@@ -203,7 +211,7 @@ const BDSReportFilter = ({ title }: BDSReportFilterProps) => {
 
       {/* Results Table */}
       {showResults ? (
-        <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />
+        renderResultsTable()
       ) : (
         <Card>
           <CardHeader>
