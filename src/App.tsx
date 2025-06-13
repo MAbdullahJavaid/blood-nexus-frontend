@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +19,6 @@ import BloodBleedRecordReport from "./pages/BloodBleedRecordReport";
 import RecordGroupWiseReport from "./pages/RecordGroupWiseReport";
 import TestPositiveReport from "./pages/TestPositiveReport";
 import TestReportDetail from "./pages/TestReportDetail";
-import PatientWiseBloodIssue from "./pages/PatientWiseBloodIssue";
 import ProductWiseBloodIssue from "./pages/ProductWiseBloodIssue";
 import DonorScreening from "./pages/DonorScreening";
 import DonorBleedSummary from "./pages/DonorBleedSummary";
@@ -123,14 +123,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TestReportDetail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/reports/lab/patient-wise-blood-issue" 
-              element={
-                <ProtectedRoute>
-                  <PatientWiseBloodIssue />
                 </ProtectedRoute>
               } 
             />
