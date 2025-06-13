@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -12,6 +11,7 @@ import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BloodBleedRecordTable from "./BloodBleedRecordTable";
 import RecordGroupWiseTable from "./RecordGroupWiseTable";
+import DonorBleedSummaryTable from "./DonorBleedSummaryTable";
 
 interface BDSReportFilterProps {
   title: string;
@@ -85,6 +85,9 @@ const BDSReportFilter = ({ title, reportType }: BDSReportFilterProps) => {
   const renderResultsTable = () => {
     if (reportType === "record-group-wise") {
       return <RecordGroupWiseTable fromDate={fromDate} toDate={toDate} />;
+    }
+    if (title === "Donor Bleeded Summary") {
+      return <DonorBleedSummaryTable fromDate={fromDate} toDate={toDate} />;
     }
     return <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />;
   };
