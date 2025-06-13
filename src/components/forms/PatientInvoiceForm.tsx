@@ -47,6 +47,33 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [gender, setGender] = useState("male");
     const [exDonor, setExDonor] = useState("");
 
+    const clearForm = () => {
+      setPatientType("regular");
+      setDocumentNo("");
+      setBloodGroup("N/A");
+      setRhType("N/A");
+      setBloodCategory("FWB");
+      setBottleRequired(0);
+      setBottleUnitType("bag");
+      setItems([]);
+      setDiscount(0);
+      setReceivedAmount(0);
+      setTotalAmount(0);
+      setSelectedItemIndex(null);
+      setCurrentTestIndex(null);
+      setSelectedPatient(null);
+      setDocumentDate(new Date().toISOString().split('T')[0]);
+      setPatientID("");
+      setPatientName("");
+      setPhoneNo("");
+      setAge(null);
+      setDob("");
+      setReferences("");
+      setHospital("");
+      setGender("male");
+      setExDonor("");
+    };
+
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
         handleAddItem();
@@ -55,8 +82,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         handleDeleteItem();
       },
       handleSave: async () => {
-        return await handleSave();
-      }
+        const result = await handleSave();
+        if (result.success) {
+          clearForm();
+        }
+        return result;
+      },
+      clearForm: clearForm
     }));
 
     const isAdding = !documentNo && isEditable;

@@ -21,7 +21,7 @@ export function BloodDetailsSection({
   bloodGroup = "N/A",
   rhType = "N/A",
   bloodCategory,
-  bottleRequired = 1,
+  bottleRequired = 0,
   bottleUnitType,
   isEditable,
   onBloodGroupChange,
@@ -84,8 +84,9 @@ export function BloodDetailsSection({
             id="bottleRequired" 
             className="h-9 flex-1" 
             type="number" 
+            min="0"
             value={bottleRequired}
-            onChange={(e) => onBottleRequiredChange?.(parseInt(e.target.value) || 1)}
+            onChange={(e) => onBottleRequiredChange?.(parseInt(e.target.value) || 0)}
             disabled={!isEditable} 
           />
           <Select value={bottleUnitType} onValueChange={onBottleUnitTypeChange} disabled={!isEditable}>
