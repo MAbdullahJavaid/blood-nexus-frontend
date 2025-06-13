@@ -12,9 +12,11 @@ export type Database = {
       bleeding_records: {
         Row: {
           bag_id: string
+          bag_type: string | null
           bleeding_date: string
           created_at: string | null
           created_by: string | null
+          donor_category: string | null
           donor_id: string
           hb: number | null
           hbsag: number | null
@@ -28,9 +30,11 @@ export type Database = {
         }
         Insert: {
           bag_id?: string
+          bag_type?: string | null
           bleeding_date: string
           created_at?: string | null
           created_by?: string | null
+          donor_category?: string | null
           donor_id: string
           hb?: number | null
           hbsag?: number | null
@@ -44,9 +48,11 @@ export type Database = {
         }
         Update: {
           bag_id?: string
+          bag_type?: string | null
           bleeding_date?: string
           created_at?: string | null
           created_by?: string | null
+          donor_category?: string | null
           donor_id?: string
           hb?: number | null
           hbsag?: number | null

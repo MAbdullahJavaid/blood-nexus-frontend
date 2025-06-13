@@ -38,6 +38,8 @@ export type BagData = {
   expiry_date?: string;
   technician?: string;
   remarks?: string;
+  donor_category?: string;
+  bag_type?: string;
 };
 
 // Extended Donor type to include separate blood group fields

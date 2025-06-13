@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -16,6 +17,8 @@ interface BleedingFormContextType {
   setBagNo: (bagNo: string) => void;
   bagType: string;
   setBagType: (bagType: string) => void;
+  donorCategory: string;
+  setDonorCategory: (category: string) => void;
   bleedingDate: string;
   setBleedingDate: (date: string) => void;
   donorPatientValues: DonorPatientValues;
@@ -67,6 +70,7 @@ export const BleedingFormProvider: React.FC<{
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState("Auto-generated on save");
   const [bagType, setBagType] = useState("double");
+  const [donorCategory, setDonorCategory] = useState("voluntary");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -84,6 +88,7 @@ export const BleedingFormProvider: React.FC<{
     setSelectedDonor(null);
     setBagNo("Auto-generated on save");
     setBagType("double");
+    setDonorCategory("voluntary");
     setBleedingDate(getFormattedDate());
     setDonorPatientValues(getDefaultDonorPatientValues());
     setProductInfo(getDefaultProductInfo());
@@ -141,6 +146,10 @@ export const BleedingFormProvider: React.FC<{
         // Load the donor data
         setSelectedDonor(bleedingRecord.donors as Donor);
         setBagNo(bleedingRecord.bag_id);
+        
+        // Load bag type and donor category
+        setBagType(bleedingRecord.bag_type || "double");
+        setDonorCategory(bleedingRecord.donor_category || "voluntary");
         
         // Format bleeding date
         const bleedingDateObj = new Date(bleedingRecord.bleeding_date);
@@ -206,6 +215,8 @@ export const BleedingFormProvider: React.FC<{
         donor_id: selectedDonor.id,
         bleeding_date: formattedBleedingDate,
         technician: "Current User",
+        donor_category: donorCategory,
+        bag_type: bagType,
         hbsag: parseFloat(donorPatientValues.hepB) || null,
         hcv: parseFloat(donorPatientValues.hepC) || null,
         hiv: parseFloat(donorPatientValues.hiv) || null,
@@ -221,6 +232,8 @@ export const BleedingFormProvider: React.FC<{
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
           technician: "Current User", // You might want to get this from user context
+          donor_category: donorCategory,
+          bag_type: bagType,
           hbsag: parseFloat(donorPatientValues.hepB) || null,
           hcv: parseFloat(donorPatientValues.hepC) || null,
           hiv: parseFloat(donorPatientValues.hiv) || null,
@@ -331,6 +344,8 @@ export const BleedingFormProvider: React.FC<{
       setBagNo,
       bagType,
       setBagType,
+      donorCategory,
+      setDonorCategory,
       bleedingDate,
       setBleedingDate,
       donorPatientValues,
