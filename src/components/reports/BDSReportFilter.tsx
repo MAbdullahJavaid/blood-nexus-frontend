@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -82,7 +83,7 @@ const BDSReportFilter = ({ title, reportType }: BDSReportFilterProps) => {
   };
 
   const renderResultsTable = () => {
-    if (reportType === "group-wise") {
+    if (reportType === "record-group-wise") {
       return <RecordGroupWiseTable fromDate={fromDate} toDate={toDate} />;
     }
     return <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />;

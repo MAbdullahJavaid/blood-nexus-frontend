@@ -53,7 +53,7 @@ const RecordGroupWiseTable = ({ fromDate, toDate }: RecordGroupWiseTableProps) =
         if (record.donors) {
           const bloodGroup = record.donors.blood_group_separate || '';
           const rhFactor = record.donors.rh_factor || '';
-          const combinedGroup = bloodGroup + (rhFactor === '+ve' ? '+ve' : rhFactor === '-ve' ? '-ve' : rhFactor);
+          const combinedGroup = bloodGroup + rhFactor;
           
           if (combinedGroup) {
             bloodGroupCounts[combinedGroup] = (bloodGroupCounts[combinedGroup] || 0) + 1;
@@ -61,7 +61,7 @@ const RecordGroupWiseTable = ({ fromDate, toDate }: RecordGroupWiseTableProps) =
         }
       });
 
-      // Convert to array and sort by blood group
+      // Convert to array and sort by blood group (positive first, then negative)
       const bloodGroupOrder = ['A+ve', 'B+ve', 'O+ve', 'AB+ve', 'A-ve', 'B-ve', 'O-ve', 'AB-ve', 'A--', 'B--', 'O--', 'AB--'];
       
       return bloodGroupOrder
@@ -174,51 +174,41 @@ const RecordGroupWiseTable = ({ fromDate, toDate }: RecordGroupWiseTableProps) =
       <CardContent className="p-6">
         <div id="record-group-wise-table" className="bg-white p-8">
           {/* Report Header */}
-          <div className="text-center mb-8 space-y-2">
-            <h1 className="text-xl font-bold">BLOOD CARE FOUNDATION</h1>
-            <h2 className="text-lg font-semibold">Blood Donor Register Group Wise</h2>
+          <div className="text-center mb-8 space-y-2 border-t-2 border-b-2 border-black pt-2 pb-2">
+            <h1 className="text-lg font-bold uppercase">BLOOD CARE FOUNDATION</h1>
+            <h2 className="text-base font-semibold">Blood Donor Register Group Wise</h2>
             <div className="text-sm">
               For the Period from {fromDate ? format(fromDate, 'MMM, dd yyyy') : 'Start'} to {toDate ? format(toDate, 'MMM, dd yyyy') : 'End'}
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs">
               Print Date: {format(new Date(), 'dd-MMM-yyyy HH:mm:ss')} pm
             </div>
           </div>
 
           {/* Blood Group Summary Table */}
-          <div className="max-w-md mx-auto">
-            <Table className="border border-gray-800">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="border border-gray-800 text-center font-bold text-black bg-gray-100">
-                    Blood Group
-                  </TableHead>
-                  <TableHead className="border border-gray-800 text-center font-bold text-black bg-gray-100">
-                    Total:
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bloodGroupData?.map((item) => (
-                  <TableRow key={item.blood_group}>
-                    <TableCell className="border border-gray-800 text-center font-medium">
-                      {item.blood_group}
-                    </TableCell>
-                    <TableCell className="border border-gray-800 text-center">
-                      {item.count}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell className="border border-gray-800 text-center font-bold bg-gray-100">
-                    Grand Total:
-                  </TableCell>
-                  <TableCell className="border border-gray-800 text-center font-bold bg-gray-100">
-                    {totalCount}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+          <div className="max-w-sm mx-auto">
+            <div className="mb-4">
+              <div className="grid grid-cols-2 text-center">
+                <div className="font-semibold text-sm">Blood Group</div>
+                <div className="font-semibold text-sm">Total:</div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              {bloodGroupData?.map((item) => (
+                <div key={item.blood_group} className="grid grid-cols-2 text-center text-sm">
+                  <div className="text-left pl-8">{item.blood_group}</div>
+                  <div>{item.count}</div>
+                </div>
+              ))}
+              
+              <div className="border-t border-black mt-2 pt-1">
+                <div className="grid grid-cols-2 text-center text-sm font-semibold">
+                  <div className="text-left pl-4">Grand Total:</div>
+                  <div>{totalCount}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {bloodGroupData?.length === 0 && (
