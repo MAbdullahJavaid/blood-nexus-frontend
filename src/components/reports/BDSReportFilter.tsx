@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import BloodBleedRecordTable from "./BloodBleedRecordTable";
 import RecordGroupWiseTable from "./RecordGroupWiseTable";
 import DonorBleedSummaryTable from "./DonorBleedSummaryTable";
+import BagBleedSummaryTable from "./BagBleedSummaryTable";
 
 interface BDSReportFilterProps {
   title: string;
@@ -88,6 +90,9 @@ const BDSReportFilter = ({ title, reportType }: BDSReportFilterProps) => {
     }
     if (title === "Donor Bleeded Summary") {
       return <DonorBleedSummaryTable fromDate={fromDate} toDate={toDate} />;
+    }
+    if (title === "Bag Bleeded Summary") {
+      return <BagBleedSummaryTable fromDate={fromDate} toDate={toDate} />;
     }
     return <BloodBleedRecordTable fromDate={fromDate} toDate={toDate} />;
   };

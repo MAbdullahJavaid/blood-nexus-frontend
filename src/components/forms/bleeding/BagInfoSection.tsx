@@ -63,7 +63,7 @@ const BagInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: Bag
               <SelectItem value="single">Single</SelectItem>
               <SelectItem value="double">Double</SelectItem>
               <SelectItem value="triple">Triple</SelectItem>
-              <SelectItem value="quadruple">Quadruple</SelectItem>
+              <SelectItem value="megaunit">Megaunit</SelectItem>
             </SelectContent>
           </Select>
         </div>
