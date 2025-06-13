@@ -56,10 +56,10 @@ const TestPositiveReport = () => {
 
       // Filter for records with any positive screening results (>1.0)
       const positiveRecords = (data || []).filter(record => {
-        const hbsag = parseFloat(record.hbsag) || 0;
-        const hcv = parseFloat(record.hcv) || 0;
-        const hiv = parseFloat(record.hiv) || 0;
-        const vdrl = parseFloat(record.vdrl) || 0;
+        const hbsag = Number(record.hbsag) || 0;
+        const hcv = Number(record.hcv) || 0;
+        const hiv = Number(record.hiv) || 0;
+        const vdrl = Number(record.vdrl) || 0;
         
         return hbsag > 1.0 || hcv > 1.0 || hiv > 1.0 || vdrl > 1.0;
       });
