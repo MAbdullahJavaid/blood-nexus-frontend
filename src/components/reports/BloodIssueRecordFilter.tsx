@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
+import BloodIssueRecordTable from "./BloodIssueRecordTable";
 
 interface BloodIssueRecordFilterProps {
   title: string;
@@ -17,6 +18,7 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
   const [dateRange, setDateRange] = useState("This Fiscal Year");
   const [fromDate, setFromDate] = useState("01/07/2024");
   const [toDate, setToDate] = useState("30/06/2025");
+  const [showResults, setShowResults] = useState(false);
 
   const getDateForOption = (option: string) => {
     const today = new Date();
@@ -61,7 +63,7 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
       fromDate,
       toDate
     });
-    // This will be connected to actual data fetching later
+    setShowResults(true);
   };
 
   const handleCancel = () => {
@@ -69,15 +71,22 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
     setDateRange("This Fiscal Year");
     setFromDate("01/07/2024");
     setToDate("30/06/2025");
+    setShowResults(false);
   };
 
   const handleExport = () => {
     console.log("Exporting report...");
-    // Export functionality will be implemented later
+    // Export functionality will be handled by the table component
   };
 
   const handleExit = () => {
     navigate("/dashboard");
+  };
+
+  // Convert DD/MM/YYYY to YYYY-MM-DD format for database queries
+  const convertToISODate = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
   return (
@@ -197,18 +206,26 @@ const BloodIssueRecordFilter = ({ title }: BloodIssueRecordFilterProps) => {
         </CardContent>
       </Card>
 
-      {/* Results Table Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No results found. Use the filters above to generate the report.</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Results Table */}
+      {showResults ? (
+        <BloodIssueRecordTable 
+          category={category}
+          fromDate={convertToISODate(fromDate)}
+          toDate={convertToISODate(toDate)}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Report Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No results found. Use the filters above to generate the report.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
