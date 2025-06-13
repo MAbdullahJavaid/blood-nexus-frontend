@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -77,7 +76,7 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         return;
       }
 
-      console.log("Invoice data:", invoiceData);
+      console.log("Raw invoice data:", invoiceData);
 
       // Group data by date and blood category
       const groupedData: { [key: string]: BloodCategoryData } = {};
@@ -99,30 +98,40 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         }
 
         const quantity = record.bottle_quantity || 0;
-        const bloodCategory = record.blood_category?.toUpperCase();
+        const bloodCategory = record.blood_category?.toUpperCase().trim();
 
-        // Sum the actual bottle quantities for each category
+        console.log(`Processing record: Date=${dateKey}, Category=${bloodCategory}, Quantity=${quantity}`);
+
+        // Map blood categories correctly - FWB should go to WB column
         switch (bloodCategory) {
           case 'WB':
+          case 'FWB': // FWB maps to WB column
             groupedData[dateKey].WB += quantity;
+            console.log(`Added ${quantity} to WB for date ${dateKey}, new total: ${groupedData[dateKey].WB}`);
             break;
           case 'PC':
             groupedData[dateKey].PC += quantity;
+            console.log(`Added ${quantity} to PC for date ${dateKey}, new total: ${groupedData[dateKey].PC}`);
             break;
           case 'FFP':
             groupedData[dateKey].FFP += quantity;
+            console.log(`Added ${quantity} to FFP for date ${dateKey}, new total: ${groupedData[dateKey].FFP}`);
             break;
           case 'PLT':
+          case 'PLTS': // Handle PLT's variation
             groupedData[dateKey].PLT += quantity;
+            console.log(`Added ${quantity} to PLT for date ${dateKey}, new total: ${groupedData[dateKey].PLT}`);
             break;
           case 'CP':
             groupedData[dateKey].CP += quantity;
+            console.log(`Added ${quantity} to CP for date ${dateKey}, new total: ${groupedData[dateKey].CP}`);
             break;
           case 'MEGAUNIT':
             groupedData[dateKey].MEGAUNIT += quantity;
+            console.log(`Added ${quantity} to MEGAUNIT for date ${dateKey}, new total: ${groupedData[dateKey].MEGAUNIT}`);
             break;
           default:
-            // Handle other categories as needed
+            console.warn(`Unknown blood category: ${bloodCategory}`);
             break;
         }
 
@@ -157,8 +166,8 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         newTotals.total += row.total;
       });
 
-      console.log("Calculated totals:", newTotals);
-      console.log("Result array:", resultArray);
+      console.log("Final calculated totals:", newTotals);
+      console.log("Final result array:", resultArray);
 
       setData(resultArray);
       setTotals(newTotals);
