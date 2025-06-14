@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,6 @@ type UserProfile = {
   id: string;
   username: string;
   role: string;
-  roles?: string[]; // Add roles array for application roles
 };
 
 type AuthContextType = {
@@ -18,8 +18,6 @@ type AuthContextType = {
   signup: (email: string, password: string, username: string) => Promise<boolean>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  roles: string[]; // Expose roles (read-only)
-  hasRole: (role: string) => boolean; // Helper to check for specific roles
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,30 +26,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [roles, setRoles] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Helper: fetch roles for user
-  const fetchRoles = async (userId: string) => {
-    // User roles are in user_roles table with role values 'lab', 'bds', 'reception'
-    if (!userId) return [];
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    if (error) {
-      console.error("Unable to fetch user roles", error);
-      return [];
-    }
-    return data.map((r: { role: string }) => r.role);
-  };
-
   useEffect(() => {
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         
         if (session?.user) {
+          // Get user profile data
           setTimeout(async () => {
             const { data, error } = await supabase
               .from('profiles')
@@ -59,49 +43,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('id', session.user.id)
               .single();
             
-            let customProfile = null;
             if (data) {
-              customProfile = {
+              setUser({
                 id: data.id,
                 username: data.username,
-                role: data.role,
-              };
+                role: data.role
+              });
+            } else if (error) {
+              console.error('Error fetching user profile:', error);
             }
-            const userRoles = await fetchRoles(session.user.id);
-            setRoles(userRoles);
-            setUser(customProfile ? { ...customProfile, roles: userRoles } : null);
           }, 0);
         } else {
           setUser(null);
-          setRoles([]);
         }
+        
         setIsLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      
       if (session?.user) {
-        const { data, error } = await supabase
+        // Get user profile data
+        supabase
           .from('profiles')
           .select('id, username, role')
           .eq('id', session.user.id)
-          .single();
-        let customProfile = null;
-        if (data) {
-          customProfile = {
-            id: data.id,
-            username: data.username,
-            role: data.role,
-          };
-        }
-        const userRoles = await fetchRoles(session.user.id);
-        setRoles(userRoles);
-        setUser(customProfile ? { ...customProfile, roles: userRoles } : null);
-        setIsLoading(false);
+          .single()
+          .then(({ data, error }) => {
+            if (data) {
+              setUser({
+                id: data.id,
+                username: data.username,
+                role: data.role
+              });
+            } else if (error) {
+              console.error('Error fetching user profile:', error);
+            }
+            setIsLoading(false);
+          });
       } else {
         setIsLoading(false);
-        setRoles([]);
       }
     });
 
@@ -112,11 +96,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
       if (error) {
         toast({
           title: "Login failed",
@@ -125,16 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return false;
       }
+      
       toast({
         title: "Login successful",
         description: `Welcome back!`,
       });
-      // Fetch roles again after login
-      if (data?.user) {
-        const userRoles = await fetchRoles(data.user.id);
-        setRoles(userRoles);
-        setUser(prev => prev ? { ...prev, roles: userRoles } : prev);
-      }
       return true;
     } catch (error: any) {
       console.error('Unexpected error during login:', error);
@@ -151,7 +132,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, username: string): Promise<boolean> => {
     setIsLoading(true);
+    
     try {
+      // Create the user in Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -161,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       });
+      
       if (signUpError) {
         toast({
           title: "Signup failed",
@@ -169,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return false;
       }
+      
       toast({
         title: "Account created",
         description: "Your account has been created successfully!",
@@ -189,8 +174,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     setIsLoading(true);
+    
     try {
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
         console.error('Error signing out:', error);
         toast({
@@ -200,9 +187,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return;
       }
+      
       setUser(null);
       setSession(null);
-      setRoles([]);
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
@@ -219,9 +206,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Helper to check roles
-  const hasRole = (role: string) => roles.includes(role);
-
   return (
     <AuthContext.Provider 
       value={{ 
@@ -231,9 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login, 
         signup, 
         logout, 
-        isAuthenticated: !!session,
-        roles,
-        hasRole
+        isAuthenticated: !!session 
       }}
     >
       {children}

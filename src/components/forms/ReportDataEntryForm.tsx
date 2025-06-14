@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,37 +102,6 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       const processedCategories = new Set<string>();
 
       for (const selectedTest of selectedTests) {
-        const isEnriched =
-          typeof selectedTest === "object" &&
-          ("measuring_unit" in selectedTest || "low_value" in selectedTest);
-
-        if (isEnriched) {
-          const categoryName = selectedTest.category || "Unknown Category";
-          if (!processedCategories.has(categoryName)) {
-            allLoadedTests.push({
-              test_id: 0,
-              test_name: categoryName,
-              measuring_unit: "",
-              low_value: "",
-              high_value: "",
-              user_value: "",
-              category: categoryName,
-              is_category_header: true,
-            });
-            processedCategories.add(categoryName);
-          }
-          allLoadedTests.push({
-            test_id: selectedTest.test_id,
-            test_name: selectedTest.test_name,
-            measuring_unit: selectedTest.measuring_unit ?? "",
-            low_value: selectedTest.low_value ?? "",
-            high_value: selectedTest.high_value ?? "",
-            user_value: selectedTest.user_value ?? "",
-            category: selectedTest.category ?? "",
-          });
-          continue;
-        }
-
         console.log('Processing test:', selectedTest);
         
         // Get test information from database to check type
@@ -240,22 +210,19 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
 
   const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
-
+    
+    // Parse tests from JSON string
     if (report.tests_type) {
       try {
-        let tests: TestResult[];
-        if (typeof report.tests_type === "string") {
-          tests = JSON.parse(report.tests_type);
-        } else {
-          tests = report.tests_type as unknown as TestResult[];
-        }
-        if (!Array.isArray(tests)) throw new Error("Malformed test data");
-
+        const tests = JSON.parse(report.tests_type);
         setTestResults(tests || []);
-        await loadTestsBasedOnType(tests);
+        
+        // Load tests based on their type
+        if (tests && tests.length > 0) {
+          await loadTestsBasedOnType(tests);
+        }
       } catch (error) {
-        console.warn('Error parsing or loading test data:', error);
-        toast.warning('Some test data could not be loaded for this report.');
+        console.error('Error parsing tests:', error);
         setTestResults([]);
         setLoadedTestResults([]);
       }
@@ -263,7 +230,7 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
       setTestResults([]);
       setLoadedTestResults([]);
     }
-
+    
     setIsSearchModalOpen(false);
     toast.success(`Report for ${report.patient_name} loaded successfully`);
   };

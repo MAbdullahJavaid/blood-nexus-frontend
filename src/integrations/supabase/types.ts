@@ -708,27 +708,6 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       donors_with_combined_blood_group: {
@@ -880,20 +859,12 @@ export type Database = {
         Args: { test_id: number } | { test_uuid: string }
         Returns: number
       }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       is_test_active: {
         Args: { test_description: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "lab" | "bds" | "reception"
       blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       blood_status: "Available" | "Reserved" | "Used" | "Expired" | "Discarded"
     }
@@ -1011,7 +982,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["lab", "bds", "reception"],
       blood_group: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       blood_status: ["Available", "Reserved", "Used", "Expired", "Discarded"],
     },
