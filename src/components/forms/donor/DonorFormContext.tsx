@@ -145,7 +145,25 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           onConflict: 'donor_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        if (
+          error.code === "23505" ||
+          (typeof error.message === "string" && error.message.includes("donor_id"))
+        ) {
+          toast({
+            title: "Error",
+            description: "Donor already exists",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to save donor information",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
 
       toast({
         title: "Success",
