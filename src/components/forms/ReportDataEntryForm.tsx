@@ -602,6 +602,8 @@ const ReportDataEntryForm = ({
                         onChange={(e) => handleValueChange(test.test_id, e.target.value)}
                         className="h-8" 
                         placeholder="Enter value"
+                        readOnly={!isEditable}
+                        disabled={!isEditable}
                       />
                     </TableCell>
                   </TableRow>
