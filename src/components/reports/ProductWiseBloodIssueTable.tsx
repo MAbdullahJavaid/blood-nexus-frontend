@@ -223,13 +223,7 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         <div className="flex justify-between items-start">
           <div className="flex-1"></div>
           <div className="text-center flex-1">
-            <p className="text-xs mb-1">AFFILIATED WITH</p>
-            <p className="text-sm font-bold mb-2">We Care About.....</p>
-            <p className="text-sm font-bold mb-1">THALASSAEMIC, HAEMOPHILIC, BLOOD CANCER PATIENTS!</p>
-            <h1 className="text-xl font-bold mb-1">BLOOD CARE FOUNDATION</h1>
-            <p className="text-sm font-medium mb-2">BLOOD TRANSFUSION AND HEMATOLOGICAL SERVICE</p>
-            <div className="w-full h-1 bg-red-600 mb-4"></div>
-            <h2 className="text-lg font-bold">Blood Issuing Blood Category Wise</h2>
+            
           </div>
           <div className="flex flex-col gap-2">
             <Button onClick={handleExportPDF} className="flex items-center gap-2" size="sm">
