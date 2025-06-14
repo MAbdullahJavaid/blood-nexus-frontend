@@ -110,6 +110,11 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     }
   };
 
+  // Utility to strip "@gmail.com" from the username
+  const displayUsername = user?.username
+    ? user.username.replace(/@gmail\.com$/, "")
+    : "";
+
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-border flex flex-col">
       <div className="p-4 flex items-center gap-3">
@@ -319,7 +324,9 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             <UserIcon className="h-5 w-5 text-gray-500" />
           </div>
           <div>
-            <p className="font-medium">{user?.username }</p>
+            <p className="font-medium">
+              {displayUsername}
+            </p>
             <p className="text-xs text-muted-foreground">Staff</p>
           </div>
         </div>
