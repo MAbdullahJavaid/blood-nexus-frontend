@@ -1,9 +1,8 @@
 
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileSearch } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 
 interface PatientDetailsSectionProps {
   patientType: string;
@@ -11,17 +10,17 @@ interface PatientDetailsSectionProps {
   selectedPatient: any;
   isEditable: boolean;
   isAdding: boolean;
-  onPatientTypeChange: (value: string) => void;
+  onPatientTypeChange: (val: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
   patientName: string;
-  setPatientName: (value: string) => void;
+  setPatientName: (val: string) => void;
   documentDate: string;
-  setDocumentDate: (value: string) => void;
+  setDocumentDate: (val: string) => void;
   shouldEnableEditing: boolean;
-  setDocumentNo: (value: string) => void;
+  setDocumentNo: (val: string) => void;
   patientID: string;
-  setPatientId: (value: string) => void;
+  setPatientId: (val: string) => void;
 }
 
 export function PatientDetailsSection({
@@ -40,92 +39,97 @@ export function PatientDetailsSection({
   shouldEnableEditing,
   setDocumentNo,
   patientID,
-  setPatientId
+  setPatientId,
 }: PatientDetailsSectionProps) {
   return (
-    <div className="grid grid-cols-4 gap-4 mb-4">
-      <div>
-        <Label htmlFor="patientType" className="mb-1 block">Patient Type:</Label>
-        <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable}>
-          <SelectTrigger className="h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="regular">Regular</SelectItem>
-            <SelectItem value="opd">OPD</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
-        <div className="flex items-center gap-2">
-          <Input 
-            id="documentNo" 
-            className="h-9 flex-1" 
-            value={documentNo}
-            readOnly={true}
-            placeholder="Auto-generated"
-          />
-          {isEditable && (
-            <Button 
-              type="button" 
-              size="sm" 
-              variant="outline" 
-              className="h-9 px-2"
-              onClick={onSearchDocumentClick}
-            >
-              <FileSearch className="h-4 w-4" />
-            </Button>
-          )}
+    <div className="border rounded-md p-4 bg-green-50 mb-4">
+      <div className="grid grid-cols-7 gap-4 items-center mb-2">
+        <div>
+          <Label htmlFor="patientType" className="mb-1 block">Type:</Label>
+          <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable}>
+            <SelectTrigger className="h-8">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="regular">Regular</SelectItem>
+              <SelectItem value="opd">OPD</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-      <div>
-        <Label htmlFor="patientName" className="mb-1 block">Patient Name:</Label>
-        <div className="flex items-center gap-2">
-          <Input 
-            id="patientName" 
-            className="h-9 flex-1" 
+        <div>
+          <Label htmlFor="patientId" className="mb-1 block">Patient ID:</Label>
+          <div className="flex gap-2">
+            <Input
+              id="patientId"
+              value={patientID}
+              onChange={(e) => setPatientId(e.target.value)}
+              disabled={!isEditable || !!selectedPatient}
+              className="h-8"
+              placeholder="Enter Patient ID"
+            />
+            {isEditable && (
+              <button 
+                onClick={onSearchPatientClick}
+                className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
+                title="Search Patient by Patient ID"
+                type="button"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="patientName" className="mb-1 block">Patient Name:</Label>
+          <Input
+            id="patientName"
             value={patientName}
             onChange={(e) => setPatientName(e.target.value)}
-            disabled={!shouldEnableEditing} 
-          />
-          {patientType === "regular" && isEditable && (
-            <Button 
-              type="button" 
-              size="sm" 
-              variant="outline" 
-              className="h-9 px-2"
-              onClick={onSearchPatientClick}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="documentDate" className="mb-1 block">Date:</Label>
-        <Input 
-          id="documentDate" 
-          className="h-9" 
-          type="date" 
-          value={documentDate}
-          onChange={(e) => setDocumentDate(e.target.value)}
-          disabled={!isEditable} 
-        />
-      </div>
-      {patientType === "opd" && (
-        <div className="col-span-4">
-          <Label htmlFor="patientId" className="mb-1 block">Patient ID:</Label>
-          <Input 
-            id="patientId" 
-            className="h-9" 
-            value={patientID}
-            onChange={(e) => setPatientId(e.target.value)}
             disabled={!shouldEnableEditing}
-            placeholder="Enter patient ID"
+            className="h-8"
           />
         </div>
-      )}
+        <div>
+          <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
+          <div className="flex gap-2">
+            <Input
+              id="documentNo"
+              value={documentNo}
+              onChange={(e) => setDocumentNo(e.target.value)}
+              disabled={true}
+              className="h-8 bg-green-100"
+              placeholder="(Auto)"
+            />
+            {isEditable && (
+              <button
+                onClick={onSearchDocumentClick}
+                className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
+                title="Search Document"
+                type="button"
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="documentDate" className="mb-1 block">Document Date:</Label>
+          <Input
+            id="documentDate"
+            type="date"
+            className="h-8"
+            value={documentDate}
+            onChange={(e) => setDocumentDate(e.target.value)}
+            disabled={!shouldEnableEditing}
+          />
+        </div>
+          <div>
+            {/* Just placeholder for alignment, no label. */}
+          </div>
+          <div>
+            {/* Row 1 rightmost cell (could be used for future feature) */}
+          </div>
+      </div>
     </div>
   );
 }

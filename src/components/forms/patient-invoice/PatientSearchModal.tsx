@@ -24,15 +24,16 @@ export function PatientSearchModal({ isOpen, onOpenChange, onPatientSelect }: Pa
     }
   }, [isOpen]);
 
-  // Filter patients based on search term
+  // Filter patients based on search term (patient id prioritized, but also fallback to name/phone)
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredPatients(allPatients);
     } else {
+      const lowerSearch = searchTerm.toLowerCase();
       const filtered = allPatients.filter(patient => 
-        patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.patient_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+        patient.patient_id?.toLowerCase().includes(lowerSearch) ||
+        patient.name?.toLowerCase().includes(lowerSearch) ||
+        patient.phone?.toLowerCase().includes(lowerSearch)
       );
       setFilteredPatients(filtered);
     }
@@ -46,10 +47,7 @@ export function PatientSearchModal({ isOpen, onOpenChange, onPatientSelect }: Pa
       const { data, error } = await supabase
         .from('patients')
         .select('*')
-        .order('name', { ascending: true });
-
-      console.log("Patients loaded:", data);
-      console.log("Load error:", error);
+        .order('patient_id', { ascending: true });
 
       if (error) throw error;
       
@@ -79,11 +77,11 @@ export function PatientSearchModal({ isOpen, onOpenChange, onPatientSelect }: Pa
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Search Patient</DialogTitle>
+          <DialogTitle>Search Patient (by Patient ID)</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <Input 
-            placeholder="Search by patient name, ID, or phone number" 
+            placeholder="Search by Patient ID, Name, or Phone" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="mb-4"
@@ -101,8 +99,10 @@ export function PatientSearchModal({ isOpen, onOpenChange, onPatientSelect }: Pa
                   >
                     <div className="font-medium">{patient.name}</div>
                     <div className="text-sm text-gray-600">
-                      ID: {patient.patient_id} | Phone: {patient.phone || 'N/A'} | 
-                      Blood Group: {patient.blood_group} | Hospital: {patient.hospital || 'N/A'}
+                      <strong>ID:</strong> <span className="text-blue-900">{patient.patient_id}</span> 
+                      {" | "}Phone: {patient.phone || 'N/A'} 
+                      {" | "}Blood Group: {patient.blood_group}
+                      {" | "}Hospital: {patient.hospital || 'N/A'}
                     </div>
                     <div className="text-xs text-gray-500">
                       Age: {patient.age || 'N/A'} | Gender: {patient.gender || 'N/A'}
@@ -112,7 +112,7 @@ export function PatientSearchModal({ isOpen, onOpenChange, onPatientSelect }: Pa
               </div>
             ) : (
               <div className="p-8 text-center text-gray-500">
-                {searchTerm ? "No patients found matching your search" : "No patients available"}
+                {searchTerm ? "No patients found matching your Patient ID" : "No patients available"}
               </div>
             )}
           </div>
