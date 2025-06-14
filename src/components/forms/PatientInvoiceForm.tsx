@@ -82,11 +82,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         handleDeleteItem();
       },
       handleSave: async () => {
-        const result = await handleSave();
-        if (result.success) {
-          clearForm();
-        }
-        return result;
+        // Only save, do NOT clear form after save!
+        // (let parent control when to clear)
+        return await handleSave();
       },
       clearForm: clearForm
     }));

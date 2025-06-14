@@ -94,7 +94,6 @@ const Dashboard = () => {
         setIsAdding(false);
         setIsDeleting(false);
         setIsSearchEnabled(false);
-        clearActiveForm(); // Clear form after successful save
       }
     } else {
       toast({
@@ -105,7 +104,6 @@ const Dashboard = () => {
       setIsAdding(false);
       setIsDeleting(false);
       setIsSearchEnabled(false);
-      clearActiveForm(); // Clear form after successful save
     }
   };
 
