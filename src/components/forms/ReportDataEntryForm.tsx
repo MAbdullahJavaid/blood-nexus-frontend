@@ -59,7 +59,10 @@ interface ReportDataEntryFormProps {
   isEditable?: boolean;
 }
 
-const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: ReportDataEntryFormProps) => {
+const ReportDataEntryForm = ({
+  isSearchEnabled = true,
+  isEditable = false,
+}: ReportDataEntryFormProps) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
@@ -72,15 +75,15 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('pre_report')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("pre_report")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setReports(data || []);
     } catch (error) {
-      console.error('Error fetching reports:', error);
-      toast.error('Failed to fetch reports');
+      console.error("Error fetching reports:", error);
+      toast.error("Failed to fetch reports");
     } finally {
       setLoading(false);
     }
@@ -90,198 +93,106 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
     fetchReports();
   }, []);
 
-  const filteredReports = reports.filter(report =>
-    report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredReports = reports.filter(
+    (report) =>
+      report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  /**
-   * New logic:
-   * - Collect all "single" tests individually.
-   * - For every "full" test, fetch all tests in its category.
-   * - Avoid duplicate test rows.
-   * - Add category headers as before.
-   */
-  const loadTestsBasedOnType = async (selectedTests: TestResult[]) => {
+  // --- New function to load tests from invoice_items ---
+  const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
-      const allLoadedTests: LoadedTestResult[] = [];
-      const processedTestIds = new Set<number>();
-      const processedCategories = new Set<string>();
-      const categoryMap = new Map<string, number>(); // category_name -> category_id
+      // Find patient invoice using document_no
+      const { data: invoiceData, error: invError } = await supabase
+        .from("patient_invoices")
+        .select("id")
+        .eq("document_no", documentNo)
+        .maybeSingle();
 
-      // First, get detailed info for each selected test to learn its type/category
-      for (const selectedTest of selectedTests) {
-        // Fetch test info
-        const { data: testInfo, error } = await supabase
-          .from('test_information')
-          .select(`
-            id,
-            name,
-            test_type,
-            category_id,
-            description,
-            test_categories (
-              id,
-              name
-            )
-          `)
-          .eq('id', selectedTest.test_id)
-          .maybeSingle();
-
-        if (error || !testInfo) {
-          console.error('Error fetching test info:', error);
-          continue;
-        }
-
-        // Category handling
-        const categoryId = testInfo.category_id;
-        const categoryName = testInfo.test_categories?.name || 'Unknown Category';
-        if (categoryId && categoryName) {
-          categoryMap.set(categoryName, categoryId);
-        }
-
-        if (testInfo.test_type === 'full') {
-          // Only add this category once
-          if (!processedCategories.has(categoryName)) {
-            // Fetch all tests in the category
-            const { data: categoryTests, error: catError } = await supabase
-              .from('test_information')
-              .select(`
-                id,
-                name,
-                description,
-                test_type,
-                category_id,
-                test_categories (
-                  name
-                )
-              `)
-              .eq('category_id', categoryId);
-
-            if (catError) {
-              console.error('Error fetching category tests:', catError);
-              continue;
-            }
-
-            // Add header for this category
-            allLoadedTests.push({
-              test_id: 0,
-              test_name: categoryName,
-              measuring_unit: '',
-              low_value: '',
-              high_value: '',
-              user_value: '',
-              category: categoryName,
-              is_category_header: true
-            });
-            processedCategories.add(categoryName);
-
-            // Add all tests in this category
-            categoryTests?.forEach(test => {
-              if (!processedTestIds.has(test.id)) {
-                // Parse description JSON if available for extra info
-                let measuring_unit = '', low_value = '', high_value = '';
-                try {
-                  if (test.description) {
-                    const desc = JSON.parse(test.description);
-                    measuring_unit = desc.measuring_unit || '';
-                    low_value = desc.low_value || '';
-                    high_value = desc.high_value || '';
-                  }
-                } catch {}
-                allLoadedTests.push({
-                  test_id: test.id,
-                  test_name: test.name,
-                  measuring_unit,
-                  low_value,
-                  high_value,
-                  user_value: '',
-                  category: categoryName
-                });
-                processedTestIds.add(test.id);
-              }
-            });
-          }
-        } else if (testInfo.test_type === 'single') {
-          // Add header if not already added
-          if (!processedCategories.has(categoryName)) {
-            allLoadedTests.push({
-              test_id: 0,
-              test_name: categoryName,
-              measuring_unit: '',
-              low_value: '',
-              high_value: '',
-              user_value: '',
-              category: categoryName,
-              is_category_header: true
-            });
-            processedCategories.add(categoryName);
-          }
-          // Add single test if not already added
-          if (!processedTestIds.has(testInfo.id)) {
-            let measuring_unit = '', low_value = '', high_value = '';
-            try {
-              if (testInfo.description) {
-                const desc = JSON.parse(testInfo.description);
-                measuring_unit = desc.measuring_unit || '';
-                low_value = desc.low_value || '';
-                high_value = desc.high_value || '';
-              }
-            } catch {}
-            allLoadedTests.push({
-              test_id: testInfo.id,
-              test_name: testInfo.name,
-              measuring_unit,
-              low_value,
-              high_value,
-              user_value: '',
-              category: categoryName
-            });
-            processedTestIds.add(testInfo.id);
-          }
-        }
+      if (invError) throw invError;
+      if (!invoiceData?.id) {
+        setLoadedTestResults([]);
+        toast.error("No invoice found for this document");
+        return;
       }
 
-      setLoadedTestResults(allLoadedTests);
-    } catch (error) {
-      console.error('Error loading tests:', error);
-      toast.error('Failed to load test details');
+      // Fetch invoice items (the tests)
+      const { data: invoiceItems, error: itemsError } = await supabase
+        .from("invoice_items")
+        .select(
+          `test_id, test_name, type, category, quantity, unit_price, id`
+        )
+        .eq("invoice_id", invoiceData.id);
+
+      if (itemsError) throw itemsError;
+      if (!invoiceItems || invoiceItems.length === 0) {
+        setLoadedTestResults([]);
+        toast.error("No tests found in invoice items for this document");
+        return;
+      }
+
+      // For each invoice item, get measuring_unit, low_value, high_value from test_information (description)
+      const loadedTests: LoadedTestResult[] = [];
+      for (const item of invoiceItems) {
+        // Get additional info from test_information
+        let measuring_unit = "";
+        let low_value = "";
+        let high_value = "";
+
+        const { data: testInfo, error: testInfoErr } = await supabase
+          .from("test_information")
+          .select("description")
+          .eq("id", item.test_id)
+          .maybeSingle();
+
+        if (testInfo && testInfo.description) {
+          try {
+            const desc = JSON.parse(testInfo.description);
+            measuring_unit = desc.measuring_unit || "";
+            low_value = desc.low_value || "";
+            high_value = desc.high_value || "";
+          } catch {
+            // Ignore JSON parsing errors (leave as empty string)
+          }
+        }
+
+        loadedTests.push({
+          test_id: item.test_id,
+          test_name: item.test_name,
+          category: item.category || "",
+          measuring_unit,
+          low_value,
+          high_value,
+          user_value: "",
+        });
+      }
+      setLoadedTestResults(loadedTests);
+    } catch (error: any) {
+      console.error("Error loading tests from invoice items:", error);
+      setLoadedTestResults([]);
+      toast.error("Failed to load test details from invoice");
     }
   };
 
+  // --- Use this function in handleReportSelect ---
   const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
-    
-    // Parse tests from JSON string
-    if (report.tests_type) {
-      try {
-        const tests = JSON.parse(report.tests_type);
-        setTestResults(tests || []);
-        
-        // Load tests based on their type
-        if (tests && tests.length > 0) {
-          await loadTestsBasedOnType(tests);
-        }
-      } catch (error) {
-        console.error('Error parsing tests:', error);
-        setTestResults([]);
-        setLoadedTestResults([]);
-      }
+
+    // Always fetch via invoice_items for this document
+    if (report.document_no) {
+      await loadTestsFromInvoiceItems(report.document_no);
     } else {
-      setTestResults([]);
       setLoadedTestResults([]);
     }
-    
+
     setIsSearchModalOpen(false);
     toast.success(`Report for ${report.patient_name} loaded successfully`);
   };
 
   const handleValueChange = (testId: number, value: string) => {
-    setLoadedTestResults(prev => 
-      prev.map(test => 
-        test.test_id === testId 
-          ? { ...test, user_value: value }
-          : test
+    setLoadedTestResults((prev) =>
+      prev.map((test) =>
+        test.test_id === testId ? { ...test, user_value: value } : test
       )
     );
   };
@@ -289,13 +200,13 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    return date.toLocaleDateString("en-GB");
   };
 
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleString('en-GB'); // DD/MM/YYYY HH:MM:SS format
+    return date.toLocaleString("en-GB");
   };
 
   return (
