@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -45,7 +44,7 @@ const defaultDonorData: DonorData = {
   phoneRes: "",
   phoneOffice: "",
   remarks: "",
-  status: true,
+  status: true, // Default to active
 };
 
 const DonorFormContext = createContext<DonorFormContextType | undefined>(undefined);
@@ -78,20 +77,15 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   };
 
   const loadDonorData = (donor: any) => {
-    // Parse blood group using new separate fields with fallback to combined field
     const group = donor.blood_group_separate || donor.blood_group?.replace(/[+-]/g, '') || 'B';
     const rh = donor.rh_factor || (donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '+ve');
-    
-    // Calculate age from date_of_birth if available
     const age = donor.date_of_birth 
       ? (new Date().getFullYear() - new Date(donor.date_of_birth).getFullYear()).toString() 
       : '';
-    
-    // Use registration date (created_at) as the date
     const registrationDate = donor.created_at 
       ? new Date(donor.created_at).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0];
-    
+
     setDonorData({
       regNo: donor.donor_id || '',
       name: donor.name || '',
@@ -104,7 +98,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       phoneRes: donor.phone || '',
       phoneOffice: '',
       remarks: '',
-      status: true // Status is by default true/tick
+      status: donor.status !== undefined ? donor.status : true // Load from DB, default to true if undefined
     });
   };
 
@@ -120,20 +114,18 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     
     try {
       setIsSubmitting(true);
-      
-      // Handle blood group and rh factor separately
+
       let bloodGroupSeparate = null;
       let rhFactor = null;
       let combinedBloodGroup = null;
-      
+
       if (donorData.group !== "--" && donorData.rh !== "--") {
         bloodGroupSeparate = donorData.group;
         rhFactor = donorData.rh;
-        // Create combined format for backward compatibility
         const rhValue = donorData.rh === "+ve" ? "+" : "-";
         combinedBloodGroup = `${donorData.group}${rhValue}`;
       }
-      
+
       const { error } = await supabase
         .from('donors')
         .upsert({
@@ -141,25 +133,25 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           name: donorData.name,
           address: donorData.address,
           gender: donorData.sex,
-          blood_group: combinedBloodGroup as any, // Keep for backward compatibility
+          blood_group: combinedBloodGroup as any,
           blood_group_separate: bloodGroupSeparate,
           rh_factor: rhFactor,
           phone: donorData.phoneRes,
           email: "",
           date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
-          last_donation_date: donorData.date
+          last_donation_date: donorData.date,
+          status: donorData.status // <-- ADD THIS
         }, {
           onConflict: 'donor_id'
         });
-      
+
       if (error) throw error;
-      
+
       toast({
         title: "Success",
         description: "Donor information saved successfully",
       });
-      
-      // Clear form after successful submission
+
       clearForm();
       
     } catch (error) {
@@ -186,20 +178,19 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     
     try {
       setIsSubmitting(true);
-      
+
       const { error } = await supabase
         .from('donors')
         .delete()
         .eq('donor_id', donorData.regNo);
-      
+
       if (error) throw error;
-      
+
       toast({
         title: "Success",
         description: "Donor deleted successfully",
       });
-      
-      // Clear form after successful deletion
+
       clearForm();
       
     } catch (error) {

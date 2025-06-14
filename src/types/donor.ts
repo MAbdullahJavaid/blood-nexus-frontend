@@ -14,4 +14,5 @@ export interface Donor {
   last_donation_date?: string;
   created_at?: string;
   updated_at?: string;
+  status?: boolean; // Active (true) or Inactive (false)
 }
