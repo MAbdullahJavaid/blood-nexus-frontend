@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { DropletIcon } from "lucide-react";
 
 export function SignupForm() {
-  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,20 +19,23 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Reset error
+
     setError("");
-    
-    // Validation
+
+    if (!username || !password || !confirmPassword) {
+      setError("Please fill out all required fields");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      const success = await signup(email, password, username);
+      // Sign up using username as email (Supabase requires 'email' field)
+      const success = await signup(username, password, username);
       if (success) {
         navigate("/dashboard");
       }
@@ -50,23 +52,12 @@ export function SignupForm() {
         </div>
         <CardTitle className="text-2xl text-center">Create an Account</CardTitle>
         <CardDescription className="text-center">
-          Enter your information to create a new account
+          Enter your username and password to create a new account
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
