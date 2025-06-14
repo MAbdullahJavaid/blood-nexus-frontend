@@ -69,7 +69,8 @@ export const BleedingFormProvider: React.FC<{
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState("Auto-generated on save");
   const [bagType, setBagType] = useState("double");
-  const [donorCategory, setDonorCategory] = useState("voluntary");
+  // Change: set donorCategory default to "Self Donor"
+  const [donorCategory, setDonorCategory] = useState("Self Donor");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -87,7 +88,7 @@ export const BleedingFormProvider: React.FC<{
     setSelectedDonor(null);
     setBagNo("Auto-generated on save");
     setBagType("double");
-    setDonorCategory("voluntary");
+    setDonorCategory("Self Donor"); // match new default
     setBleedingDate(getFormattedDate());
     setDonorPatientValues(getDefaultDonorPatientValues());
     setProductInfo(getDefaultProductInfo());
@@ -206,7 +207,7 @@ export const BleedingFormProvider: React.FC<{
         donor_id: selectedDonor.id,
         bleeding_date: formattedBleedingDate,
         technician: "Current User",
-        donor_category: donorCategory,
+        donor_category: donorCategory, // Save the current UI value!
         bag_type: bagType,
         hbsag: parseFloat(donorPatientValues.hepB) || null,
         hcv: parseFloat(donorPatientValues.hepC) || null,
@@ -223,7 +224,7 @@ export const BleedingFormProvider: React.FC<{
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
           technician: "Current User", // You might want to get this from user context
-          donor_category: donorCategory,
+          donor_category: donorCategory, // Only use the value from context/UI
           bag_type: bagType,
           hbsag: parseFloat(donorPatientValues.hepB) || null,
           hcv: parseFloat(donorPatientValues.hepC) || null,
@@ -360,7 +361,6 @@ export const BleedingFormProvider: React.FC<{
     </BleedingFormContext.Provider>
   );
 };
-
 export const useBleedingForm = () => {
   const context = useContext(BleedingFormContext);
   if (context === undefined) {

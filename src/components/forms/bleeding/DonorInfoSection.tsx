@@ -13,8 +13,15 @@ interface DonorInfoSectionProps {
   isDeleting?: boolean;
 }
 
+const donorCategoryOptions = [
+  "Self Donor",
+  "Call Donor",
+  "EX/Patient",
+  "EX/OPD"
+];
+
 const DonorInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: DonorInfoSectionProps) => {
-  const { selectedDonor, handleDonorSelect } = useBleedingForm();
+  const { selectedDonor, handleDonorSelect, donorCategory, setDonorCategory } = useBleedingForm();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   // Auto-open search modal when edit or delete is selected
@@ -68,12 +75,12 @@ const DonorInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }: D
         <select 
           id="donorCategory" 
           className="h-9 bg-gray-50 w-full rounded-md border px-2"
-          defaultValue="Self Donor"
+          value={donorCategory}
+          onChange={e => setDonorCategory(e.target.value)}
         >
-          <option value="Self Donor">Self Donor</option>
-          <option value="Call Donor">Call Donor</option>
-          <option value="EX/Patient">EX/Patient</option>
-          <option value="EX/OPD">EX/OPD</option>
+          {donorCategoryOptions.map(option => (
+            <option value={option} key={option}>{option}</option>
+          ))}
         </select>
       </div>
 
