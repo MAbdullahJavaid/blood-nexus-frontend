@@ -108,7 +108,7 @@ const ReportDataEntryForm = ({
             size="sm"
             onClick={handleSearchClick}
             className="px-3"
-            disabled={!isSearchEnabled}
+            // Button is always enabled now
             type="button"
           >
             <Search className="h-4 w-4" />
@@ -147,3 +147,4 @@ const ReportDataEntryForm = ({
 };
 
 export default ReportDataEntryForm;
+
