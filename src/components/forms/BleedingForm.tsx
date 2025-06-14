@@ -6,7 +6,7 @@ import DonorInfoSection from "./bleeding/DonorInfoSection";
 import BagInfoSection from "./bleeding/BagInfoSection";
 import BloodGroupSection from "./bleeding/BloodGroupSection";
 import AddressSection from "./bleeding/AddressSection";
-import DonorCategorySection from "./bleeding/DonorCategorySection";
+// Removed DonorCategorySection import
 import ScreeningResultsPanel from "./bleeding/ScreeningResultsPanel";
 import HBAndDateSection from "./bleeding/HBAndDateSection";
 import ProductInfoSection from "./bleeding/ProductInfoSection";
@@ -44,7 +44,7 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
         />
         <BloodGroupSection />
         <AddressSection />
-        <DonorCategorySection />
+        {/* DonorCategorySection has been removed per your request */}
 
         <div className="mt-6 mb-2">
           <h3 className="text-lg font-medium text-red-600">Screening Results</h3>
@@ -78,3 +78,4 @@ BleedingForm.displayName = "BleedingForm";
 BleedingFormContent.displayName = "BleedingFormContent";
 
 export default BleedingForm;
+
