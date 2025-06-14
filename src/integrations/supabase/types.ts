@@ -705,6 +705,62 @@ export type Database = {
           },
         ]
       }
+      test_report_results: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          document_no: string
+          high_flag: boolean | null
+          high_value: string | null
+          id: string
+          low_flag: boolean | null
+          low_value: string | null
+          measuring_unit: string | null
+          test_id: number
+          test_name: string
+          updated_at: string | null
+          user_value: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          document_no: string
+          high_flag?: boolean | null
+          high_value?: string | null
+          id?: string
+          low_flag?: boolean | null
+          low_value?: string | null
+          measuring_unit?: string | null
+          test_id: number
+          test_name: string
+          updated_at?: string | null
+          user_value?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          document_no?: string
+          high_flag?: boolean | null
+          high_value?: string | null
+          id?: string
+          low_flag?: boolean | null
+          low_value?: string | null
+          measuring_unit?: string | null
+          test_id?: number
+          test_name?: string
+          updated_at?: string | null
+          user_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_report_results_document_no_fkey"
+            columns: ["document_no"]
+            isOneToOne: false
+            referencedRelation: "pre_report"
+            referencedColumns: ["document_no"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

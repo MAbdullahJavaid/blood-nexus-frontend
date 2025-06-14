@@ -70,6 +70,7 @@ const ReportDataEntryForm = ({
   const [loadedTestResults, setLoadedTestResults] = useState<LoadedTestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const fetchReports = async () => {
     try {
@@ -303,6 +304,43 @@ const ReportDataEntryForm = ({
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleString("en-GB");
+  };
+
+  // Handler to save test results into Supabase
+  const handleSaveReportResults = async () => {
+    if (!selectedReport?.document_no || loadedTestResults.length === 0) {
+      toast.error("No report or test results to save");
+      return;
+    }
+    setSaving(true);
+    toast.loading("Saving report...");
+    try {
+      // Only save actual test rows, not headers
+      const rowsToSave = loadedTestResults
+        .filter(r => !r.is_category_header)
+        .map(r => ({
+          document_no: selectedReport.document_no,
+          test_id: r.test_id,
+          test_name: r.test_name,
+          category: r.category,
+          measuring_unit: r.measuring_unit,
+          low_value: r.low_value,
+          high_value: r.high_value,
+          user_value: r.user_value,
+        }));
+      // Upsert so repeated saves don't create duplicate rows
+      const { data, error } = await supabase
+        .from("test_report_results")
+        .upsert(rowsToSave, { onConflict: ["document_no", "test_id"] });
+      if (error) throw error;
+      toast.success("Test results saved successfully!");
+    } catch (err) {
+      toast.error("Failed to save test results");
+      console.error(err);
+    } finally {
+      setSaving(false);
+      toast.dismiss();
+    }
   };
 
   return (
@@ -619,6 +657,19 @@ const ReportDataEntryForm = ({
           </TableBody>
         </Table>
       </div>
+
+      {/* Save Button - show if editable and a report with results is loaded */}
+      {isEditable && selectedReport?.document_no && loadedTestResults.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSaveReportResults}
+            disabled={saving}
+            className="px-6"
+          >
+            {saving ? "Saving..." : "Save Report"}
+          </Button>
+        </div>
+      )}
 
       {/* Search Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
