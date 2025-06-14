@@ -302,12 +302,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
                           active={activePage === '/reports/lab/product-wise-blood-issue'}
                         />
-                        <SidebarItem 
-                          icon={ReceiptIcon} 
-                          label="Patient Wise Blood Issue" 
-                          onClick={() => handleReportNavigate('/reports/lab/patient-wise-blood-issue')}
-                          active={activePage === '/reports/lab/patient-wise-blood-issue'}
-                        />
+                       
                       </div>
                     </AccordionContent>
                   </AccordionItem>
