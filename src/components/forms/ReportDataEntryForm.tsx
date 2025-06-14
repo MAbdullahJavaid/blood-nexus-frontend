@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,12 +57,15 @@ interface PreReport {
 interface ReportDataEntryFormProps {
   isSearchEnabled?: boolean;
   isEditable?: boolean;
+  isDeleting?: boolean;
 }
 
-const ReportDataEntryForm = ({
+// Add Ref Forwarding for clearing the form from parent
+const ReportDataEntryForm = forwardRef(({
   isSearchEnabled = true,
   isEditable = false,
-}: ReportDataEntryFormProps) => {
+  isDeleting = false,
+}: ReportDataEntryFormProps, ref) => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<PreReport | null>(null);
@@ -344,11 +347,76 @@ const ReportDataEntryForm = ({
     }
   };
 
+  // Expose a clearForm method to parent so "Add" or "Edit" can reset this form
+  useImperativeHandle(ref, () => ({
+    clearForm: () => {
+      setSelectedReport(null);
+      setLoadedTestResults([]);
+      setTestResults([]);
+      setSearchTerm("");
+    }
+  }));
+
+  // Add: when becoming "deleting", automatically show search for select
+  useEffect(() => {
+    if (isDeleting && !isSearchModalOpen) {
+      setIsSearchModalOpen(true);
+    }
+  }, [isDeleting]);
+
+  // Add: when becoming "editing" and no report selected, show search modal
+  useEffect(() => {
+    if (isEditable && !selectedReport && !isSearchModalOpen) {
+      setIsSearchModalOpen(true);
+    }
+  }, [isEditable, selectedReport, isSearchModalOpen]);
+
+  // Update: Search Modal button disables in DELETE mode,
+  // allow only selecting (not editing in place).
+  function handleSearchClick() {
+    setIsSearchModalOpen(true);
+    if (reports.length === 0) {
+      fetchReports();
+    }
+  }
+
+  // Add: Handle delete after report selected
+  const handleDeleteReportResult = async () => {
+    if (!selectedReport?.document_no) {
+      toast.error("Select a report to delete.");
+      return;
+    }
+    if (!confirm("Are you sure you want to delete all test results for this document?")) return;
+
+    try {
+      // Delete all rows for the selected document_no
+      const { error } = await supabase
+        .from("test_report_results")
+        .delete()
+        .eq("document_no", selectedReport.document_no);
+
+      if (error) throw error;
+
+      toast.success("Deleted test results for this document!");
+      setSelectedReport(null);
+      setLoadedTestResults([]);
+    } catch (error) {
+      toast.error("Failed to delete test results");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-md space-y-6">
       {/* Header */}
-      <div className="border-b pb-4">
+      <div className="border-b pb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
+        {/* Only show Delete button if isDeleting and a report is selected */}
+        {isDeleting && selectedReport?.document_no && (
+          <Button variant="destructive" onClick={handleDeleteReportResult}>
+            Delete Report Results
+          </Button>
+        )}
       </div>
 
       {/* Test Categories and Type Blue Bar */}
@@ -726,6 +794,6 @@ const ReportDataEntryForm = ({
       fetchReports();
     }
   }
-};
+});
 
 export default ReportDataEntryForm;

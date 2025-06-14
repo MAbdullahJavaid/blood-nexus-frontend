@@ -34,6 +34,8 @@ const Dashboard = () => {
     clearForm: () => {}
   });
   
+  const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
+
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
     setActiveForm(formType);
@@ -50,6 +52,9 @@ const Dashboard = () => {
   const clearActiveForm = () => {
     if (activeFormRef.current && activeFormRef.current.clearForm) {
       activeFormRef.current.clearForm();
+    }
+    if (activeForm === "reportDataEntry" && reportFormRef.current && reportFormRef.current.clearForm) {
+      reportFormRef.current.clearForm();
     }
   };
 
@@ -177,7 +182,15 @@ const Dashboard = () => {
                  ref={activeFormRef as any}
                />;
       case 'reportDataEntry':
-        return <ReportDataEntryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return (
+          <ReportDataEntryForm
+            isSearchEnabled={isSearchEnabled}
+            isEditable={isEditable}
+            isDeleting={isDeleting}
+            key="report-data-entry"
+            ref={reportFormRef}
+          />
+        );
       default:
         return null;
     }
