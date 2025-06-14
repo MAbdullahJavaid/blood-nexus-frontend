@@ -99,7 +99,7 @@ const ReportDataEntryForm = ({
       report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- UPDATED function to load tests based on invoice_items type/category ---
+  // --- New function to load tests from invoice_items ---
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
       // Find patient invoice using document_no
@@ -131,98 +131,40 @@ const ReportDataEntryForm = ({
         return;
       }
 
-      let loadedTests: LoadedTestResult[] = [];
-      const addedTestIds = new Set<number>();
-
+      // For each invoice item, get measuring_unit, low_value, high_value from test_information (description)
+      const loadedTests: LoadedTestResult[] = [];
       for (const item of invoiceItems) {
-        if (item.type && item.type.toLowerCase() === "full" && item.category) {
-          // Convert category to number for category_id comparison
-          const categoryNum = Number(item.category);
-          if (!categoryNum || isNaN(categoryNum)) {
-            console.warn("Category is not a valid number:", item.category);
-            continue;
+        // Get additional info from test_information
+        let measuring_unit = "";
+        let low_value = "";
+        let high_value = "";
+
+        const { data: testInfo, error: testInfoErr } = await supabase
+          .from("test_information")
+          .select("description")
+          .eq("id", item.test_id)
+          .maybeSingle();
+
+        if (testInfo && testInfo.description) {
+          try {
+            const desc = JSON.parse(testInfo.description);
+            measuring_unit = desc.measuring_unit || "";
+            low_value = desc.low_value || "";
+            high_value = desc.high_value || "";
+          } catch {
+            // Ignore JSON parsing errors (leave as empty string)
           }
-
-          // If full panel, fetch all tests from test_information with this category
-          const { data: categoryTests, error: catErr } = await supabase
-            .from("test_information")
-            .select("id, name, description, category_id")
-            .eq("category_id", categoryNum);
-
-          if (catErr) {
-            // Ignore and continue, but print error
-            console.error(`Failed loading all tests for category ${item.category}:`, catErr);
-            continue;
-          }
-          if (categoryTests && categoryTests.length) {
-            for (const test of categoryTests) {
-              // Avoid duplicates
-              if (addedTestIds.has(test.id)) continue;
-
-              let measuring_unit = "";
-              let low_value = "";
-              let high_value = "";
-
-              if (test.description) {
-                try {
-                  const desc = JSON.parse(test.description);
-                  measuring_unit = desc.measuring_unit || "";
-                  low_value = desc.low_value || "";
-                  high_value = desc.high_value || "";
-                } catch {}
-              }
-
-              loadedTests.push({
-                test_id: test.id,
-                test_name: test.name,
-                category: item.category || "",
-                measuring_unit,
-                low_value,
-                high_value,
-                user_value: "",
-              });
-              addedTestIds.add(test.id);
-            }
-          }
-        } else {
-          // Not a full panel, load this test only
-          if (!item.test_id || addedTestIds.has(item.test_id)) continue;
-
-          // Get additional info from test_information
-          let measuring_unit = "";
-          let low_value = "";
-          let high_value = "";
-          let test_name = item.test_name;
-
-          const { data: testInfo, error: testInfoErr } = await supabase
-            .from("test_information")
-            .select("id, name, description")
-            .eq("id", item.test_id)
-            .maybeSingle();
-
-          if (testInfo) {
-            test_name = testInfo.name || test_name;
-            if (testInfo.description) {
-              try {
-                const desc = JSON.parse(testInfo.description);
-                measuring_unit = desc.measuring_unit || "";
-                low_value = desc.low_value || "";
-                high_value = desc.high_value || "";
-              } catch {}
-            }
-          }
-
-          loadedTests.push({
-            test_id: item.test_id,
-            test_name: test_name,
-            category: item.category || "",
-            measuring_unit,
-            low_value,
-            high_value,
-            user_value: "",
-          });
-          addedTestIds.add(item.test_id);
         }
+
+        loadedTests.push({
+          test_id: item.test_id,
+          test_name: item.test_name,
+          category: item.category || "",
+          measuring_unit,
+          low_value,
+          high_value,
+          user_value: "",
+        });
       }
       setLoadedTestResults(loadedTests);
     } catch (error: any) {
