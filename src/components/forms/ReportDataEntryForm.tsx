@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,15 +95,23 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
     report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  /**
+   * New logic:
+   * - Collect all "single" tests individually.
+   * - For every "full" test, fetch all tests in its category.
+   * - Avoid duplicate test rows.
+   * - Add category headers as before.
+   */
   const loadTestsBasedOnType = async (selectedTests: TestResult[]) => {
     try {
       const allLoadedTests: LoadedTestResult[] = [];
+      const processedTestIds = new Set<number>();
       const processedCategories = new Set<string>();
+      const categoryMap = new Map<string, number>(); // category_name -> category_id
 
+      // First, get detailed info for each selected test to learn its type/category
       for (const selectedTest of selectedTests) {
-        console.log('Processing test:', selectedTest);
-        
-        // Get test information from database to check type
+        // Fetch test info
         const { data: testInfo, error } = await supabase
           .from('test_information')
           .select(`
@@ -112,40 +119,51 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
             name,
             test_type,
             category_id,
+            description,
             test_categories (
+              id,
               name
             )
           `)
           .eq('id', selectedTest.test_id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
+        if (error || !testInfo) {
           console.error('Error fetching test info:', error);
           continue;
         }
 
+        // Category handling
+        const categoryId = testInfo.category_id;
         const categoryName = testInfo.test_categories?.name || 'Unknown Category';
-        
+        if (categoryId && categoryName) {
+          categoryMap.set(categoryName, categoryId);
+        }
+
         if (testInfo.test_type === 'full') {
-          // Load all tests with the same category
+          // Only add this category once
           if (!processedCategories.has(categoryName)) {
-            const { data: categoryTests, error: categoryError } = await supabase
+            // Fetch all tests in the category
+            const { data: categoryTests, error: catError } = await supabase
               .from('test_information')
               .select(`
                 id,
                 name,
+                description,
+                test_type,
+                category_id,
                 test_categories (
                   name
                 )
               `)
-              .eq('category_id', testInfo.category_id);
+              .eq('category_id', categoryId);
 
-            if (categoryError) {
-              console.error('Error fetching category tests:', categoryError);
+            if (catError) {
+              console.error('Error fetching category tests:', catError);
               continue;
             }
 
-            // Add category header
+            // Add header for this category
             allLoadedTests.push({
               test_id: 0,
               test_name: categoryName,
@@ -156,26 +174,37 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
               category: categoryName,
               is_category_header: true
             });
+            processedCategories.add(categoryName);
 
             // Add all tests in this category
             categoryTests?.forEach(test => {
-              allLoadedTests.push({
-                test_id: test.id,
-                test_name: test.name,
-                measuring_unit: '', // This would come from test details if available
-                low_value: '', // This would come from test reference ranges if available
-                high_value: '', // This would come from test reference ranges if available
-                user_value: '',
-                category: categoryName
-              });
+              if (!processedTestIds.has(test.id)) {
+                // Parse description JSON if available for extra info
+                let measuring_unit = '', low_value = '', high_value = '';
+                try {
+                  if (test.description) {
+                    const desc = JSON.parse(test.description);
+                    measuring_unit = desc.measuring_unit || '';
+                    low_value = desc.low_value || '';
+                    high_value = desc.high_value || '';
+                  }
+                } catch {}
+                allLoadedTests.push({
+                  test_id: test.id,
+                  test_name: test.name,
+                  measuring_unit,
+                  low_value,
+                  high_value,
+                  user_value: '',
+                  category: categoryName
+                });
+                processedTestIds.add(test.id);
+              }
             });
-
-            processedCategories.add(categoryName);
           }
-        } else {
-          // Load only the single test
+        } else if (testInfo.test_type === 'single') {
+          // Add header if not already added
           if (!processedCategories.has(categoryName)) {
-            // Add category header
             allLoadedTests.push({
               test_id: 0,
               test_name: categoryName,
@@ -188,16 +217,28 @@ const ReportDataEntryForm = ({ isSearchEnabled = true, isEditable = false }: Rep
             });
             processedCategories.add(categoryName);
           }
-
-          allLoadedTests.push({
-            test_id: testInfo.id,
-            test_name: testInfo.name,
-            measuring_unit: '', // This would come from test details if available
-            low_value: '', // This would come from test reference ranges if available
-            high_value: '', // This would come from test reference ranges if available
-            user_value: '',
-            category: categoryName
-          });
+          // Add single test if not already added
+          if (!processedTestIds.has(testInfo.id)) {
+            let measuring_unit = '', low_value = '', high_value = '';
+            try {
+              if (testInfo.description) {
+                const desc = JSON.parse(testInfo.description);
+                measuring_unit = desc.measuring_unit || '';
+                low_value = desc.low_value || '';
+                high_value = desc.high_value || '';
+              }
+            } catch {}
+            allLoadedTests.push({
+              test_id: testInfo.id,
+              test_name: testInfo.name,
+              measuring_unit,
+              low_value,
+              high_value,
+              user_value: '',
+              category: categoryName
+            });
+            processedTestIds.add(testInfo.id);
+          }
         }
       }
 
