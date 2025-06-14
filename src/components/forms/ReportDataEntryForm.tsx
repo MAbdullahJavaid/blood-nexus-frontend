@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -232,8 +231,38 @@ const ReportDataEntryForm = ({
         }
       }
 
-      // Convert map to array
-      setLoadedTestResults(Object.values(loadedTestsMap));
+      // Instead of setting loaded test results directly, we will
+      // group by category and insert category header objects
+      const testsWithHeaders: LoadedTestResult[] = [];
+
+      // Group tests by category
+      const testsArray = Object.values(loadedTestsMap);
+      const grouped: Record<string, LoadedTestResult[]> = {};
+
+      for (const test of testsArray) {
+        const cat = test.category || "Uncategorized";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(test);
+      }
+
+      // Insert a header row and its children for each category
+      Object.entries(grouped).forEach(([categoryName, testsList]) => {
+        // Push a header row for this category
+        testsWithHeaders.push({
+          test_id: -1, // dummy value, not to be shown
+          test_name: categoryName,
+          category: categoryName,
+          measuring_unit: "",
+          low_value: "",
+          high_value: "",
+          user_value: "",
+          is_category_header: true,
+        });
+        // Push all tests in that category
+        testsList.forEach(test => testsWithHeaders.push(test));
+      });
+
+      setLoadedTestResults(testsWithHeaders);
     } catch (error: any) {
       console.error("Error loading tests from invoice items:", error);
       setLoadedTestResults([]);
@@ -541,42 +570,42 @@ const ReportDataEntryForm = ({
           <TableBody>
             {loadedTestResults.length > 0 ? (
               loadedTestResults.map((test, index) => (
-                <TableRow 
-                  key={`${test.test_id}-${index}`}
-                  className={test.is_category_header ? "bg-blue-500 text-white" : ""}
-                >
-                  {test.is_category_header ? (
-                    <TableCell colSpan={6} className="font-medium text-center py-2">
+                test.is_category_header ? (
+                  <TableRow 
+                    key={`head-${test.category}-${index}`} 
+                    className="bg-blue-500 text-white"
+                  >
+                    <TableCell colSpan={6} className="font-bold text-lg text-center py-2 uppercase tracking-wider">
                       {test.test_name}
                     </TableCell>
-                  ) : (
-                    <>
-                      <TableCell>
-                        <Input value={test.test_id.toString()} readOnly className="bg-gray-50 h-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Input value={test.test_name} readOnly className="bg-gray-50 h-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Input value={test.measuring_unit} readOnly className="bg-gray-50 h-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Input value={test.low_value} readOnly className="bg-gray-50 h-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Input value={test.high_value} readOnly className="bg-gray-50 h-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          value={test.user_value} 
-                          onChange={(e) => handleValueChange(test.test_id, e.target.value)}
-                          className="h-8" 
-                          placeholder="Enter value"
-                        />
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
+                  </TableRow>
+                ) : (
+                  <TableRow key={`${test.test_id}-${index}`}>
+                    <TableCell>
+                      <Input value={test.test_id.toString()} readOnly className="bg-gray-50 h-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Input value={test.test_name} readOnly className="bg-gray-50 h-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Input value={test.measuring_unit} readOnly className="bg-gray-50 h-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Input value={test.low_value} readOnly className="bg-gray-50 h-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Input value={test.high_value} readOnly className="bg-gray-50 h-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Input 
+                        value={test.user_value} 
+                        onChange={(e) => handleValueChange(test.test_id, e.target.value)}
+                        className="h-8" 
+                        placeholder="Enter value"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
               ))
             ) : (
               <TableRow>
@@ -646,4 +675,3 @@ const ReportDataEntryForm = ({
 };
 
 export default ReportDataEntryForm;
-
