@@ -328,7 +328,8 @@ const ReportDataEntryForm = ({
           high_value: r.high_value,
           user_value: r.user_value,
         }));
-      // Fix: Pass onConflict as a string, not an array
+      // Upsert so repeated saves don't create duplicate rows
+      // With new unique constraint, onConflict can safely target document_no,test_id
       const { data, error } = await supabase
         .from("test_report_results")
         .upsert(rowsToSave, { onConflict: "document_no,test_id" });
