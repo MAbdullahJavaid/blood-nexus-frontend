@@ -1,7 +1,7 @@
 
 import React, { useRef } from "react";
 import { toast } from "@/hooks/use-toast";
-import { FilePdf, LogOut } from "lucide-react";
+import { FileText, LogOut } from "lucide-react";
 import html2canvas from "html2canvas";
 
 interface Props {
@@ -23,7 +23,7 @@ export default function PatientRequestReportActions({
         title="Export PDF"
         type="button"
       >
-        <FilePdf className="text-rose-500 group-hover:text-rose-700" size={18} />
+        <FileText className="text-rose-500 group-hover:text-rose-700" size={18} />
         <span className="text-sm font-semibold text-rose-600">Export PDF</span>
       </button>
       <button
@@ -53,3 +53,4 @@ export default function PatientRequestReportActions({
     </div>
   );
 }
+
