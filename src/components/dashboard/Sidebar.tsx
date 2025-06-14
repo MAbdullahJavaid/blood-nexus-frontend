@@ -27,6 +27,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { useRoles } from "@/hooks/useRoles";
 
 type SidebarItemProps = {
   icon: React.ElementType;
@@ -54,6 +55,7 @@ interface SidebarProps {
 
 export function Sidebar({ onFormOpen }: SidebarProps) {
   const { user, logout } = useAuth();
+  const { roles, isLab, isBds, isReception } = useRoles();
   const navigate = useNavigate();
   const [activePage, setActivePage] = useState("dashboard");
   
@@ -137,58 +139,65 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
           collapsible
           className="w-full"
         >
-          <AccordionItem value="maintain" className="border-b-0">
-            <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
-              <div className="flex items-center gap-3">
-                <SettingsIcon className="h-5 w-5" />
-                <span>Maintain</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pl-8">
-              <div className="flex flex-col gap-1">
-                <SidebarItem 
-                  icon={FileIcon} 
-                  label="Category" 
-                  onClick={() => handleFormClick('category')}
-                />
-                <SidebarItem 
-                  icon={TestTubeIcon} 
-                  label="Test Information" 
-                  onClick={() => handleFormClick('testInformation')}
-                />
-                <SidebarItem icon={MailIcon} label="Thanks Letter" />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="task" className="border-b-0">
-            <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
-              <div className="flex items-center gap-3">
-                <ListTodoIcon className="h-5 w-5" />
-                <span>Task</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pl-8">
-              <div className="flex flex-col gap-1">
-                <SidebarItem 
-                  icon={FileTextIcon} 
-                  label="Report Data Entry" 
-                  onClick={() => handleFormClick('reportDataEntry')}
-                />
-                <SidebarItem 
-                  icon={ReceiptIcon} 
-                  label="Patient Invoice"
-                  onClick={() => handleFormClick('patientInvoice')}
-                />
-                <SidebarItem 
-                  icon={DropletIcon} 
-                  label="Bleeding"
-                  onClick={() => handleFormClick('bleeding')}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
+          {/* Only 'lab' or 'bds' can see Maintain section */}
+          {(isLab || isBds) && (
+            <AccordionItem value="maintain" className="border-b-0">
+              <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
+                <div className="flex items-center gap-3">
+                  <SettingsIcon className="h-5 w-5" />
+                  <span>Maintain</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pl-8">
+                <div className="flex flex-col gap-1">
+                  <SidebarItem 
+                    icon={FileIcon} 
+                    label="Category" 
+                    onClick={() => handleFormClick('category')}
+                  />
+                  <SidebarItem 
+                    icon={TestTubeIcon} 
+                    label="Test Information" 
+                    onClick={() => handleFormClick('testInformation')}
+                  />
+                  <SidebarItem icon={MailIcon} label="Thanks Letter" />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Only 'reception' can see 'Task' */}
+          {isReception && (
+            <AccordionItem value="task" className="border-b-0">
+              <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
+                <div className="flex items-center gap-3">
+                  <ListTodoIcon className="h-5 w-5" />
+                  <span>Task</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pl-8">
+                <div className="flex flex-col gap-1">
+                  <SidebarItem 
+                    icon={FileTextIcon} 
+                    label="Report Data Entry" 
+                    onClick={() => handleFormClick('reportDataEntry')}
+                  />
+                  <SidebarItem 
+                    icon={ReceiptIcon} 
+                    label="Patient Invoice"
+                    onClick={() => handleFormClick('patientInvoice')}
+                  />
+                  <SidebarItem 
+                    icon={DropletIcon} 
+                    label="Bleeding"
+                    onClick={() => handleFormClick('bleeding')}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Example: Only lab/bds/reception - or adjust according to requirements for reports */}
           <AccordionItem value="reports" className="border-b-0">
             <AccordionTrigger className="py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md px-3">
               <div className="flex items-center gap-3">
@@ -198,119 +207,124 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="space-y-2">
+                {/* Render different reports based on roles */}
                 <Accordion 
                   type="single" 
                   value={openNestedItems.reception ? "reception" : (openNestedItems.bds ? "bds" : (openNestedItems.lab ? "lab" : ""))}
                   onValueChange={handleNestedAccordionChange}
                   collapsible
                 >
-                  <AccordionItem value="reception" className="border-b-0">
-                    <AccordionTrigger className="py-1">
-                      <span>Reception</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-4">
-                      <div className="flex flex-col gap-1">
-                        <SidebarItem 
-                          icon={FileTextIcon} 
-                          label="Patient Request" 
-                          onClick={() => handleReportNavigate('/reports/reception/patient-request')}
-                          active={activePage === '/reports/reception/patient-request'}
-                        />
-                        <SidebarItem 
-                          icon={ReceiptIcon} 
-                          label="Patient Request Summary" 
-                          onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
-                          active={activePage === '/reports/reception/patient-request-summary'}
-                        />
-                        <SidebarItem 
-                          icon={HistoryIcon} 
-                          label="Patient Transfusion History" 
-                          onClick={() => handleReportNavigate('/reports/reception/patient-transfusion-history')}
-                          active={activePage === '/reports/reception/patient-transfusion-history'}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="bds" className="border-b-0">
-                    <AccordionTrigger className="py-1">
-                      <span>BDS</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-4">
-                      <div className="flex flex-col gap-1">
-                        <SidebarItem 
-                          icon={DropletIcon} 
-                          label="Blood Bleeded Record" 
-                          onClick={() => handleReportNavigate('/reports/bds/blood-bleed-record')}
-                          active={activePage === '/reports/bds/blood-bleed-record'}
-                        />
-                        <SidebarItem 
-                          icon={GroupIcon} 
-                          label="Record Group Wise" 
-                          onClick={() => handleReportNavigate('/reports/bds/record-group-wise')}
-                          active={activePage === '/reports/bds/record-group-wise'}
-                        />
-                        <SidebarItem 
-                          icon={TestTubeIcon} 
-                          label="Test Positive Report" 
-                          onClick={() => handleReportNavigate('/reports/bds/test-positive')}
-                          active={activePage === '/reports/bds/test-positive'}
-                        />
-                        <SidebarItem 
-                          icon={CheckIcon} 
-                          label="Donor Screening" 
-                          onClick={() => handleReportNavigate('/reports/bds/donor-screening')}
-                          active={activePage === '/reports/bds/donor-screening'}
-                        />
-                        <SidebarItem 
-                          icon={ReceiptIcon} 
-                          label="Donor Bleeded Summary" 
-                          onClick={() => handleReportNavigate('/reports/bds/donor-bleed-summary')}
-                          active={activePage === '/reports/bds/donor-bleed-summary'}
-                        />
-                        <SidebarItem 
-                          icon={FileTextIcon} 
-                          label="Bag Bleeded Summary" 
-                          onClick={() => handleReportNavigate('/reports/bds/bag-bleed-summary')}
-                          active={activePage === '/reports/bds/bag-bleed-summary'}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="lab" className="border-b-0">
-                    <AccordionTrigger className="py-1">
-                      <span>LAB</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-4">
-                      <div className="flex flex-col gap-1">
-                        <SidebarItem 
-                          icon={DropletIcon} 
-                          label="Blood Issue Record" 
-                          onClick={() => handleReportNavigate('/reports/lab/blood-issue-record')}
-                          active={activePage === '/reports/lab/blood-issue-record'}
-                        />
-                        <SidebarItem 
-                          icon={TestTubeIcon} 
-                          label="Test Report Detail" 
-                          onClick={() => handleReportNavigate('/reports/lab/test-report-detail')}
-                          active={activePage === '/reports/lab/test-report-detail'}
-                        />
-                        <SidebarItem 
-                          icon={FileTextIcon} 
-                          label="Product Wise Blood Issue" 
-                          onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
-                          active={activePage === '/reports/lab/product-wise-blood-issue'}
-                        />
-                        <SidebarItem 
-                          icon={ReceiptIcon} 
-                          label="Patient Wise Blood Issue" 
-                          onClick={() => handleReportNavigate('/reports/lab/patient-wise-blood-issue')}
-                          active={activePage === '/reports/lab/patient-wise-blood-issue'}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                  {isReception && (
+                    <AccordionItem value="reception" className="border-b-0">
+                      <AccordionTrigger className="py-1">
+                        <span>Reception</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="pl-4">
+                        <div className="flex flex-col gap-1">
+                          <SidebarItem 
+                            icon={FileTextIcon} 
+                            label="Patient Request" 
+                            onClick={() => handleReportNavigate('/reports/reception/patient-request')}
+                            active={activePage === '/reports/reception/patient-request'}
+                          />
+                          <SidebarItem 
+                            icon={ReceiptIcon} 
+                            label="Patient Request Summary" 
+                            onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
+                            active={activePage === '/reports/reception/patient-request-summary'}
+                          />
+                          <SidebarItem 
+                            icon={HistoryIcon} 
+                            label="Patient Transfusion History" 
+                            onClick={() => handleReportNavigate('/reports/reception/patient-transfusion-history')}
+                            active={activePage === '/reports/reception/patient-transfusion-history'}
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  {isBds && (
+                    <AccordionItem value="bds" className="border-b-0">
+                      <AccordionTrigger className="py-1">
+                        <span>BDS</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="pl-4">
+                        <div className="flex flex-col gap-1">
+                          <SidebarItem 
+                            icon={DropletIcon} 
+                            label="Blood Bleeded Record" 
+                            onClick={() => handleReportNavigate('/reports/bds/blood-bleed-record')}
+                            active={activePage === '/reports/bds/blood-bleed-record'}
+                          />
+                          <SidebarItem 
+                            icon={GroupIcon} 
+                            label="Record Group Wise" 
+                            onClick={() => handleReportNavigate('/reports/bds/record-group-wise')}
+                            active={activePage === '/reports/bds/record-group-wise'}
+                          />
+                          <SidebarItem 
+                            icon={TestTubeIcon} 
+                            label="Test Positive Report" 
+                            onClick={() => handleReportNavigate('/reports/bds/test-positive')}
+                            active={activePage === '/reports/bds/test-positive'}
+                          />
+                          <SidebarItem 
+                            icon={CheckIcon} 
+                            label="Donor Screening" 
+                            onClick={() => handleReportNavigate('/reports/bds/donor-screening')}
+                            active={activePage === '/reports/bds/donor-screening'}
+                          />
+                          <SidebarItem 
+                            icon={ReceiptIcon} 
+                            label="Donor Bleeded Summary" 
+                            onClick={() => handleReportNavigate('/reports/bds/donor-bleed-summary')}
+                            active={activePage === '/reports/bds/donor-bleed-summary'}
+                          />
+                          <SidebarItem 
+                            icon={FileTextIcon} 
+                            label="Bag Bleed Summary" 
+                            onClick={() => handleReportNavigate('/reports/bds/bag-bleed-summary')}
+                            active={activePage === '/reports/bds/bag-bleed-summary'}
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  {isLab && (
+                    <AccordionItem value="lab" className="border-b-0">
+                      <AccordionTrigger className="py-1">
+                        <span>LAB</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="pl-4">
+                        <div className="flex flex-col gap-1">
+                          <SidebarItem 
+                            icon={DropletIcon} 
+                            label="Blood Issue Record" 
+                            onClick={() => handleReportNavigate('/reports/lab/blood-issue-record')}
+                            active={activePage === '/reports/lab/blood-issue-record'}
+                          />
+                          <SidebarItem 
+                            icon={TestTubeIcon} 
+                            label="Test Report Detail" 
+                            onClick={() => handleReportNavigate('/reports/lab/test-report-detail')}
+                            active={activePage === '/reports/lab/test-report-detail'}
+                          />
+                          <SidebarItem 
+                            icon={FileTextIcon} 
+                            label="Product Wise Blood Issue" 
+                            onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
+                            active={activePage === '/reports/lab/product-wise-blood-issue'}
+                          />
+                          <SidebarItem 
+                            icon={ReceiptIcon} 
+                            label="Patient Wise Blood Issue" 
+                            onClick={() => handleReportNavigate('/reports/lab/patient-wise-blood-issue')}
+                            active={activePage === '/reports/lab/patient-wise-blood-issue'}
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
                 </Accordion>
               </div>
             </AccordionContent>
