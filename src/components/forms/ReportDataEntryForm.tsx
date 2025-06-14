@@ -102,7 +102,6 @@ const ReportDataEntryForm = ({
   // --- New function to load tests from invoice_items ---
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
-      // 1. Fetch related invoice
       const { data: invoiceData, error: invError } = await supabase
         .from("patient_invoices")
         .select("id")
@@ -116,7 +115,6 @@ const ReportDataEntryForm = ({
         return;
       }
 
-      // 2. Fetch invoice items (tests)
       const { data: invoiceItems, error: itemsError } = await supabase
         .from("invoice_items")
         .select(`test_id, test_name, type, category, quantity, unit_price, id`)
@@ -129,69 +127,77 @@ const ReportDataEntryForm = ({
         return;
       }
 
-      // Prepare to collect all test definitions, expanded and deduped
-      const loadedTestsMap: { [test_id: number]: LoadedTestResult } = {};
+      // Map with composite key (test_id + category) for uniqueness
+      const loadedTestsMap: { [key: string]: LoadedTestResult } = {};
 
-      // 3. Identify all full-type items and fetch all test info for their categories
-      for (const item of invoiceItems) {
-        if ((item.type || '').toLowerCase() === "full" && item.category) {
-          // Find category id by name
-          const { data: categoryRow, error: catError } = await supabase
-            .from("test_categories")
-            .select("id")
-            .eq("name", item.category)
-            .maybeSingle();
-          if (catError || !categoryRow?.id) continue;
+      // Gather all full category names to avoid duplicate addition of category-based tests
+      const fullCategories = invoiceItems
+        .filter((item: any) => (item.type || '').toLowerCase() === "full" && item.category)
+        .map((item: any) => item.category)
+        .filter(Boolean);
 
-          // Fetch all tests in test_information for this category id
-          const { data: testInfoRows, error: testInfoError } = await supabase
-            .from("test_information")
-            .select("id, name, description, category_id")
-            .eq("category_id", categoryRow.id);
+      // 1. Add all tests from full categories
+      for (const categoryName of fullCategories) {
+        // Find category id by name
+        const { data: categoryRow, error: catError } = await supabase
+          .from("test_categories")
+          .select("id")
+          .eq("name", categoryName)
+          .maybeSingle();
+        if (catError || !categoryRow?.id) continue;
 
-          if (testInfoError || !testInfoRows) continue;
+        // Fetch all tests for this category
+        const { data: testInfoRows, error: testInfoError } = await supabase
+          .from("test_information")
+          .select("id, name, description, category_id")
+          .eq("category_id", categoryRow.id);
 
-          for (const test of testInfoRows) {
-            let measuring_unit = "";
-            let low_value = "";
-            let high_value = "";
-            if (test.description) {
-              try {
-                const desc = JSON.parse(test.description);
-                measuring_unit = desc.measuring_unit || "";
-                low_value = desc.low_value || "";
-                high_value = desc.high_value || "";
-              } catch { }
-            }
-            // Deduplication by test_id
-            loadedTestsMap[test.id] = {
-              test_id: test.id,
-              test_name: test.name,
-              category: item.category,
-              measuring_unit,
-              low_value,
-              high_value,
-              user_value: "",
-            };
+        if (testInfoError || !testInfoRows) continue;
+
+        for (const test of testInfoRows) {
+          let measuring_unit = "";
+          let low_value = "";
+          let high_value = "";
+          if (test.description) {
+            try {
+              const desc = JSON.parse(test.description);
+              measuring_unit = desc.measuring_unit || "";
+              low_value = desc.low_value || "";
+              high_value = desc.high_value || "";
+            } catch { }
           }
+          // Key by both test_id and category to ensure uniqueness per context
+          const compositeKey = `${test.id}___${categoryName}`;
+          loadedTestsMap[compositeKey] = {
+            test_id: test.id,
+            test_name: test.name,
+            category: categoryName,
+            measuring_unit,
+            low_value,
+            high_value,
+            user_value: "",
+          };
         }
       }
 
-      // 4. For all other (non-full, or not already included) invoice items, add individual test
+      // 2. Add all other (non-full, or not already included) invoice items by composite key
       for (const item of invoiceItems) {
         const test_id = item.test_id;
-        // Skip if already added by a "full" category above
-        if (loadedTestsMap[test_id]) continue;
+        const category = item.category || "";
+        // Only add if this particular test+category isn't already included by above
+        const compositeKey = `${test_id}___${category}`;
+        if (loadedTestsMap[compositeKey]) continue;
 
-        // Fetch specific test_information for this test_id
+        // Fetch full info for this test_id (some non-full tests might not have description)
         let measuring_unit = "", low_value = "", high_value = "";
+        let test_name = item.test_name || "";
         if (test_id != null) {
           const { data: testInfo, error: testInfoErr } = await supabase
             .from("test_information")
             .select("description, name")
             .eq("id", test_id)
             .maybeSingle();
-          let test_name = item.test_name || '';
+
           if (testInfo && testInfo.description) {
             try {
               const desc = JSON.parse(testInfo.description);
@@ -203,10 +209,10 @@ const ReportDataEntryForm = ({
           if (testInfo && testInfo.name) {
             test_name = testInfo.name;
           }
-          loadedTestsMap[test_id] = {
+          loadedTestsMap[compositeKey] = {
             test_id,
             test_name,
-            category: item.category || "",
+            category,
             measuring_unit,
             low_value,
             high_value,
@@ -215,7 +221,7 @@ const ReportDataEntryForm = ({
         }
       }
 
-      // Convert map to array and set as state
+      // Convert map to array
       setLoadedTestResults(Object.values(loadedTestsMap));
 
     } catch (error: any) {
