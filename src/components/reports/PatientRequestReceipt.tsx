@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
+// Types as before
 interface InvoiceItem {
   test_id?: number;
   test_name: string;
@@ -11,7 +12,6 @@ interface InvoiceItem {
   unit_price: number;
   total_price: number;
 }
-
 interface PatientInvoiceData {
   id: string;
   document_no: string;
@@ -79,31 +79,33 @@ export default function PatientRequestReceipt() {
     );
   }
 
-  // Build full blood group if possible
   const bloodGroup = invoice.blood_group_separate
     ? invoice.blood_group_separate +
       (invoice.rh_factor === "+ve" ? "+" : invoice.rh_factor === "-ve" ? "-" : "")
     : "";
 
+  // Styles to mimic the screenshot appearance - fixed width, border, minimal padding, system font.
   return (
-    <div className="w-full h-full flex justify-center p-4 print:p-0 bg-gray-100">
-      <div
-        className="bg-white border shadow print:shadow-none p-6 mx-auto w-full max-w-3xl"
+    <div className="w-full min-h-screen flex justify-center items-start bg-[#e5ecfa] p-4 print:p-0" style={{ fontFamily: "Segoe UI, Arial, sans-serif" }}>
+      <div 
+        className="bg-white border border-[#264f9b] mx-auto mt-6"
         style={{
-          boxSizing: "border-box",
-          minHeight: "1100px",
+          minWidth: 784,
+          maxWidth: 800,
+          minHeight: 950,
           pageBreakAfter: "always",
         }}
       >
-        {/* Header */}
-        <div className="border border-black p-6" style={{ minHeight: "1000px" }}>
-          <div className="text-center mb-2">
-            <div className="font-bold text-lg tracking-wide">BLOOD CARE FOUNDATION</div>
-            <div className="text-base" style={{ fontStyle: "italic", textDecoration: "underline" }}>
-              PATIENT RECEIPT
+        <div className="p-0" style={{ minHeight: "930px" }}>
+          {/* Header: Title */}
+          <div className="flex flex-col items-center mt-6 mb-4">
+            <div className="font-bold text-xl tracking-wide mb-1" style={{letterSpacing:1}}>
+              SUNDAS FOUNDATION
             </div>
+            <div className="text-base font-normal italic underline">PATIENT RECEIPT</div>
           </div>
-          <div className="flex justify-between text-xs mb-1">
+          {/* Print Date and Page 1 of 1 */}
+          <div className="flex flex-row justify-between px-7 mb-3 text-sm">
             <div>
               Print Date:{" "}
               {format(new Date(), "dd-MMM-yyyy hh:mm:ss aa")}
@@ -112,32 +114,27 @@ export default function PatientRequestReceipt() {
               Page 1 of 1
             </div>
           </div>
-
-          {/* Main Info */}
-          <div className="flex justify-between mt-2 mb-4">
-            <div>
-              <div>
-                <span className="font-semibold">Patient #:</span>{" "}
-                {invoice.patient_id || "-"}
-              </div>
+          {/* Patient # and Document No */}
+          <div className="flex flex-row justify-between items-center px-7 mb-2">
+            <div className="font-semibold text-base">
+              Patient #: <span className="font-bold">{invoice.patient_id}</span>
             </div>
-            <div>
-              <span className="font-semibold">Document No:</span>{" "}
-              {invoice.document_no}
+            <div className="font-semibold text-base">
+              Document No: <span className="font-bold">{invoice.document_no}</span>
             </div>
           </div>
-
-          {/* Patient and Additional Info */}
-          <div className="grid grid-cols-2 gap-4 text-xs mb-2">
+          {/* Main Info: Left and Right grid */}
+          <div className="grid grid-cols-2 gap-x-10 px-7 mb-1 text-[15px]">
             {/* Left */}
             <div>
               <div>
                 <span className="font-semibold">Patient Name:</span>{" "}
-                {invoice.patient_name}
+                <span>{invoice.patient_name || ""}</span>
               </div>
               <div>
                 <span className="font-semibold">Age/Sex:</span>{" "}
-                {invoice.age !== null ? `${invoice.age} Year(s)` : ""}{invoice.gender ? "/" + invoice.gender.charAt(0).toUpperCase() : ""}
+                {invoice.age !== null ? `${invoice.age} Year(s)` : ""}
+                {invoice.gender ? "/" + invoice.gender.charAt(0).toUpperCase() : ""}
               </div>
               <div>
                 <span className="font-semibold">Phone:</span>{" "}
@@ -166,7 +163,7 @@ export default function PatientRequestReceipt() {
               </div>
               <div>
                 <span className="font-semibold">Registration Loc:</span>{" "}
-                BLOOD CARE FOUNDATION
+                SUNDAS FOUNDATION
               </div>
               <div>
                 <span className="font-semibold">Reference:</span>{" "}
@@ -178,32 +175,31 @@ export default function PatientRequestReceipt() {
               </div>
             </div>
           </div>
-          {/* Test table */}
-          <div className="mt-2 text-xs">
-            <table className="w-full border border-black">
+          {/* Table of tests */}
+          <div className="w-full px-7 mt-3">
+            <table className="w-full border border-black border-collapse text-[15px]">
               <thead>
                 <tr>
-                  <th className="border border-black py-1 px-2 font-bold w-12">#</th>
-                  <th className="border border-black py-1 px-2 font-bold">Test(s)</th>
-                  <th className="border border-black py-1 px-2 font-bold w-16">Quantity</th>
-                  <th className="border border-black py-1 px-2 font-bold w-20">Rate</th>
+                  <th className="border border-black px-2 py-1 w-12 font-normal">Test(s)</th>
+                  <th className="border border-black px-2 py-1 w-16 font-normal">Quantity</th>
+                  <th className="border border-black px-2 py-1 w-20 font-normal">Rate</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.invoice_items && invoice.invoice_items.length > 0 ? (
                   invoice.invoice_items.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="border border-black px-2 py-1 text-center">
-                        {item.test_id || ""}
+                    <tr key={idx} className="h-7">
+                      <td className="border border-black px-2 py-1 text-left">
+                        {item.test_id ? <span className="font-bold mr-1">{item.test_id}</span> : ""}
+                        {item.test_name}
                       </td>
-                      <td className="border border-black px-2 py-1">{item.test_name}</td>
                       <td className="border border-black px-2 py-1 text-center">{item.quantity}</td>
                       <td className="border border-black px-2 py-1 text-right">{item.unit_price.toLocaleString()}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="border border-black px-2 py-2 text-center" colSpan={4}>
+                    <td colSpan={3} className="border border-black px-2 py-2 text-center">
                       No tests found.
                     </td>
                   </tr>
@@ -212,58 +208,56 @@ export default function PatientRequestReceipt() {
             </table>
           </div>
           {/* Total Section */}
-          <div className="mt-3 w-1/2 ml-auto text-xs">
-            <div className="flex justify-between mb-1">
+          <div className="w-96 ml-auto mr-8 mt-4 text-[15px]">
+            <div className="flex justify-between py-0.5">
               <span>Total Amount :</span>
               <span>
                 {invoice.total_amount ? invoice.total_amount.toLocaleString() : 0}
               </span>
             </div>
-            <div className="flex justify-between mb-1">
+            <div className="flex justify-between py-0.5">
               <span>Amount Less :</span>
               <span>
                 {invoice.discount_amount ? invoice.discount_amount.toLocaleString() : 0}
               </span>
             </div>
-            <div className="flex justify-between mb-1 font-bold">
+            <div className="flex justify-between py-0.5 font-bold">
               <span>To Be Paid :</span>
               <span>
                 {(invoice.total_amount - invoice.discount_amount).toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between mb-1">
+            <div className="flex justify-between py-0.5">
               <span>Paid :</span>
               <span>
                 {invoice.amount_received ? invoice.amount_received.toLocaleString() : ""}
               </span>
             </div>
-            <div className="flex justify-between mb-2">
+            {/* Paid underline */}
+            <div className="flex justify-between items-center py-2">
               <span>&nbsp;</span>
-              <span>
-                {/* Empty for spacing */}
-              </span>
+              <span style={{ borderBottom: '1px solid #333', minWidth: 140, height: 10, display: 'inline-block', marginLeft: 4 }}></span>
             </div>
           </div>
-          {/* Footer */}
-          <div className="flex mt-10 justify-between text-xs">
-            <div>
-              Registered By : <b>BLOOD CARE FOUNDATION</b>
-            </div>
-            <div>
-              {/* Empty block for signature, etc */}
+          {/* Footer Registered By */}
+          <div className="mt-10 flex flex-row justify-end pr-8 text-[15px]">
+            <div className="flex flex-row items-center gap-2">
+              <span>Registered By :</span>
+              <span style={{ borderBottom: '1px solid #333', minWidth: 160, height: 10, display: 'inline-block', marginLeft: 2 }}></span>
+              <span className="font-bold ml-2">SUNDAS FOUNDATION</span>
             </div>
           </div>
         </div>
         {/* Print rules */}
         <style>{`
           @media print {
-            html, body, #root, .print\:p-0, .print\:shadow-none {
+            html, body, #root, .print\\:p-0 {
               background: white !important;
-              box-shadow: none !important;
               margin: 0 !important;
             }
-            .print\:p-0 { padding: 0 !important; }
-            .print\:shadow-none { box-shadow: none !important; }
+            .border {
+              box-shadow: none !important;
+            }
             .page-break { page-break-after: always; }
           }
         `}</style>
