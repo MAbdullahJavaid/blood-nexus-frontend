@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,14 +131,21 @@ const ReportDataEntryForm = ({
       // Map with composite key (test_id + category) for uniqueness
       const loadedTestsMap: { [key: string]: LoadedTestResult } = {};
 
-      // Gather all full category names to avoid duplicate addition of category-based tests
-      const fullCategories = invoiceItems
+      // Gather all full category tests for exclusion and lookup
+      const fullCategoryTests = invoiceItems
         .filter((item: any) => (item.type || '').toLowerCase() === "full" && item.category)
-        .map((item: any) => item.category)
-        .filter(Boolean);
+        .map((item: any) => ({
+          test_id: item.test_id,
+          category: item.category
+        }));
 
-      // 1. Add all tests from full categories
-      for (const categoryName of fullCategories) {
+      // For quick exclusion: set of test_id+category
+      const fullTestIdCategorySet = new Set(
+        fullCategoryTests.map(t => `${t.test_id}___${t.category}`)
+      );
+
+      // 1. Add all tests from full categories except the "full" test itself
+      for (const { test_id: fullTestId, category: categoryName } of fullCategoryTests) {
         // Find category id by name
         const { data: categoryRow, error: catError } = await supabase
           .from("test_categories")
@@ -155,6 +163,7 @@ const ReportDataEntryForm = ({
         if (testInfoError || !testInfoRows) continue;
 
         for (const test of testInfoRows) {
+          if (test.id === fullTestId) continue; // SKIP the "full" test itself!
           let measuring_unit = "";
           let low_value = "";
           let high_value = "";
@@ -164,7 +173,7 @@ const ReportDataEntryForm = ({
               measuring_unit = desc.measuring_unit || "";
               low_value = desc.low_value || "";
               high_value = desc.high_value || "";
-            } catch { }
+            } catch {}
           }
           // Key by both test_id and category to ensure uniqueness per context
           const compositeKey = `${test.id}___${categoryName}`;
@@ -184,9 +193,11 @@ const ReportDataEntryForm = ({
       for (const item of invoiceItems) {
         const test_id = item.test_id;
         const category = item.category || "";
-        // Only add if this particular test+category isn't already included by above
         const compositeKey = `${test_id}___${category}`;
+        // Skip if this was already added by above
         if (loadedTestsMap[compositeKey]) continue;
+        // Also skip if this is a "full" test itself and handled already!
+        if (fullTestIdCategorySet.has(compositeKey)) continue;
 
         // Fetch full info for this test_id (some non-full tests might not have description)
         let measuring_unit = "", low_value = "", high_value = "";
@@ -204,7 +215,7 @@ const ReportDataEntryForm = ({
               measuring_unit = desc.measuring_unit || "";
               low_value = desc.low_value || "";
               high_value = desc.high_value || "";
-            } catch { }
+            } catch {}
           }
           if (testInfo && testInfo.name) {
             test_name = testInfo.name;
@@ -223,7 +234,6 @@ const ReportDataEntryForm = ({
 
       // Convert map to array
       setLoadedTestResults(Object.values(loadedTestsMap));
-
     } catch (error: any) {
       console.error("Error loading tests from invoice items:", error);
       setLoadedTestResults([]);
@@ -636,3 +646,4 @@ const ReportDataEntryForm = ({
 };
 
 export default ReportDataEntryForm;
+
