@@ -27,16 +27,17 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
     }
   }, [isOpen]);
 
-  // Fetch donors from Supabase
+  // Fetch only active donors from Supabase
   const fetchDonors = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('donors')
-        .select('id, donor_id, name, blood_group, address, phone, email, gender, date_of_birth, last_donation_date');
-      
+        .select('id, donor_id, name, blood_group, address, phone, email, gender, date_of_birth, last_donation_date')
+        .eq('status', true); // Only fetch donors where status is true (active)
+
       if (error) throw error;
-      
+
       if (data) {
         setDonors(data);
         setSearchResults(data);
@@ -59,13 +60,13 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
       setSearchResults(donors);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
-    const filtered = donors.filter(donor => 
-      donor.donor_id.toLowerCase().includes(query) || 
+    const filtered = donors.filter(donor =>
+      donor.donor_id.toLowerCase().includes(query) ||
       donor.name.toLowerCase().includes(query)
     );
-    
+
     setSearchResults(filtered);
   };
 
@@ -82,8 +83,8 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
         </DialogHeader>
         <div className="py-4">
           <div className="flex items-center space-x-2">
-            <Input 
-              placeholder="Enter donor ID or name" 
+            <Input
+              placeholder="Enter donor ID or name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
@@ -93,21 +94,21 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
                 }
               }}
             />
-            <Button 
-              onClick={handleSearch} 
-              variant="outline" 
+            <Button
+              onClick={handleSearch}
+              variant="outline"
               size="sm"
             >
               <SearchIcon className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {isLoading && (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blood"></div>
             </div>
           )}
-          
+
           {!isLoading && (
             <div className="h-64 border mt-4 overflow-y-auto">
               {searchResults.length === 0 ? (
@@ -116,8 +117,8 @@ const DonorSearchModal = ({ isOpen, onClose, onSelect }: DonorSearchModalProps) 
                 </div>
               ) : (
                 searchResults.map(donor => (
-                  <div 
-                    key={donor.id} 
+                  <div
+                    key={donor.id}
                     className="p-3 border-b hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleDonorSelect(donor)}
                   >
