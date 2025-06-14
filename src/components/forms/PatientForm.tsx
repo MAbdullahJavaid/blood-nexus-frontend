@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ShadcnDatePicker } from "@/components/ui/ShadcnDatePicker";
 
 interface PatientFormProps {
   isSearchEnabled?: boolean;
@@ -495,13 +496,11 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <Label htmlFor="dob" className="mb-1 block">Date Of Birth:</Label>
-            <Input 
-              id="dob" 
-              className="h-9" 
-              type="date" 
+            <ShadcnDatePicker
               value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              disabled={!isEditable} 
+              onChange={setDob}
+              disabled={!isEditable}
+              placeholder="YYYY-MM-DD"
             />
           </div>
           <div></div>
