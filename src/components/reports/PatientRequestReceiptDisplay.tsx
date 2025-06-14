@@ -183,7 +183,7 @@ export default function PatientRequestReceiptDisplay({ invoice }: { invoice: any
         <div className="mt-10 flex flex-row justify-end pr-8 text-[15px]">
           <div className="flex flex-row items-center gap-2">
             <span>Registered By :</span>
-            <span style={{ borderBottom: '1px solid #333', minWidth: 160, height: 10, display: 'inline-block', marginLeft: 2 }}></span>
+            
             <span className="font-bold ml-2">BLOOD CARE FOUNDATION</span>
           </div>
         </div>
