@@ -70,6 +70,7 @@ const ReportDataEntryForm = ({
   const [loadedTestResults, setLoadedTestResults] = useState<LoadedTestResult[]>([]);
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(true);
 
   const fetchReports = async () => {
     try {
@@ -91,6 +92,7 @@ const ReportDataEntryForm = ({
 
   useEffect(() => {
     fetchReports();
+    setIsDisabled(true); // Always start as disabled
   }, []);
 
   const filteredReports = reports.filter(
@@ -273,6 +275,7 @@ const ReportDataEntryForm = ({
   // --- Use this function in handleReportSelect ---
   const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
+    setIsDisabled(true); // Disable after selecting a report (until Add is clicked)
 
     // Always fetch via invoice_items for this document
     if (report.document_no) {
@@ -286,6 +289,7 @@ const ReportDataEntryForm = ({
   };
 
   const handleValueChange = (testId: number, value: string) => {
+    if (isDisabled) return; // Do not allow change if disabled
     setLoadedTestResults((prev) =>
       prev.map((test) =>
         test.test_id === testId ? { ...test, user_value: value } : test
@@ -305,11 +309,24 @@ const ReportDataEntryForm = ({
     return date.toLocaleString("en-GB");
   };
 
+  // Handle the Add button click
+  const handleAddClick = () => {
+    setIsDisabled(false);
+    toast.info("Form enabled. You can now enter test values.");
+  };
+
   return (
     <div className="bg-white p-6 rounded-md space-y-6">
-      {/* Header */}
-      <div className="border-b pb-4">
+      {/* Header and Add Button */}
+      <div className="border-b pb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
+        <Button 
+          variant="default" 
+          size="sm" 
+          onClick={handleAddClick}
+          disabled={!selectedReport || !isDisabled}
+          title={!selectedReport ? "Select a document before adding" : isDisabled ? "Enable form for editing" : "Form already enabled"}
+        >Add</Button>
       </div>
 
       {/* Test Categories and Type Blue Bar */}
@@ -365,6 +382,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.patient_name || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -377,6 +395,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.hospital_name || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -389,6 +408,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.phone || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -401,6 +421,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.blood_group || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
         </div>
@@ -416,6 +437,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.patient_id || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -458,6 +480,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.age || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -470,6 +493,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.rh || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
         </div>
@@ -485,6 +509,7 @@ const ReportDataEntryForm = ({
               value={formatDate(selectedReport?.created_at)}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -497,6 +522,7 @@ const ReportDataEntryForm = ({
               value={formatDateTime(selectedReport?.registration_date)}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -509,6 +535,7 @@ const ReportDataEntryForm = ({
               value={formatDate(selectedReport?.dob)}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -521,6 +548,7 @@ const ReportDataEntryForm = ({
               value={selectedReport?.reference || ""}
               readOnly
               className="bg-gray-50"
+              disabled={isDisabled}
             />
           </div>
           
@@ -534,6 +562,7 @@ const ReportDataEntryForm = ({
                 value={selectedReport?.blood_category || ""}
                 readOnly
                 className="bg-gray-50"
+                disabled={isDisabled}
               />
             </div>
             <div>
@@ -546,6 +575,7 @@ const ReportDataEntryForm = ({
                   value={selectedReport?.bottle_required || ""}
                   readOnly
                   className="bg-gray-50"
+                  disabled={isDisabled}
                 />
                 <span className="text-sm text-gray-600 flex items-center">bag</span>
               </div>
@@ -582,19 +612,19 @@ const ReportDataEntryForm = ({
                 ) : (
                   <TableRow key={`${test.test_id}-${index}`}>
                     <TableCell>
-                      <Input value={test.test_id.toString()} readOnly className="bg-gray-50 h-8" />
+                      <Input value={test.test_id.toString()} readOnly className="bg-gray-50 h-8" disabled />
                     </TableCell>
                     <TableCell>
-                      <Input value={test.test_name} readOnly className="bg-gray-50 h-8" />
+                      <Input value={test.test_name} readOnly className="bg-gray-50 h-8" disabled />
                     </TableCell>
                     <TableCell>
-                      <Input value={test.measuring_unit} readOnly className="bg-gray-50 h-8" />
+                      <Input value={test.measuring_unit} readOnly className="bg-gray-50 h-8" disabled />
                     </TableCell>
                     <TableCell>
-                      <Input value={test.low_value} readOnly className="bg-gray-50 h-8" />
+                      <Input value={test.low_value} readOnly className="bg-gray-50 h-8" disabled />
                     </TableCell>
                     <TableCell>
-                      <Input value={test.high_value} readOnly className="bg-gray-50 h-8" />
+                      <Input value={test.high_value} readOnly className="bg-gray-50 h-8" disabled />
                     </TableCell>
                     <TableCell>
                       <Input 
@@ -602,6 +632,7 @@ const ReportDataEntryForm = ({
                         onChange={(e) => handleValueChange(test.test_id, e.target.value)}
                         className="h-8" 
                         placeholder="Enter value"
+                        disabled={isDisabled}
                       />
                     </TableCell>
                   </TableRow>
