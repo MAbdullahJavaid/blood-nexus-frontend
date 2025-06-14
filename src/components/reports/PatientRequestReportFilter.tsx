@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DocumentSearchModal } from "@/components/forms/patient-invoice/DocumentSearchModal";
 
 interface Props {
   onOk?: (from: string, to: string) => void;
@@ -14,7 +15,26 @@ export default function PatientRequestReportFilter({
 }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  // For now, the search buttons don't trigger a modal, but this is where you'd wire it up.
+
+  // Track which search modal is open: "from", "to", or null
+  const [searchModalOpenFor, setSearchModalOpenFor] = useState<"from" | "to" | null>(null);
+
+  const handleOpenSearchModal = (which: "from" | "to") => {
+    setSearchModalOpenFor(which);
+  };
+
+  const handleDocumentSelect = (docNum: string) => {
+    if (searchModalOpenFor === "from") {
+      setFrom(docNum);
+    } else if (searchModalOpenFor === "to") {
+      setTo(docNum);
+    }
+    setSearchModalOpenFor(null);
+  };
+
+  const handleModalOpenChange = (open: boolean) => {
+    if (!open) setSearchModalOpenFor(null);
+  };
 
   return (
     <div
@@ -70,6 +90,7 @@ export default function PatientRequestReportFilter({
                       tabIndex={-1}
                       type="button"
                       className="ml-1 px-0 py-0 w-7 h-7 rounded border border-gray-400 bg-[#e8e8e8] hover:bg-gray-200"
+                      onClick={() => handleOpenSearchModal("from")}
                     >
                       <span className="font-bold text-gray-600 text-lg leading-none">?</span>
                     </Button>
@@ -91,6 +112,7 @@ export default function PatientRequestReportFilter({
                       tabIndex={-1}
                       type="button"
                       className="ml-1 px-0 py-0 w-7 h-7 rounded border border-gray-400 bg-[#e8e8e8] hover:bg-gray-200"
+                      onClick={() => handleOpenSearchModal("to")}
                     >
                       <span className="font-bold text-gray-600 text-lg leading-none">?</span>
                     </Button>
@@ -121,6 +143,12 @@ export default function PatientRequestReportFilter({
           Cancel
         </Button>
       </div>
+      {/* Document Search Modal, reused for both inputs */}
+      <DocumentSearchModal
+        isOpen={!!searchModalOpenFor}
+        onOpenChange={handleModalOpenChange}
+        onDocumentSelect={handleDocumentSelect}
+      />
     </div>
   );
 }
