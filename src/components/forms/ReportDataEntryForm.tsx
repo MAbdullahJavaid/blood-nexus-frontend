@@ -119,9 +119,7 @@ const ReportDataEntryForm = ({
       // 2. Fetch invoice items (tests)
       const { data: invoiceItems, error: itemsError } = await supabase
         .from("invoice_items")
-        .select(
-          `test_id, test_name, type, category, quantity, unit_price, id`
-        )
+        .select(`test_id, test_name, type, category, quantity, unit_price, id`)
         .eq("invoice_id", invoiceData.id);
 
       if (itemsError) throw itemsError;
@@ -131,112 +129,95 @@ const ReportDataEntryForm = ({
         return;
       }
 
-      // 3. Check for any 'full' test type in invoice_items
-      const fullTestItem = invoiceItems.find(
-        (item: any) => (item.type || "").toLowerCase() === "full"
-      );
+      // Prepare to collect all test definitions, expanded and deduped
+      const loadedTestsMap: { [test_id: number]: LoadedTestResult } = {};
 
-      // If 'full' type exists, fetch category, then fetch all tests from test_information with that category
-      if (fullTestItem && fullTestItem.category) {
-        // First, get the category name from the invoice item (string)
-        const fullCategory = fullTestItem.category;
+      // 3. Identify all full-type items and fetch all test info for their categories
+      for (const item of invoiceItems) {
+        if ((item.type || '').toLowerCase() === "full" && item.category) {
+          // Find category id by name
+          const { data: categoryRow, error: catError } = await supabase
+            .from("test_categories")
+            .select("id")
+            .eq("name", item.category)
+            .maybeSingle();
+          if (catError || !categoryRow?.id) continue;
 
-        // Now, fetch all tests from test_information with this category
-        // We need to match by category name, so let's first get the category id for the name
-        const { data: categoryRow, error: catError } = await supabase
-          .from("test_categories")
-          .select("id")
-          .eq("name", fullCategory)
-          .maybeSingle();
+          // Fetch all tests in test_information for this category id
+          const { data: testInfoRows, error: testInfoError } = await supabase
+            .from("test_information")
+            .select("id, name, description, category_id")
+            .eq("category_id", categoryRow.id);
 
-        if (catError) throw catError;
-        if (!categoryRow?.id) {
-          setLoadedTestResults([]);
-          toast.error("Test category not found for 'full' test");
-          return;
+          if (testInfoError || !testInfoRows) continue;
+
+          for (const test of testInfoRows) {
+            let measuring_unit = "";
+            let low_value = "";
+            let high_value = "";
+            if (test.description) {
+              try {
+                const desc = JSON.parse(test.description);
+                measuring_unit = desc.measuring_unit || "";
+                low_value = desc.low_value || "";
+                high_value = desc.high_value || "";
+              } catch { }
+            }
+            // Deduplication by test_id
+            loadedTestsMap[test.id] = {
+              test_id: test.id,
+              test_name: test.name,
+              category: item.category,
+              measuring_unit,
+              low_value,
+              high_value,
+              user_value: "",
+            };
+          }
         }
+      }
 
-        // Now fetch all tests in test_information for this category id
-        const { data: testInfoRows, error: testInfoError } = await supabase
-          .from("test_information")
-          .select("id, name, description, category_id")
-          .eq("category_id", categoryRow.id);
+      // 4. For all other (non-full, or not already included) invoice items, add individual test
+      for (const item of invoiceItems) {
+        const test_id = item.test_id;
+        // Skip if already added by a "full" category above
+        if (loadedTestsMap[test_id]) continue;
 
-        if (testInfoError) throw testInfoError;
-        if (!testInfoRows || testInfoRows.length === 0) {
-          setLoadedTestResults([]);
-          toast.error("No tests found in test_information for this category");
-          return;
-        }
-
-        // Compose loadedTests from descriptions and test info
-        const loadedTests: LoadedTestResult[] = testInfoRows.map((test: any) => {
-          let measuring_unit = "";
-          let low_value = "";
-          let high_value = "";
-
-          if (test.description) {
+        // Fetch specific test_information for this test_id
+        let measuring_unit = "", low_value = "", high_value = "";
+        if (test_id != null) {
+          const { data: testInfo, error: testInfoErr } = await supabase
+            .from("test_information")
+            .select("description, name")
+            .eq("id", test_id)
+            .maybeSingle();
+          let test_name = item.test_name || '';
+          if (testInfo && testInfo.description) {
             try {
-              const desc = JSON.parse(test.description);
+              const desc = JSON.parse(testInfo.description);
               measuring_unit = desc.measuring_unit || "";
               low_value = desc.low_value || "";
               high_value = desc.high_value || "";
-            } catch {
-              // Ignore JSON parsing errors
-            }
+            } catch { }
           }
-
-          return {
-            test_id: test.id,
-            test_name: test.name,
-            category: fullCategory,
+          if (testInfo && testInfo.name) {
+            test_name = testInfo.name;
+          }
+          loadedTestsMap[test_id] = {
+            test_id,
+            test_name,
+            category: item.category || "",
             measuring_unit,
             low_value,
             high_value,
             user_value: "",
           };
-        });
-
-        setLoadedTestResults(loadedTests);
-        return;
-      }
-
-      // --- Normal/default logic if no 'full' test present ---
-      // Fetch test info for EACH invoice item
-      const loadedTests: LoadedTestResult[] = [];
-      for (const item of invoiceItems) {
-        let measuring_unit = "";
-        let low_value = "";
-        let high_value = "";
-
-        const { data: testInfo, error: testInfoErr } = await supabase
-          .from("test_information")
-          .select("description")
-          .eq("id", item.test_id)
-          .maybeSingle();
-
-        if (testInfo && testInfo.description) {
-          try {
-            const desc = JSON.parse(testInfo.description);
-            measuring_unit = desc.measuring_unit || "";
-            low_value = desc.low_value || "";
-            high_value = desc.high_value || "";
-          } catch {
-            // Ignore
-          }
         }
-
-        loadedTests.push({
-          test_id: item.test_id,
-          test_name: item.test_name,
-          category: item.category || "",
-          measuring_unit,
-          low_value,
-          high_value,
-          user_value: "",
-        });
       }
-      setLoadedTestResults(loadedTests);
+
+      // Convert map to array and set as state
+      setLoadedTestResults(Object.values(loadedTestsMap));
+
     } catch (error: any) {
       console.error("Error loading tests from invoice items:", error);
       setLoadedTestResults([]);
