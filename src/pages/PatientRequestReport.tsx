@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import PatientRequestReportFilter from "@/components/reports/PatientRequestReportFilter";
 import PatientRequestReceiptDisplay from "@/components/reports/PatientRequestReceiptDisplay";
@@ -93,7 +92,8 @@ const PatientRequestReport = () => {
                 <Pagination className="mt-4">
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious asChild tabIndex={0}
+                      <PaginationPrevious
+                        tabIndex={0}
                         onClick={handlePrev}
                         aria-disabled={currentPage === 0}
                         className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
@@ -105,7 +105,8 @@ const PatientRequestReport = () => {
                       </span>
                     </PaginationItem>
                     <PaginationItem>
-                      <PaginationNext asChild tabIndex={0}
+                      <PaginationNext
+                        tabIndex={0}
                         onClick={handleNext}
                         aria-disabled={currentPage === totalPages - 1}
                         className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
@@ -123,4 +124,3 @@ const PatientRequestReport = () => {
 };
 
 export default PatientRequestReport;
-
