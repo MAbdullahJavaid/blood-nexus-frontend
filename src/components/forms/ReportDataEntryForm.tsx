@@ -99,9 +99,10 @@ const ReportDataEntryForm = ({
       report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- New function to load tests from invoice_items ---
+  // --- New function to load tests based on type/category logic ---
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
+      setLoading(true);
       // Find patient invoice using document_no
       const { data: invoiceData, error: invError } = await supabase
         .from("patient_invoices")
@@ -113,10 +114,11 @@ const ReportDataEntryForm = ({
       if (!invoiceData?.id) {
         setLoadedTestResults([]);
         toast.error("No invoice found for this document");
+        setLoading(false);
         return;
       }
 
-      // Fetch invoice items (the tests)
+      // Fetch all invoice items for this invoice (with type & category)
       const { data: invoiceItems, error: itemsError } = await supabase
         .from("invoice_items")
         .select(
@@ -128,35 +130,87 @@ const ReportDataEntryForm = ({
       if (!invoiceItems || invoiceItems.length === 0) {
         setLoadedTestResults([]);
         toast.error("No tests found in invoice items for this document");
+        setLoading(false);
         return;
       }
 
-      // For each invoice item, get measuring_unit, low_value, high_value from test_information (description)
-      const loadedTests: LoadedTestResult[] = [];
+      // Build the final list of tests to load based on your rule
+      const testsToLoad: any[] = [];
+      const loadedTestIds = new Set<number>();
+      const loadedCategory = new Set<string>();
+
+      // Helper for loading test details by test_id array
+      const getTestDetails = async (testIds: number[]) => {
+        // Fetch test_information rows for all test IDs
+        const { data: testInfoArr, error: testInfoErr } = await supabase
+          .from("test_information")
+          .select("id, description")
+          .in("id", testIds);
+
+        // prepare a map for fast lookup if testInfoArr defined
+        const descMap =
+          testInfoArr?.reduce((acc, ti) => {
+            acc[ti.id] = ti.description;
+            return acc;
+          }, {} as Record<number, any>) || {};
+
+        return descMap;
+      };
+
+      // 1. Pre-build per-invoice-item basis and category sets
       for (const item of invoiceItems) {
-        // Get additional info from test_information
+        if (item.type?.toLowerCase() === "full" && item.category) {
+          if (!loadedCategory.has(item.category)) {
+            // Find all items sharing this category and add them
+            const sameCatItems = invoiceItems.filter(
+              (i) =>
+                i.category === item.category &&
+                !loadedTestIds.has(i.test_id) &&
+                typeof i.test_id === "number"
+            );
+            for (const catItem of sameCatItems) {
+              testsToLoad.push(catItem);
+              loadedTestIds.add(catItem.test_id);
+            }
+            loadedCategory.add(item.category);
+          }
+        } else if (
+          typeof item.test_id === "number" &&
+          !loadedTestIds.has(item.test_id)
+        ) {
+          testsToLoad.push(item);
+          loadedTestIds.add(item.test_id);
+        }
+      }
+
+      // 2. Now, get all test details in one call for those test_ids
+      const testIdArray = testsToLoad.map((t) => t.test_id);
+      const descMap = await getTestDetails(testIdArray);
+
+      // 3. Map to LoadedTestResult
+      const loadedTests: LoadedTestResult[] = testsToLoad.map((item) => {
         let measuring_unit = "";
         let low_value = "";
         let high_value = "";
-
-        const { data: testInfo, error: testInfoErr } = await supabase
-          .from("test_information")
-          .select("description")
-          .eq("id", item.test_id)
-          .maybeSingle();
-
-        if (testInfo && testInfo.description) {
-          try {
-            const desc = JSON.parse(testInfo.description);
-            measuring_unit = desc.measuring_unit || "";
-            low_value = desc.low_value || "";
-            high_value = desc.high_value || "";
-          } catch {
-            // Ignore JSON parsing errors (leave as empty string)
+        try {
+          // parse description JSON
+          if (
+            descMap[item.test_id] !== undefined &&
+            descMap[item.test_id] !== null
+          ) {
+            const desc =
+              typeof descMap[item.test_id] === "string"
+                ? JSON.parse(descMap[item.test_id])
+                : descMap[item.test_id];
+            measuring_unit = desc?.measuring_unit || "";
+            low_value = desc?.low_value || "";
+            high_value = desc?.high_value || "";
           }
+        } catch {
+          // ignore parsing failures
         }
 
-        loadedTests.push({
+        return {
           test_id: item.test_id,
           test_name: item.test_name,
           category: item.category || "",
@@ -164,13 +218,16 @@ const ReportDataEntryForm = ({
           low_value,
           high_value,
           user_value: "",
-        });
-      }
+        };
+      });
+
       setLoadedTestResults(loadedTests);
     } catch (error: any) {
       console.error("Error loading tests from invoice items:", error);
       setLoadedTestResults([]);
       toast.error("Failed to load test details from invoice");
+    } finally {
+      setLoading(false);
     }
   };
 
