@@ -7,7 +7,7 @@ interface TotalSectionProps {
   totalAmount: number;
   receivedAmount: number;
   isEditable: boolean;
-  onDiscountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDiscountChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onReceivedAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -16,7 +16,6 @@ export function TotalSection({
   totalAmount, 
   receivedAmount, 
   isEditable,
-  onDiscountChange,
   onReceivedAmountChange
 }: TotalSectionProps) {
   return (
@@ -61,3 +60,4 @@ export function TotalSection({
     </div>
   );
 }
+

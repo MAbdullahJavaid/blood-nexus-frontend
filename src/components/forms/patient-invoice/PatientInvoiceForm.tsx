@@ -1,4 +1,3 @@
-
 import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
@@ -177,6 +176,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
+    // Always calculate discount as (totalAmount - receivedAmount), never editable:
+    const discountCalc = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
+    
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
     // Get current patient data based on type
@@ -368,11 +370,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <TotalSection
-          discount={discount}
+          discount={discountCalc}
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
           isEditable={isEditable}
-          onDiscountChange={handleDiscountChange}
           onReceivedAmountChange={handleReceivedAmountChange}
         />
 

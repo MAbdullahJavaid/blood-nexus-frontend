@@ -43,7 +43,8 @@ export function PatientDetailsSection({
 }: PatientDetailsSectionProps) {
   return (
     <div className="border rounded-md p-4 bg-green-50 mb-4">
-      <div className="grid grid-cols-7 gap-4 items-center mb-2">
+      {/* First row: Type, Patient ID, Patient Name */}
+      <div className="grid grid-cols-3 gap-4 items-center mb-2">
         <div>
           <Label htmlFor="patientType" className="mb-1 block">Type:</Label>
           <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable}>
@@ -89,6 +90,9 @@ export function PatientDetailsSection({
             className="h-8"
           />
         </div>
+      </div>
+      {/* Second row: Document No, Document Date */}
+      <div className="grid grid-cols-2 gap-4 items-center">
         <div>
           <Label htmlFor="documentNo" className="mb-1 block">Document No:</Label>
           <div className="flex gap-2">
@@ -123,13 +127,8 @@ export function PatientDetailsSection({
             disabled={!shouldEnableEditing}
           />
         </div>
-          <div>
-            {/* Just placeholder for alignment, no label. */}
-          </div>
-          <div>
-            {/* Row 1 rightmost cell (could be used for future feature) */}
-          </div>
       </div>
     </div>
   );
 }
+
