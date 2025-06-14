@@ -38,83 +38,94 @@ export default function PatientRequestReportFilter({
   };
 
   return (
-    <Card className="max-w-xl mx-auto mb-6 border-gray-300 shadow-lg">
-      <CardHeader className="flex flex-row gap-2 items-center bg-blue-50 border-b border-gray-200 rounded-t px-4 py-3">
-        <img alt="icon" src="https://cdn.jsdelivr.net/gh/lucide-icons/lucide@latest/icons/filter.svg" width={20} height={20} className="text-blue-600" />
-        <CardTitle className="text-lg font-semibold text-blue-900">Patient Request Report Filter</CardTitle>
+    <Card className="max-w-4xl mx-auto mb-6 border-gray-300 shadow-sm">
+      {/* Yellow header matching the screenshot */}
+      <CardHeader className="bg-yellow-200 border-b border-gray-300 rounded-t-lg px-6 py-4">
+        <CardTitle className="flex items-center gap-3 text-lg font-bold text-gray-800">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-blue-600">
+            <rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+            <path d="M7 8h10M7 12h7" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+          Report Filter
+        </CardTitle>
       </CardHeader>
-      <CardContent className="pt-6 pb-4 bg-white">
-        {/* "Filter" section header */}
-        <div className="flex items-center gap-2 mb-4">
-          <Search size={18} className="text-blue-600" />
-          <span className="font-medium text-base text-gray-700">Filter</span>
+      
+      <CardContent className="pt-6 pb-6 bg-white">
+        {/* Filter section header */}
+        <div className="flex items-center gap-2 mb-6">
+          <Search size={20} className="text-gray-600" />
+          <span className="font-semibold text-gray-800">Filter</span>
         </div>
 
-        {/* Table for From/To */}
-        <div className="border border-gray-200 rounded-md overflow-hidden">
-          <div className="grid grid-cols-3 bg-blue-100 border-b border-gray-200">
-            <div className="p-3 border-r border-gray-200 text-center font-medium text-blue-900">Column</div>
-            <div className="p-3 border-r border-gray-200 text-center font-medium text-blue-900">From</div>
-            <div className="p-3 text-center font-medium text-blue-900">To</div>
+        {/* Table matching the screenshot layout */}
+        <div className="border border-gray-300 rounded-md overflow-hidden mb-8">
+          {/* Header row */}
+          <div className="grid grid-cols-3 bg-gray-100 border-b border-gray-300">
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">Column</div>
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">From</div>
+            <div className="p-4 text-center font-semibold text-gray-700">To</div>
           </div>
+          
+          {/* Data row */}
           <div className="grid grid-cols-3 bg-white">
-            {/* "Code:" row */}
-            <div className="p-3 border-r border-gray-200 bg-gray-50 flex items-center justify-center font-medium text-gray-700">Code:</div>
-            {/* From */}
-            <div className="p-3 border-r border-gray-200">
-              <div className="flex items-center gap-1">
+            {/* Code label */}
+            <div className="p-4 border-r border-gray-300 bg-gray-50 flex items-center justify-start font-medium text-gray-700">
+              Code:
+            </div>
+            
+            {/* From input */}
+            <div className="p-4 border-r border-gray-300">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={from}
                   onChange={e => setFrom(e.target.value)}
-                  className="border border-gray-300 bg-white rounded px-2 py-1 w-full text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  style={{ height: 32 }}
+                  className="border border-gray-300 bg-white rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter code"
                 />
                 <Button
                   size="icon"
                   variant="outline"
-                  tabIndex={-1}
                   type="button"
-                  className="ml-1 px-0 py-0 w-8 h-8 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  className="w-8 h-8 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-600 flex-shrink-0"
                   onClick={() => handleOpenSearchModal("from")}
                   aria-label="Search From Doc No"
                 >
-                  <span className="font-bold text-lg leading-none">?</span>
+                  <span className="font-bold text-sm">?</span>
                 </Button>
               </div>
             </div>
-            {/* To */}
-            <div className="p-3">
-              <div className="flex items-center gap-1">
+            
+            {/* To input */}
+            <div className="p-4">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={to}
                   onChange={e => setTo(e.target.value)}
-                  className="border border-gray-300 bg-white rounded px-2 py-1 w-full text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  style={{ height: 32 }}
+                  className="border border-gray-300 bg-white rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter code"
                 />
                 <Button
                   size="icon"
                   variant="outline"
-                  tabIndex={-1}
                   type="button"
-                  className="ml-1 px-0 py-0 w-8 h-8 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  className="w-8 h-8 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-600 flex-shrink-0"
                   onClick={() => handleOpenSearchModal("to")}
                   aria-label="Search To Doc No"
                 >
-                  <span className="font-bold text-lg leading-none">?</span>
+                  <span className="font-bold text-sm">?</span>
                 </Button>
               </div>
             </div>
           </div>
         </div>
-        {/* Footer action buttons */}
-        <div className="flex flex-row gap-2 justify-end px-2 pt-6">
+
+        {/* Action buttons matching the screenshot */}
+        <div className="flex justify-center gap-4">
           <Button
             type="button"
-            size="sm"
-            variant="default"
-            className="min-w-[80px] bg-blue-600 text-white hover:bg-blue-700"
+            className="min-w-[80px] bg-red-600 text-white hover:bg-red-700 px-8 py-2"
             onClick={() => onOk?.(from, to)}
           >
             OK
@@ -122,13 +133,13 @@ export default function PatientRequestReportFilter({
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="min-w-[80px] border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="min-w-[80px] border-gray-400 text-gray-700 hover:bg-gray-50 px-8 py-2"
             onClick={onCancel}
           >
             Cancel
           </Button>
         </div>
+
         {/* Document Search Modal */}
         <DocumentSearchModal
           isOpen={!!searchModalOpenFor}
