@@ -788,12 +788,6 @@ const ReportDataEntryForm = forwardRef(({
     </div>
   );
 
-  function handleSearchClick() {
-    setIsSearchModalOpen(true);
-    if (reports.length === 0) {
-      fetchReports();
-    }
-  }
 });
 
 export default ReportDataEntryForm;
