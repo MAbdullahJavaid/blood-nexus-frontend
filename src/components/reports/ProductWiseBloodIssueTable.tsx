@@ -88,7 +88,13 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         if (!grouped[d]) {
           grouped[d] = { date: d, FWB: 0, WB: 0, PC: 0, FFP: 0, PLT: 0, CP: 0, MEGAUNIT: 0, total: 0 };
         }
-        const qty = Number(record.bottle_quantity) || 0;
+        // Make sure `qty` is always a number
+        let qty: number = 0;
+        if (typeof record.bottle_quantity === "string") {
+          qty = parseInt(record.bottle_quantity, 10) || 0;
+        } else if (typeof record.bottle_quantity === "number") {
+          qty = record.bottle_quantity;
+        }
         const bc = (record.blood_category || '').toUpperCase().trim();
 
         // Map by FWB or WB, rest as-is
@@ -133,7 +139,7 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
         newTotals.total += row.total;
       });
       setData(resultArr);
-      setTotals(newTotals);
+      setTotals(newTotals as {[k: string]: number; total: number});
     } catch (error) {
       console.error("Error in fetchData:", error);
       setData([]);
