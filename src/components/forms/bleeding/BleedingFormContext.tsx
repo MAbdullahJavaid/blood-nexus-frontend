@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -59,7 +58,7 @@ const getDefaultProductInfo = () => ({
 });
 
 export const BleedingFormProvider: React.FC<{ 
-  children: ReactNode; 
+  children: React.ReactNode; 
   isEditable?: boolean;
   isDeleting?: boolean;
 }> = ({ 
@@ -107,7 +106,7 @@ export const BleedingFormProvider: React.FC<{
   // Handle donor selection
   const handleDonorSelect = async (donor: Donor) => {
     setSelectedDonor(donor);
-    
+
     // Set the bleeding date to the donor's last donation date or today
     if (donor.last_donation_date) {
       const donorDate = new Date(donor.last_donation_date);
@@ -115,18 +114,10 @@ export const BleedingFormProvider: React.FC<{
       setBleedingDate(formattedDonorDate);
     }
 
-    // Update donor status to false when selected for bleeding
-    try {
-      await supabase
-        .from('donors')
-        .update({ 
-          // Note: This assumes there's a status field in the donors table
-          // If not, this update might need to be adjusted based on actual table structure
-        })
-        .eq('id', donor.id);
-    } catch (error) {
-      console.error('Error updating donor status:', error);
-    }
+    // IMPORTANT:
+    // No need to manually update donor's status to inactive here.
+    // Supabase now handles this through an AFTER INSERT trigger on bleeding_records.
+    // See SQL: set_donor_inactive_on_bleeding_insert()
   };
 
   const loadBleedingRecord = async (bagId: string) => {
