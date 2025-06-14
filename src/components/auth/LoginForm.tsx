@@ -8,24 +8,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DropletIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-
-interface LoginFormData {
-  email: string;
-  password: string;
-}
 
 export function LoginForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = async (data: LoginFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!username || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter both your username and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
-    
+
     try {
-      const success = await login(data.email, data.password);
+      // Use the username as the "email" for Supabase Auth
+      const success = await login(username, password);
       if (success) {
         toast({
           title: "Login successful",
@@ -53,29 +60,21 @@ export function LoginForm() {
         </div>
         <CardTitle className="text-2xl text-center">Blood Transfusion Management</CardTitle>
         <CardDescription className="text-center">
-          Enter your credentials to sign in to your account
+          Enter your username and password to sign in to your account
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                {...register("email", { 
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address"
-                  }
-                })}
+                id="username"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
               />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -83,17 +82,10 @@ export function LoginForm() {
                 id="password"
                 type="password"
                 placeholder="Enter your password"
-                {...register("password", { 
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters"
-                  }
-                })}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
-              )}
             </div>
             <Button 
               type="submit" 
