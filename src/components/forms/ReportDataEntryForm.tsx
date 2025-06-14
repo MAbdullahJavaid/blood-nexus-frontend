@@ -48,7 +48,7 @@ interface PreReport {
   rh: string | null;
   blood_category: string | null;
   bottle_required: number | null;
-  tests_type: string | null;
+  tests_type?: string | null;
   category: string | null;
   created_at: string;
   updated_at: string;
