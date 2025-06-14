@@ -108,8 +108,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setHospital("");
       setGender("male");
       setExDonor("");
-      setBloodGroup("N/A");
-      setRhType("N/A");
     };
 
     const handleAddItem = () => {
@@ -398,20 +396,23 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
         // For OPD patients, create a new patient record first if needed
         let finalPatientId = patientID;
-        
+
         if (patientType === "opd") {
           // Create patient record for OPD
           const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
             "A": "A+",
-            "B": "B+", 
+            "B": "B+",
             "AB": "AB+",
             "O": "O+",
             "N/A": "O+"
           };
-          
+
           const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-          
-          const { data: patientData, error: patientError } = await supabase
+
+          let patientInsertError: any = null;
+          let patientData: any = null;
+
+          const { data: newPatient, error: insertError } = await supabase
             .from('patients')
             .insert({
               patient_id: patientID,
@@ -421,56 +422,89 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               gender: gender,
               blood_group: mappedBloodGroup,
               hospital: hospital,
-              age: age
+              age: age,
             })
             .select('id')
-            .single();
-            
-          if (patientError) {
-            console.error("Error creating patient:", patientError);
-            // If patient already exists, we'll use the provided ID
-            if (patientError.code === '23505') { // Unique constraint violation
-              console.log("Patient already exists, using provided ID");
+            .maybeSingle();
+
+          if (insertError) {
+            // If duplicate, search for the existing patient and use their UUID as finalPatientId
+            if (insertError.code === '23505') {
+              // Constraint violation, look up the existing patient by patient_id!
+              const { data: existingP, error: fetchExistingErr } = await supabase
+                .from('patients')
+                .select('id')
+                .eq('patient_id', patientID)
+                .maybeSingle();
+
+              if (fetchExistingErr || !existingP?.id) {
+                console.error(`Duplicate patient ID, but could not find patient:`, fetchExistingErr);
+                toast.error("Duplicate patient ID and could not find patient record.");
+                return { success: false, error: fetchExistingErr || "Patient fetch failed" };
+              }
+              finalPatientId = existingP.id;
             } else {
-              throw patientError;
+              // Some other error
+              console.error("Error creating patient:", insertError);
+              toast.error(`Failed to create patient: ${insertError.message}`);
+              return { success: false, error: insertError };
             }
+          } else if (newPatient && newPatient.id) {
+            finalPatientId = newPatient.id;
           } else {
-            console.log("Created new patient:", patientData);
+            // Defensive
+            toast.error("Unknown error when creating patient.");
+            return { success: false, error: "Unknown patient creation error" };
           }
         }
-        
+
         // Create invoice with the patient_id as a string (either UUID for regular or custom ID for OPD)
-        const { data: invoiceData, error: invoiceError } = await supabase
-          .from('patient_invoices')
-          .insert({
-            document_no: finalDocumentNo,
-            document_date: documentDate,
-            patient_id: finalPatientId, // This is now a string for both types
-            patient_type: patientType,
-            patient_name: patientName,
-            phone_no: phoneNo,
-            age: age,
-            dob: dob || null,
-            gender: gender,
-            hospital_name: hospital,
-            blood_group_separate: bloodGroup,
-            rh_factor: rhType,
-            blood_category: bloodCategory,
-            bottle_quantity: bottleRequired,
-            bottle_unit: bottleUnitType,
-            ex_donor: exDonor,
-            reference_notes: references,
-            total_amount: totalAmount,
-            discount_amount: discount,
-            amount_received: receivedAmount
-          })
-          .select('id')
-          .single();
-          
-        if (invoiceError) throw invoiceError;
-        
+        let invoiceData, invoiceError;
+        try {
+          const resp = await supabase
+            .from('patient_invoices')
+            .insert({
+              document_no: finalDocumentNo,
+              document_date: documentDate,
+              patient_id: finalPatientId,
+              patient_type: patientType,
+              patient_name: patientName,
+              phone_no: phoneNo,
+              age: age,
+              dob: dob || null,
+              gender: gender,
+              hospital_name: hospital,
+              blood_group_separate: bloodGroup,
+              rh_factor: rhType,
+              blood_category: bloodCategory,
+              bottle_quantity: bottleRequired,
+              bottle_unit: bottleUnitType,
+              ex_donor: exDonor,
+              reference_notes: references,
+              total_amount: totalAmount,
+              discount_amount: discount,
+              amount_received: receivedAmount
+            })
+            .select('id')
+            .maybeSingle();
+          invoiceData = resp.data;
+          invoiceError = resp.error;
+        } catch (err) {
+          invoiceError = err;
+        }
+
+        if (invoiceError) {
+          console.error("Error inserting invoice:", invoiceError);
+          if (invoiceError.code === '23505') {
+            toast.error("Duplicate document number, please refresh and try again.");
+          } else {
+            toast.error(`Failed to save invoice: ${invoiceError.message || invoiceError.toString()}`);
+          }
+          return { success: false, error: invoiceError };
+        }
+
         // Create invoice items with type and category
-        if (items.length > 0) {
+        if (items.length > 0 && invoiceData?.id) {
           const invoiceItems = items.map(item => ({
             invoice_id: invoiceData.id,
             test_id: item.testId || null,
@@ -481,19 +515,23 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             type: item.type,
             category: item.category
           }));
-          
+
           const { error: itemsError } = await supabase
             .from('invoice_items')
             .insert(invoiceItems);
-            
-          if (itemsError) throw itemsError;
+
+          if (itemsError) {
+            console.error("Error saving invoice items:", itemsError);
+            toast.error("Failed to save invoice items. " + (itemsError.message || itemsError.toString()));
+            return { success: false, error: itemsError };
+          }
         }
-        
+
         toast.success("Invoice saved successfully");
-        return { success: true, invoiceId: invoiceData.id };
+        return { success: true, invoiceId: invoiceData?.id };
       } catch (error) {
-        console.error("Error saving invoice:", error);
-        toast.error("Failed to save invoice");
+        console.error("Error saving invoice (catch):", error);
+        toast.error("Failed to save invoice: " + (error as any)?.message);
         return { success: false, error };
       } finally {
         setLoading(false);
