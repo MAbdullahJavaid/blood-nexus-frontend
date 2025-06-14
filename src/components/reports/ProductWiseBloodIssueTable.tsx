@@ -134,9 +134,12 @@ const ProductWiseBloodIssueTable = ({ category, fromDate, toDate }: ProductWiseB
       const newTotals: {[k:string]:number} = {FWB:0, WB:0, PC:0, FFP:0, PLT:0, CP:0, MEGAUNIT:0, total:0};
       resultArr.forEach(row => {
         COLUMNS.forEach(col => {
-          newTotals[col] += row[col as keyof BloodCategoryData] || 0;
+          // Cast to number to avoid TypeScript error
+          const value = Number(row[col as keyof BloodCategoryData]) || 0;
+          newTotals[col] += value;
         });
-        newTotals.total += row.total;
+        // Sum total, casting to number again
+        newTotals.total += Number(row.total) || 0;
       });
       setData(resultArr);
       setTotals(newTotals as {[k: string]: number; total: number});
