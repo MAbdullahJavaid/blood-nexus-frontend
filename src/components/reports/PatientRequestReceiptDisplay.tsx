@@ -162,13 +162,13 @@ export default function PatientRequestReceiptDisplay({ invoice }: { invoice: any
             </span>
           </div>
           <div className="flex justify-between py-0.5 font-bold">
-            <span>To Be Paid :</span>
+            <span> Paid :</span>
             <span>
               {(Number(invoice.total_amount || 0) - Number(invoice.discount_amount || 0)).toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between py-0.5">
-            <span>Paid :</span>
+
             <span>
               {invoice.amount_received ? Number(invoice.amount_received).toLocaleString() : ""}
             </span>
