@@ -533,6 +533,7 @@ export type Database = {
           reference: string | null
           registration_date: string | null
           rh: string | null
+          tests_type: string | null
           type: string | null
           updated_at: string | null
         }
@@ -553,6 +554,7 @@ export type Database = {
           reference?: string | null
           registration_date?: string | null
           rh?: string | null
+          tests_type?: string | null
           type?: string | null
           updated_at?: string | null
         }
@@ -573,6 +575,7 @@ export type Database = {
           reference?: string | null
           registration_date?: string | null
           rh?: string | null
+          tests_type?: string | null
           type?: string | null
           updated_at?: string | null
         }

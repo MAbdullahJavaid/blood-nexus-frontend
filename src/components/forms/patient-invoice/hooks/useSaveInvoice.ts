@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Patient, InvoiceItem } from "../types";
@@ -128,8 +127,8 @@ export const useSaveInvoice = () => {
           quantity: item.qty,
           unit_price: item.rate,
           total_price: item.amount,
-          type: item.type,
-          category: item.category
+          type: item.type ?? null,
+          category: item.category ?? null // Ensure `category` is included
         }));
         
         const { error: itemsError } = await supabase
