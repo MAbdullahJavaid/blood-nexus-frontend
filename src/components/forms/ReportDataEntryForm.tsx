@@ -136,11 +136,18 @@ const ReportDataEntryForm = ({
 
       for (const item of invoiceItems) {
         if (item.type && item.type.toLowerCase() === "full" && item.category) {
+          // Convert category to number for category_id comparison
+          const categoryNum = Number(item.category);
+          if (!categoryNum || isNaN(categoryNum)) {
+            console.warn("Category is not a valid number:", item.category);
+            continue;
+          }
+
           // If full panel, fetch all tests from test_information with this category
           const { data: categoryTests, error: catErr } = await supabase
             .from("test_information")
             .select("id, name, description, category_id")
-            .eq("category_id", item.category);
+            .eq("category_id", categoryNum);
 
           if (catErr) {
             // Ignore and continue, but print error
