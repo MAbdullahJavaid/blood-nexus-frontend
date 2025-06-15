@@ -1,16 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Mail, CalendarDays, CircleCheck, CircleX } from "lucide-react";
-
-// Initialize Supabase anonymously from env config
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
 
 type Donation = {
   id: string;
@@ -107,3 +101,4 @@ export default function DonationsReport() {
     </div>
   );
 }
+
