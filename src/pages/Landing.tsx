@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VolunteerModal from "@/components/modals/VolunteerModal";
+import OrganizeDriveModal from "@/components/modals/OrganizeDriveModal";
 import { supabase } from "@/integrations/supabase/client";
 
 const Landing = () => {
@@ -31,6 +32,7 @@ const Landing = () => {
   const [currentStory, setCurrentStory] = useState(0);
   const [currentDonor, setCurrentDonor] = useState(0);
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
+  const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
 
   // Watch for donation result in URL and show toast
   useEffect(() => {
@@ -227,10 +229,7 @@ const Landing = () => {
   };
 
   const handleOrganizeDrive = () => {
-    toast({
-      title: "Thank you for organizing!",
-      description: "Our team will help you set up a blood drive in your community.",
-    });
+    setIsDriveModalOpen(true);
   };
 
   const handleLearnMore = () => {
@@ -619,6 +618,13 @@ const Landing = () => {
         isOpen={isVolunteerModalOpen}
         onClose={() => setIsVolunteerModalOpen(false)}
       />
+
+      {/* Organize Drive Modal */}
+      <OrganizeDriveModal
+        isOpen={isDriveModalOpen}
+        onClose={() => setIsDriveModalOpen(false)}
+      />
+
     </div>
   );
 };
