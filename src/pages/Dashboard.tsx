@@ -1,3 +1,4 @@
+
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -11,8 +12,9 @@ import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
+import ThanksLetter from "@/components/thanks-letter/ThanksLetter";
 
-type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | null;
+type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | 'thanksLetter' | null;
 
 interface FormRef {
   handleAddItem?: () => void;
@@ -188,6 +190,12 @@ const Dashboard = () => {
             key="report-data-entry"
             ref={reportFormRef}
           />
+        );
+      case 'thanksLetter':
+        return (
+          <div className="flex w-full justify-center mt-8">
+            <ThanksLetter />
+          </div>
         );
       default:
         return null;

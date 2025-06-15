@@ -88,18 +88,14 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
   
   const handleNestedAccordionChange = (value: string) => {
     setOpenNestedItems(prev => {
-      // Create a new object with all values set to false
       const newState = {
         reception: false,
         bds: false,
         lab: false
-      };
-      
-      // Only set the current value to true if it's different from the previous one
+      };      
       if (prev[value as keyof typeof prev] !== true) {
         newState[value as keyof typeof newState] = true;
-      }
-      
+      }      
       return newState;
     });
   };
@@ -161,7 +157,11 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   label="Test Information" 
                   onClick={() => handleFormClick('testInformation')}
                 />
-                <SidebarItem icon={MailIcon} label="Thanks Letter" />
+                <SidebarItem 
+                  icon={MailIcon} 
+                  label="Thanks Letter"
+                  onClick={() => handleFormClick('thanksLetter')}
+                />
               </div>
             </AccordionContent>
           </AccordionItem>
