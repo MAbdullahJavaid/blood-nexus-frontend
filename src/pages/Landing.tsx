@@ -158,6 +158,12 @@ const Landing = () => {
       donations: "45+ donations"
     },
     {
+      name: "Usama",
+      story: "I believe everyone deserves a chance at life. Through blood donation, I can be part of these children's success stories and their bright futures.",
+      image: "/lovable-uploads/3fb86a0d-0fc2-4cff-a267-7455c70dd4e6.png",
+      donations: "35+ donations"
+    },
+    {
       name: "Nayyer",
       story: "Donating blood is a gift of life. By giving, we create hope and healthier futures for children in need.",
       image: "/lovable-uploads/51ca8b54-9d1b-4f95-ab33-e606a913781d.png",
