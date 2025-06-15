@@ -20,13 +20,12 @@ type Donation = {
 };
 
 async function fetchDonations(from: Date, to: Date): Promise<Donation[]> {
-  // Fetches all 'paid' donations within the date range (inclusive)
+  // Fetches all donations within the date range (inclusive), regardless of status
   const { data, error } = await supabase
     .from("donations")
     .select("*")
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString())
-    .eq("status", "paid")
     .order("created_at", { ascending: true });
 
   if (error) throw error;
