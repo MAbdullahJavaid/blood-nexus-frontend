@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +23,7 @@ import DonorScreening from "./pages/DonorScreening";
 import DonorBleedSummary from "./pages/DonorBleedSummary";
 import BagBleedSummary from "./pages/BagBleedSummary";
 import BloodIssueRecord from "./pages/BloodIssueRecord";
+import DonationsReport from "./pages/DonationsReport";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +141,15 @@ const App = () => (
                   <BloodIssueRecord />
                 </ProtectedRoute>
               } 
+            />
+            {/* Admin - Donations Report */}
+            <Route
+              path="/reports/admin/donations"
+              element={
+                <ProtectedRoute>
+                  <DonationsReport />
+                </ProtectedRoute>
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
