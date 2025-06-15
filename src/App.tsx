@@ -25,6 +25,7 @@ import BagBleedSummary from "./pages/BagBleedSummary";
 import BloodIssueRecord from "./pages/BloodIssueRecord";
 import DonationsReport from "./pages/DonationsReport";
 import BloodDriveReport from "./pages/BloodDriveReport";
+import VolunteerReport from "./pages/VolunteerReport";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BloodDriveReport />
+                </ProtectedRoute>
+              }
+            />
+            {/* Volunteer Report route */}
+            <Route
+              path="/reports/admin/volunteer"
+              element={
+                <ProtectedRoute>
+                  <VolunteerReport />
                 </ProtectedRoute>
               }
             />
