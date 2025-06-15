@@ -151,16 +151,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             </AccordionTrigger>
             <AccordionContent className="pl-8">
               <div className="flex flex-col gap-1">
-                <SidebarItem 
-                  icon={FileIcon} 
-                  label="Category" 
-                  onClick={() => handleFormClick('category')}
-                />
-                <SidebarItem 
-                  icon={TestTubeIcon} 
-                  label="Test Information" 
-                  onClick={() => handleFormClick('testInformation')}
-                />
                 <SidebarItem icon={MailIcon} label="Thanks Letter" />
               </div>
             </AccordionContent>
