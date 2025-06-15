@@ -101,7 +101,7 @@ const Landing = () => {
     {
       name: "Michael Chen", 
       story: "As a regular donor, I've seen firsthand how blood donations save lives. It's a small act that creates a huge impact for families in need.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      image: "https://images.unsplash.com/photo-1507003211169-00dcc994a43e?w=400&h=300&fit=crop",
       donations: "75+ donations"
     },
     {
@@ -677,19 +677,22 @@ const Landing = () => {
 
       {/* Sticky Donate Button */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-        {/* WhatsApp floating button (appears above Donate, slides in similar location) */}
-        <Button
-          size="lg"
-          className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5 py-4 shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+        {/* WhatsApp floating button - image ONLY as button */}
+        <img
+          src="/whatsapp.png"
+          alt="WhatsApp"
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer border-4 border-white object-cover bg-white"
           style={{
             boxShadow: "0 2px 8px 0 rgba(0,150,0,0.18)",
           }}
           onClick={handleWhatsAppClick}
+          tabIndex={0}
           aria-label="Chat on WhatsApp"
-        >
-          {/* Use exact user-provided PNG image for WhatsApp */}
-          <img src="/whatsapp.png" alt="WhatsApp" className="h-6 w-6" />
-        </Button>
+          role="button"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") handleWhatsAppClick();
+          }}
+        />
         <Button 
           size="lg"
           className="bg-blood hover:bg-blood-dark text-white rounded-full px-6 py-4 shadow-lg hover:shadow-xl transition-all"
