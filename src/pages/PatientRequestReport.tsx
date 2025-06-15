@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const PatientRequestReport = () => {
   const [receiptDataList, setReceiptDataList] = useState<any[]>([]);
@@ -73,38 +74,52 @@ const PatientRequestReport = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
   };
 
-  // EXPORT PDF (print)
-  const handleExportPDF = () => {
+  // EXPORT PDF using jsPDF
+  const handleExportPDF = async () => {
     if (!receiptDataList.length) {
       toast({ title: "Nothing to export", description: "No report data loaded.", variant: "destructive" });
       return;
     }
-    // Print only the visible report div
-    // Open a new window with just the content to be printed
+    
     const reportNode = reportContainerRef.current;
     if (!reportNode) return;
-    const printWindow = window.open("", "_blank", "width=900,height=1200");
-    if (!printWindow) {
-      toast({ title: "Pop-up Blocked", description: "Please allow pop-ups to export the PDF.", variant: "destructive" });
-      return;
+
+    try {
+      toast({ title: "Exporting", description: "Generating PDF, please wait..." });
+      
+      // Hide pagination during export
+      const paginationElements = document.querySelectorAll('.pagination-hide-export');
+      paginationElements.forEach(el => (el as HTMLElement).style.display = 'none');
+      
+      const canvas = await html2canvas(reportNode, { 
+        useCORS: true, 
+        backgroundColor: "#fff", 
+        scale: 2,
+        logging: false
+      });
+      
+      // Restore pagination
+      paginationElements.forEach(el => (el as HTMLElement).style.display = '');
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+      
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save('PatientRequestReport.pdf');
+      
+      toast({ title: "PDF Saved", description: "PDF exported successfully!" });
+    } catch (err) {
+      console.error('PDF Export Error:', err);
+      toast({ title: "Export Error", description: "Could not export as PDF.", variant: "destructive" });
     }
-    printWindow.document.write(`
-      <html>
-      <head>
-        <title>Patient Request Report</title>
-        <style>
-          body { background: white; margin: 0; }
-          .border { box-shadow: none!important; }
-          .page-break { page-break-after: always; }
-        </style>
-      </head>
-      <body>${reportNode.innerHTML}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    toast({ title: "PDF Export", description: "Print dialog opened for PDF export. Use Save as PDF." });
   };
 
   // EXPORT JPEG
@@ -159,7 +174,7 @@ const PatientRequestReport = () => {
                 <PatientRequestReceiptDisplay invoice={receiptDataList[currentPage]} />
               </div>
               {receiptDataList.length > 1 && (
-                <Pagination className="mt-4 mb-2">
+                <Pagination className="mt-4 mb-2 pagination-hide-export">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious

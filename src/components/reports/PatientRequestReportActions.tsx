@@ -1,8 +1,7 @@
 
-import React, { useRef } from "react";
+import React from "react";
 import { toast } from "@/hooks/use-toast";
-import { FileText, LogOut } from "lucide-react";
-import html2canvas from "html2canvas";
+import { FileText, LogOut, Download } from "lucide-react";
 
 interface Props {
   onExportPDF: () => void;
@@ -17,14 +16,14 @@ export default function PatientRequestReportActions({
   return (
     <div className="flex gap-3 justify-end items-center mb-3 px-1">
       <button
-        className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded shadow hover:bg-blue-100 transition group disabled:opacity-60"
+        className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded shadow hover:bg-red-100 transition group disabled:opacity-60"
         onClick={onExportPDF}
         disabled={isExportDisabled}
         title="Export PDF"
         type="button"
       >
-        <FileText className="text-rose-500 group-hover:text-rose-700" size={18} />
-        <span className="text-sm font-semibold text-rose-600">Export PDF</span>
+        <Download className="text-red-500 group-hover:text-red-700" size={18} />
+        <span className="text-sm font-semibold text-red-600">Export PDF</span>
       </button>
       <button
         className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded shadow hover:bg-yellow-100 transition group disabled:opacity-60"
@@ -53,4 +52,3 @@ export default function PatientRequestReportActions({
     </div>
   );
 }
-
