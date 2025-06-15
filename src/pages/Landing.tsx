@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VolunteerModal from "@/components/modals/VolunteerModal";
+import { supabase } from "@/integrations/supabase/client";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -153,7 +154,7 @@ const Landing = () => {
     try {
       // Optional: allow easy override for test/dev
       const amount = 5000; // $50 in cents
-      const { data, error } = await window.supabase.functions.invoke("create-payment", {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
         body: { amount, currency: "usd" },
       });
 
