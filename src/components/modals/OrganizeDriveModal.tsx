@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
 interface OrganizeDriveModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
   isOpen,
   onClose
@@ -77,9 +80,10 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
       onClose();
     }
   };
-  return <Dialog open={isOpen} onOpenChange={v => {
-    if (!v) onClose();
-  }}>
+  return (
+    <Dialog open={isOpen} onOpenChange={v => {
+      if (!v) onClose();
+    }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-0 px-[57px]">
         <DialogHeader>
           <DialogTitle>Organize a Blood Drive</DialogTitle>
@@ -87,7 +91,7 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
             Would you like to organize a blood drive at your school, company, or community center? Fill out the form below and our team will contact you soon.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-0 h-full">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           {/* Scrollable form fields */}
           <div className="flex-1 overflow-y-auto space-y-4 py-2">
             <div>
@@ -119,8 +123,8 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
               <Textarea id="additional_info" name="additional_info" value={form.additional_info} onChange={handleChange} />
             </div>
           </div>
-          {/* Sticky footer */}
-          <div className="sticky bottom-0 left-0 w-full bg-white/95 border-t border-gray-200 px-0 py-4 z-10 flex gap-2">
+          {/* Static footer at the END of the form */}
+          <div className="w-full bg-white/95 border-t border-gray-200 px-0 py-4 flex gap-2 mt-4">
             <Button type="submit" className="bg-blood text-white min-w-[120px]" disabled={loading}>
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
@@ -132,6 +136,8 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
           </div>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default OrganizeDriveModal;
