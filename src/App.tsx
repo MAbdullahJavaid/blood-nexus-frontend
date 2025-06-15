@@ -24,7 +24,6 @@ import DonorScreening from "./pages/DonorScreening";
 import DonorBleedSummary from "./pages/DonorBleedSummary";
 import BagBleedSummary from "./pages/BagBleedSummary";
 import BloodIssueRecord from "./pages/BloodIssueRecord";
-import DonationsReport from "@/components/reports/DonationsReport";
 
 const queryClient = new QueryClient();
 
@@ -46,14 +45,6 @@ const App = () => (
                   <Dashboard />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
-              path="/reports/admin/donations"
-              element={
-                <ProtectedRoute>
-                  <DonationsReport />
-                </ProtectedRoute>
-              }
             />
             <Route 
               path="/reports/reception/patient-request" 
