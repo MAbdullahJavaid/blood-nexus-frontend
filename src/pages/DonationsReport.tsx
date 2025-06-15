@@ -4,7 +4,7 @@ import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { file as File } from "lucide-react";
+import { File } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "@/hooks/use-toast";
