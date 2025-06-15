@@ -81,6 +81,42 @@ export type Database = {
           },
         ]
       }
+      blood_drive_requests: {
+        Row: {
+          additional_info: string | null
+          contact_email: string
+          contact_name: string
+          created_at: string
+          date_preference: string | null
+          id: string
+          location: string
+          org_name: string | null
+          phone: string
+        }
+        Insert: {
+          additional_info?: string | null
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          date_preference?: string | null
+          id?: string
+          location: string
+          org_name?: string | null
+          phone: string
+        }
+        Update: {
+          additional_info?: string | null
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          date_preference?: string | null
+          id?: string
+          location?: string
+          org_name?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
       blood_inventory: {
         Row: {
           bag_id: string

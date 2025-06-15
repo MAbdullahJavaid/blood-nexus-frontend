@@ -1,6 +1,14 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +39,6 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simple required fields validation
     if (!form.contact_name || !form.contact_email || !form.phone || !form.location) {
       toast({
         title: "Missing required fields",
@@ -42,17 +49,27 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
       return;
     }
 
-    const { error } = await supabase.from("blood_drive_requests").insert([
-      {
-        contact_name: form.contact_name,
-        contact_email: form.contact_email,
-        phone: form.phone,
-        org_name: form.org_name,
-        date_preference: form.date_preference,
-        location: form.location,
-        additional_info: form.additional_info,
-      }
-    ]);
+    // date_preference in DB is a date, use null if blank
+    const date_for_db =
+      form.date_preference && form.date_preference.length > 0
+        ? form.date_preference
+        : null;
+
+    // Insert, explicitly providing types so TS will not error
+    const { error } = await supabase
+      .from("blood_drive_requests")
+      .insert([
+        {
+          contact_name: form.contact_name,
+          contact_email: form.contact_email,
+          phone: form.phone,
+          org_name: form.org_name || null,
+          date_preference: date_for_db,
+          location: form.location,
+          additional_info: form.additional_info || null,
+        }
+      ]);
+
     setLoading(false);
     if (error) {
       toast({
