@@ -94,7 +94,7 @@ const Landing = () => {
     {
       name: "AbuBakar Kamal",
       story: "I believe every person can make a difference. By donating blood, I want to bring hope and life to children who are bravely fighting their battles.",
-      image: "/lovable-uploads/4a4c5f73-402c-4a91-9aa8-66f410b287ce.png",
+      image: "/lovable-uploads/e51ddfef-e651-41e9-a437-0457ac0338c2.png",
       donations: "10+ donations"
     },
     {
