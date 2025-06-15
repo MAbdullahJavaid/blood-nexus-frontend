@@ -1,10 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Mail, CalendarDays, CircleCheck, CircleX } from "lucide-react";
+import DonationsReportFilter from "./DonationsReportFilter";
 
 type Donation = {
   id: string;
@@ -38,18 +40,29 @@ function statusBadge(status: string) {
 }
 
 export default function DonationsReport() {
-  // Fetch all donations
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["all-donations-report"],
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
+  // Fetch donations, optionally filtered by date range
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
+    queryKey: ["donations-report", fromDate, toDate],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("donations")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("donations").select("*").order("created_at", { ascending: false });
+
+      if (fromDate) query = query.gte("created_at", fromDate + "T00:00:00.000Z");
+      if (toDate) query = query.lte("created_at", toDate + "T23:59:59.999Z");
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Donation[];
     }
   });
+
+  const handleFilterApply = (from: string, to: string) => {
+    setFromDate(from);
+    setToDate(to);
+    // The query will refetch automatically because keys changed
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -57,16 +70,20 @@ export default function DonationsReport() {
         <DollarSign className="text-blood" />
         Donations Report
       </h2>
+
+      {/* Filter Panel */}
+      <DonationsReportFilter onApply={handleFilterApply} loading={isLoading || isRefetching} />
+
       {isLoading ? (
-        <p className="text-gray-500">Loading donations...</p>
+        <p className="text-gray-500 mt-6">Loading donations...</p>
       ) : error ? (
-        <div className="text-red-500">Failed to load donations.</div>
+        <div className="text-red-500 mt-6">Failed to load donations.</div>
       ) : !data || data.length === 0 ? (
-        <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 shadow text-center">
-          No donations found.
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 shadow text-center mt-6">
+          No donations found{fromDate && toDate ? " for selected date range." : "."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mt-6">
           {data.map(donation => (
             <Card key={donation.id} className={cn(
               "shadow-lg border border-border hover:shadow-2xl transition-shadow duration-200 hover:scale-105", 
@@ -101,4 +118,3 @@ export default function DonationsReport() {
     </div>
   );
 }
-
