@@ -1,26 +1,18 @@
-
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
 interface OrganizeDriveModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose }) => {
+const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({
+  isOpen,
+  onClose
+}) => {
   const [form, setForm] = useState({
     contact_name: "",
     contact_email: "",
@@ -28,14 +20,15 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
     org_name: "",
     date_preference: "",
     location: "",
-    additional_info: "",
+    additional_info: ""
   });
   const [loading, setLoading] = useState(false);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,41 +36,34 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
       toast({
         title: "Missing required fields",
         description: "Please fill in your name, email, phone, and location.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setLoading(false);
       return;
     }
-
-    const date_for_db = form.date_preference && form.date_preference.length > 0
-      ? form.date_preference
-      : null;
-
-    const { error } = await supabase
-      .from("blood_drive_requests")
-      .insert([
-        {
-          contact_name: form.contact_name,
-          contact_email: form.contact_email,
-          phone: form.phone,
-          org_name: form.org_name || null,
-          date_preference: date_for_db,
-          location: form.location,
-          additional_info: form.additional_info || null,
-        }
-      ]);
-
+    const date_for_db = form.date_preference && form.date_preference.length > 0 ? form.date_preference : null;
+    const {
+      error
+    } = await supabase.from("blood_drive_requests").insert([{
+      contact_name: form.contact_name,
+      contact_email: form.contact_email,
+      phone: form.phone,
+      org_name: form.org_name || null,
+      date_preference: date_for_db,
+      location: form.location,
+      additional_info: form.additional_info || null
+    }]);
     setLoading(false);
     if (error) {
       toast({
         title: "Error submitting request",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } else {
       toast({
         title: "Blood drive request submitted!",
-        description: "Our team will reach out to you shortly. Thank you for supporting the mission.",
+        description: "Our team will reach out to you shortly. Thank you for supporting the mission."
       });
       setForm({
         contact_name: "",
@@ -86,15 +72,15 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
         org_name: "",
         date_preference: "",
         location: "",
-        additional_info: "",
+        additional_info: ""
       });
       onClose();
     }
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+  return <Dialog open={isOpen} onOpenChange={v => {
+    if (!v) onClose();
+  }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-0 px-[57px]">
         <DialogHeader>
           <DialogTitle>Organize a Blood Drive</DialogTitle>
           <DialogDescription>
@@ -146,8 +132,6 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default OrganizeDriveModal;
