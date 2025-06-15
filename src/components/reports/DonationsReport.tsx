@@ -1,10 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter, TableCaption } from "@/components/ui/table";
 import { DollarSign, Mail, CalendarDays, CircleCheck, CircleX } from "lucide-react";
 import DonationsReportFilter from "./DonationsReportFilter";
 
@@ -64,6 +64,14 @@ export default function DonationsReport() {
     // The query will refetch automatically because keys changed
   };
 
+  // Calculate grand total using useMemo for efficiency
+  const grandTotal = useMemo(() => {
+    if (!data || data.length === 0) return 0;
+    return data.reduce((acc, d) => acc + (d.amount || 0), 0);
+  }, [data]);
+
+  const currency = data && data.length > 0 ? data[0].currency : "USD";
+
   return (
     <div className="max-w-5xl mx-auto">
       <h2 className="text-3xl font-bold mb-6 flex gap-3 items-center">
@@ -83,37 +91,62 @@ export default function DonationsReport() {
           No donations found{fromDate && toDate ? " for selected date range." : "."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mt-6">
-          {data.map(donation => (
-            <Card key={donation.id} className={cn(
-              "shadow-lg border border-border hover:shadow-2xl transition-shadow duration-200 hover:scale-105", 
-              donation.status === "paid" ? "border-green-200" : donation.status === "pending" ? "border-yellow-200" : "border-gray-200"
-            )}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  {statusBadge(donation.status)}
-                  <span className="text-xs text-gray-400 flex items-center">
-                    <CalendarDays className="w-4 h-4 mr-1 inline" />
-                    {new Date(donation.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <CardTitle className="mt-4 flex flex-row items-center gap-2 font-bold text-lg">
-                  <DollarSign className="text-green-600" />
-                  {formatAmount(donation.amount, donation.currency)}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm pt-1">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="font-mono break-all">{donation.email}</span>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Donation&nbsp;ID: <span className="font-mono">{donation.id.slice(0, 8)}...</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card className="mt-6 shadow-md border border-border overflow-x-auto">
+          <Table>
+            <TableCaption>
+              Showing {data.length} donations
+              {fromDate && toDate
+                ? ` from ${fromDate} to ${toDate}`
+                : ""}
+              .
+            </TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>#</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Donation ID</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((donation, i) => (
+                <TableRow key={donation.id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{statusBadge(donation.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <CalendarDays className="w-4 h-4 text-gray-400" />
+                      <span>{new Date(donation.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono font-semibold">
+                    {formatAmount(donation.amount, donation.currency)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="font-mono break-all">{donation.email}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs">{donation.id.slice(0, 8)}...</span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={3} className="text-right font-bold uppercase tracking-wider">
+                  Grand Total
+                </TableCell>
+                <TableCell className="font-bold text-green-700">{formatAmount(grandTotal, currency)}</TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </Card>
       )}
     </div>
   );
