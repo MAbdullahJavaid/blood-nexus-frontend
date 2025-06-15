@@ -98,7 +98,7 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
   return (
     <Dialog open={isOpen} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent
-        className="flex flex-col max-h-[95vh] sm:max-h-[85vh] h-[95vh] sm:h-[85vh] p-0"
+        className="max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden"
         style={{ padding: 0 }}
       >
         <DialogHeader className="px-6 pt-6 pb-2">
@@ -107,9 +107,9 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
             Would you like to organize a blood drive at your school, company, or community center? Fill out the form below and our team will contact you soon.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           {/* Scrollable form body */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="contact_name">Your Name *</label>
               <Input id="contact_name" name="contact_name" value={form.contact_name} onChange={handleChange} required />
@@ -140,7 +140,7 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
             </div>
           </div>
           {/* Sticky footer */}
-          <DialogFooter className="sticky bottom-0 left-0 bg-white/95 border-t border-gray-200 px-6 py-4 z-10 flex-shrink-0">
+          <DialogFooter className="sticky bottom-0 bg-white/95 border-t border-gray-200 px-6 py-4 z-10 flex-shrink-0">
             <Button type="submit" className="bg-blood text-white" disabled={loading}>
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
