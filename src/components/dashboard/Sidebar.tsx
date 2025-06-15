@@ -28,6 +28,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import BloodDriveFilterModal from "@/components/modals/BloodDriveFilterModal";
 
 type SidebarItemProps = {
   icon: React.ElementType;
@@ -67,6 +68,9 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     bds?: boolean;
     lab?: boolean;
   }>({});
+
+  // State to control the filter modal
+  const [bloodDriveFilterOpen, setBloodDriveFilterOpen] = useState(false);
 
   const handleNavigate = (path: string) => {
     setActivePage(path);
@@ -116,6 +120,13 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     ? user.username.replace(/@gmail\.com$/, "")
     : "";
 
+  // For demonstration: You could add real filter logic here later.
+  const handleBloodDriveFilterApply = (date: string) => {
+    // TODO: Call a fetch or context/filter function with `date`
+    // For now just log:
+    console.log("Apply Blood Drive Date Filter:", date);
+  };
+
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-border flex flex-col">
       <div className="p-4 flex items-center gap-3">
@@ -162,10 +173,11 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   label="Test Information" 
                   onClick={() => handleFormClick('testInformation')}
                 />
+                {/* CHANGE: Open Filter Modal */}
                 <SidebarItem 
                   icon={DropletIcon}
                   label="Blood Drive"
-                  onClick={() => handleFormClick('bloodDrive')}
+                  onClick={() => setBloodDriveFilterOpen(true)}
                 />
                 <SidebarItem
                   icon={UsersIcon}
@@ -350,6 +362,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
           Logout
         </Button>
       </div>
+      {/* Blood Drive Filter Modal */}
+      <BloodDriveFilterModal
+        isOpen={bloodDriveFilterOpen}
+        onClose={() => setBloodDriveFilterOpen(false)}
+        onApply={handleBloodDriveFilterApply}
+      />
     </div>
   );
 }
