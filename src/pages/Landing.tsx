@@ -92,6 +92,12 @@ const Landing = () => {
 
   const donorStories = [
     {
+      name: "AbuBakar Kamal",
+      story: "I believe every person can make a difference. By donating blood, I want to bring hope and life to children who are bravely fighting their battles.",
+      image: "/lovable-uploads/4a4c5f73-402c-4a91-9aa8-66f410b287ce.png",
+      donations: "10+ donations"
+    },
+    {
       name: "Ali Hussnain",
       story: "I'm proud to be a regular donor. Each donation is my way of supporting children with blood disorders and giving them hope.",
       image: "/lovable-uploads/92a7b197-5179-4c60-b1b3-7998ebc97d44.png",
