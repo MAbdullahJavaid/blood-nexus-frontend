@@ -94,13 +94,13 @@ const Landing = () => {
     {
       name: "Ali Hussnain",
       story: "I'm proud to be a regular donor. Each donation is my way of supporting children with blood disorders and giving them hope.",
-      image: "/lovable-uploads/4c117c44-fc87-4900-a712-aeee276ba1a4.png",
+      image: "/lovable-uploads/92a7b197-5179-4c60-b1b3-7998ebc97d44.png",
       donations: "20+ donations"
     },
     {
       name: "Ahmed Hassan", 
       story: "Seeing the impact of blood donation motivates me to keep giving. Together, we can change lives and create brighter futures.",
-      image: "/lovable-uploads/f69c9119-a84c-4ec2-b9cc-1340589385ca.png",
+      image: "/lovable-uploads/598a61c9-0766-4378-81a0-7b46ee766a04.png",
       donations: "15+ donations"
     },
     {
