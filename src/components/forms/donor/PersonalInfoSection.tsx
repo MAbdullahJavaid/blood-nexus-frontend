@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchIcon } from "lucide-react";
+import { ShadcnDatePicker } from "@/components/ui/ShadcnDatePicker";
 import { useDonorForm } from "./DonorFormContext";
 import { useEffect } from "react";
 
@@ -27,40 +28,54 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }
   }, [isSearchEnabled, isEditable, isDeleting, setIsSearchModalOpen]);
 
   return (
-    <div className="grid grid-cols-2 gap-4 mb-4">
-      <div>
-        <Label htmlFor="regNo" className="mb-1 block">Reg No:</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            id="regNo"
-            value={donorData.regNo}
-            onChange={(e) => handleInputChange("regNo", e.target.value)}
-            className="h-9"
+    <div className="space-y-4 mb-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="regNo" className="mb-1 block">Reg No:</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="regNo"
+              value={donorData.regNo}
+              onChange={(e) => handleInputChange("regNo", e.target.value)}
+              className="h-9"
+              disabled={!isEditable || isSubmitting}
+              placeholder="Enter registration number"
+            />
+            {(isSearchEnabled || isDeleting) && (
+              <button 
+                type="button"
+                onClick={() => setIsSearchModalOpen(true)}
+                className="bg-gray-200 p-1 rounded hover:bg-gray-300"
+                disabled={isSubmitting}
+              >
+                <SearchIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="name" className="mb-1 block">Name:</Label>
+          <Input 
+            id="name" 
+            value={donorData.name} 
+            onChange={(e) => handleInputChange("name", e.target.value)}
+            className="h-9" 
             disabled={!isEditable || isSubmitting}
-            placeholder="Enter registration number"
+            placeholder="Enter donor name"
           />
-          {(isSearchEnabled || isDeleting) && (
-            <button 
-              type="button"
-              onClick={() => setIsSearchModalOpen(true)}
-              className="bg-gray-200 p-1 rounded hover:bg-gray-300"
-              disabled={isSubmitting}
-            >
-              <SearchIcon className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
-      <div>
-        <Label htmlFor="name" className="mb-1 block">Name:</Label>
-        <Input 
-          id="name" 
-          value={donorData.name} 
-          onChange={(e) => handleInputChange("name", e.target.value)}
-          className="h-9" 
-          disabled={!isEditable || isSubmitting}
-          placeholder="Enter donor name"
-        />
+      
+      <div className="grid grid-cols-1">
+        <div>
+          <Label htmlFor="date" className="mb-1 block">Date:</Label>
+          <ShadcnDatePicker
+            value={donorData.date}
+            onChange={(value) => handleInputChange("date", value)}
+            disabled={!isEditable || isSubmitting}
+            placeholder="Select registration date"
+          />
+        </div>
       </div>
     </div>
   );
