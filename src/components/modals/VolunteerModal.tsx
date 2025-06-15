@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Heart, User, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VolunteerModalProps {
   isOpen: boolean;
@@ -41,30 +42,64 @@ const VolunteerModal = ({ isOpen, onClose }: VolunteerModalProps) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const volunteerData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address || null,
+        age: formData.age ? parseInt(formData.age) : null,
+        occupation: formData.occupation || null,
+        experience: formData.experience || null,
+        availability: formData.availability || null,
+        interests: formData.interests || null,
+        motivation: formData.motivation
+      };
 
-    toast({
-      title: "Application Submitted Successfully!",
-      description: "Thank you for your interest in volunteering. Our team will contact you within 48 hours.",
-    });
+      const { error } = await supabase
+        .from('volunteers')
+        .insert([volunteerData]);
 
-    // Reset form and close modal
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      age: "",
-      occupation: "",
-      experience: "",
-      availability: "",
-      interests: "",
-      motivation: ""
-    });
-    
-    setIsSubmitting(false);
-    onClose();
+      if (error) {
+        console.error('Error submitting volunteer application:', error);
+        toast({
+          title: "Error Submitting Application",
+          description: "There was an error submitting your application. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Application Submitted Successfully!",
+        description: "Thank you for your interest in volunteering. Our team will contact you within 48 hours.",
+      });
+
+      // Reset form and close modal
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        age: "",
+        occupation: "",
+        experience: "",
+        availability: "",
+        interests: "",
+        motivation: ""
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: "Error Submitting Application",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = formData.name && formData.email && formData.phone && formData.motivation;

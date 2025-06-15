@@ -785,6 +785,54 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteers: {
+        Row: {
+          address: string | null
+          age: number | null
+          availability: string | null
+          created_at: string
+          email: string
+          experience: string | null
+          id: string
+          interests: string | null
+          motivation: string
+          name: string
+          occupation: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          availability?: string | null
+          created_at?: string
+          email: string
+          experience?: string | null
+          id?: string
+          interests?: string | null
+          motivation: string
+          name: string
+          occupation?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          availability?: string | null
+          created_at?: string
+          email?: string
+          experience?: string | null
+          id?: string
+          interests?: string | null
+          motivation?: string
+          name?: string
+          occupation?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       donors_with_combined_blood_group: {
