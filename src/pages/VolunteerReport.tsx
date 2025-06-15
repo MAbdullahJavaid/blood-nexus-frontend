@@ -1,21 +1,39 @@
 
-import React from "react";
+import React, { useState } from "react";
 import VolunteerReportFilter from "@/components/reports/VolunteerReportFilter";
+import VolunteerReportTable from "@/components/reports/VolunteerReportTable";
+import { useVolunteerReportData } from "@/hooks/useVolunteerReportData";
 import { toast } from "@/hooks/use-toast";
 
+const getDefaultFilter = () => {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), 0, 1); // Start of year
+  const to = now;
+  return { from, to };
+};
+
 const VolunteerReport = () => {
-  // Placeholder handlers for the filter actions
+  // State for selected filter date range
+  const [filter, setFilter] = useState(getDefaultFilter());
+  const { data = [], isLoading, isError, error, refetch } = useVolunteerReportData(filter);
+
+  // Handlers for filter
   const handleOk = (from: Date, to: Date) => {
+    setFilter({ from, to });
     toast({
       title: "Filter applied",
-      description: `Showing volunteers from ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`
+      description: `Showing volunteers from ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
     });
   };
   const handleCancel = () => {
+    setFilter(getDefaultFilter());
     toast({ title: "Filter canceled" });
   };
   const handleExport = () => {
-    toast({ title: "Export started", description: "This will export your filtered report." });
+    toast({
+      title: "Export started",
+      description: "This will export your filtered report. (Feature coming soon)",
+    });
   };
   const handleExit = () => {
     toast({ title: "Exited filter" });
@@ -37,15 +55,16 @@ const VolunteerReport = () => {
           onExit={handleExit}
         />
       </div>
-      {/* Placeholder for table or report results */}
-      <div className="bg-white rounded shadow p-8 max-w-xl w-full text-center">
-        <p className="text-lg text-gray-600 mb-4">
-          (Coming soon) Volunteer table or results will appear here!
-        </p>
+      <div className="bg-white rounded shadow p-6 max-w-5xl w-full">
+        <VolunteerReportTable
+          data={data}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+        />
       </div>
     </div>
   );
 };
 
 export default VolunteerReport;
-
