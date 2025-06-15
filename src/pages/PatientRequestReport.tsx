@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/pagination";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { format } from "date-fns";
 
 const PatientRequestReport = () => {
   const [receiptDataList, setReceiptDataList] = useState<any[]>([]);
@@ -73,57 +75,106 @@ const PatientRequestReport = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
   };
 
-  // EXPORT PDF (print)
-  const handleExportPDF = () => {
+  // EXPORT PDF using the same approach as other reports
+  const handleExportPDF = async () => {
     if (!receiptDataList.length) {
       toast({ title: "Nothing to export", description: "No report data loaded.", variant: "destructive" });
       return;
     }
-    // Print only the visible report div
-    // Open a new window with just the content to be printed
-    const reportNode = reportContainerRef.current;
-    if (!reportNode) return;
-    const printWindow = window.open("", "_blank", "width=900,height=1200");
-    if (!printWindow) {
-      toast({ title: "Pop-up Blocked", description: "Please allow pop-ups to export the PDF.", variant: "destructive" });
-      return;
+
+    try {
+      toast({ title: "Exporting", description: "Generating PDF, please wait..." });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      
+      for (let i = 0; i < receiptDataList.length; i++) {
+        if (i > 0) pdf.addPage();
+        
+        // Create a temporary container for each report
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.style.width = '210mm';
+        tempContainer.style.background = 'white';
+        tempContainer.innerHTML = `
+          <div style="padding: 20px;">
+            ${document.querySelector(`#patient-receipt-${i}`)?.innerHTML || ''}
+          </div>
+        `;
+        document.body.appendChild(tempContainer);
+
+        const canvas = await html2canvas(tempContainer, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+        
+        // Clean up
+        document.body.removeChild(tempContainer);
+      }
+      
+      pdf.save(`Patient_Request_Report_${format(new Date(), 'dd-MM-yyyy')}.pdf`);
+      toast({ title: "PDF Exported", description: "PDF exported successfully!" });
+    } catch (err) {
+      console.error("PDF Export Error:", err);
+      toast({ title: "Export Error", description: "Could not export as PDF.", variant: "destructive" });
     }
-    printWindow.document.write(`
-      <html>
-      <head>
-        <title>Patient Request Report</title>
-        <style>
-          body { background: white; margin: 0; }
-          .border { box-shadow: none!important; }
-          .page-break { page-break-after: always; }
-        </style>
-      </head>
-      <body>${reportNode.innerHTML}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    toast({ title: "PDF Export", description: "Print dialog opened for PDF export. Use Save as PDF." });
   };
 
-  // EXPORT JPEG
+  // EXPORT JPEG using the same approach as other reports
   const handleExportJPEG = async () => {
     if (!receiptDataList.length) {
       toast({ title: "Nothing to export", description: "No report data loaded.", variant: "destructive" });
       return;
     }
-    const reportNode = reportContainerRef.current;
-    if (!reportNode) return;
+
     try {
       toast({ title: "Exporting", description: "Generating JPEG, please wait..." });
-      const canvas = await html2canvas(reportNode, { useCORS: true, backgroundColor: "#fff", scale: 2 });
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/jpeg", 0.94);
-      link.download = "PatientRequestReport.jpg";
-      link.click();
-      toast({ title: "JPEG Saved", description: "JPEG exported successfully!" });
+      
+      for (let i = 0; i < receiptDataList.length; i++) {
+        // Create a temporary container for each report
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.style.width = '210mm';
+        tempContainer.style.background = 'white';
+        tempContainer.innerHTML = `
+          <div style="padding: 20px;">
+            ${document.querySelector(`#patient-receipt-${i}`)?.innerHTML || ''}
+          </div>
+        `;
+        document.body.appendChild(tempContainer);
+
+        const canvas = await html2canvas(tempContainer, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        const link = document.createElement('a');
+        link.download = `Patient_Request_${receiptDataList[i].document_no}_${format(new Date(), 'dd-MM-yyyy')}.jpeg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(tempContainer);
+      }
+      
+      toast({ title: "JPEG Exported", description: "JPEG exported successfully!" });
     } catch (err) {
+      console.error("JPEG Export Error:", err);
       toast({ title: "Export Error", description: "Could not export as JPEG.", variant: "destructive" });
     }
   };
@@ -156,7 +207,9 @@ const PatientRequestReport = () => {
           {receiptDataList.length > 0 && !loading && (
             <>
               <div ref={reportContainerRef}>
-                <PatientRequestReceiptDisplay invoice={receiptDataList[currentPage]} />
+                <div id={`patient-receipt-${currentPage}`}>
+                  <PatientRequestReceiptDisplay invoice={receiptDataList[currentPage]} />
+                </div>
               </div>
               {receiptDataList.length > 1 && (
                 <Pagination className="mt-4 mb-2">
