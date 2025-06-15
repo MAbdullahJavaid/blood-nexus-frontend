@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
@@ -15,19 +14,18 @@ type Donation = {
   email: string;
 };
 
-function fetchDonations(from: Date, to: Date): Promise<Donation[]> {
+async function fetchDonations(from: Date, to: Date): Promise<Donation[]> {
   // Fetches all 'paid' donations within the date range (inclusive)
-  return supabase
+  const { data, error } = await supabase
     .from("donations")
     .select("*")
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString())
     .eq("status", "paid")
-    .order("created_at", { ascending: true })
-    .then(({ data, error }) => {
-      if (error) throw error;
-      return data as Donation[];
-    });
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return data as Donation[];
 }
 
 function formatDate(dateString: string): string {
