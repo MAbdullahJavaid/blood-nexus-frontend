@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,10 +26,43 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [currentStory, setCurrentStory] = useState(0);
   const [currentDonor, setCurrentDonor] = useState(0);
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
+
+  // Watch for donation result in URL and show toast
+  useEffect(() => {
+    // Parse the search params
+    const params = new URLSearchParams(location.search);
+    const result = params.get("donation");
+
+    if (result === "success") {
+      toast({
+        title: "Thank you for your donation!",
+        description: "Your support will help provide life-saving care to children.",
+      });
+    } else if (result === "canceled") {
+      toast({
+        title: "Donation canceled",
+        description: "You canceled the donation process. No payment was made.",
+        variant: "destructive",
+      });
+    }
+
+    // Clean up the URL (remove the param if present)
+    if (result) {
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete("donation");
+      const newUrl =
+        location.pathname +
+        (newParams.toString() ? `?${newParams.toString()}` : "");
+      window.history.replaceState({}, "", newUrl);
+    }
+    // only run this effect on mount or when location.search changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const patientStories = [
     {
