@@ -16,7 +16,8 @@ import {
   SettingsIcon,
   ListTodoIcon,
   BarChartIcon,
-  FileTextIcon
+  FileTextIcon,
+  UsersIcon // for Volunteer
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -160,6 +161,16 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   icon={TestTubeIcon} 
                   label="Test Information" 
                   onClick={() => handleFormClick('testInformation')}
+                />
+                <SidebarItem 
+                  icon={DropletIcon}
+                  label="Blood Drive"
+                  onClick={() => handleFormClick('bloodDrive')}
+                />
+                <SidebarItem
+                  icon={UsersIcon}
+                  label="Volunteer"
+                  onClick={() => handleFormClick('volunteer')}
                 />
                 <SidebarItem icon={MailIcon} label="Thanks Letter" />
               </div>
