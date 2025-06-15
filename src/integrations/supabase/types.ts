@@ -1069,7 +1069,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "lab" | "bds" | "reception"
+      app_role: "lab" | "bds" | "reception" | "admin"
       blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       blood_status: "Available" | "Reserved" | "Used" | "Expired" | "Discarded"
     }
@@ -1187,7 +1187,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["lab", "bds", "reception"],
+      app_role: ["lab", "bds", "reception", "admin"],
       blood_group: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       blood_status: ["Available", "Reserved", "Used", "Expired", "Discarded"],
     },
