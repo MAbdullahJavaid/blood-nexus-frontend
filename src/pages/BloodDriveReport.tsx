@@ -1,10 +1,13 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BloodDriveReportFilter from "@/components/reports/BloodDriveReportFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { Download } from "lucide-react";
 
 type BloodDriveRequest = {
   id: string;
@@ -116,6 +119,84 @@ function exportCsvWithHeadings(
   });
 }
 
+// PDF Export
+async function exportPdf(reportRef: React.RefObject<HTMLDivElement>, from: Date, to: Date) {
+  const element = reportRef.current;
+  if (!element) {
+    toast({
+      title: "Export Error",
+      description: "Couldn't find report section for export.",
+      variant: "destructive"
+    });
+    return;
+  }
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const period = `_${from.toLocaleDateString("en-GB").replace(/\//g, "-")}_to_${to.toLocaleDateString("en-GB").replace(/\//g, "-")}`;
+    pdf.save(`blood_drive_report${period}.pdf`);
+    toast({ title: "Exported!", description: "Report exported as PDF." });
+  } catch (e) {
+    toast({
+      title: "Export Error",
+      description: "Failed to export PDF.",
+      variant: "destructive"
+    });
+  }
+}
+
+// JPEG Export
+async function exportJpeg(reportRef: React.RefObject<HTMLDivElement>, from: Date, to: Date) {
+  const element = reportRef.current;
+  if (!element) {
+    toast({
+      title: "Export Error",
+      description: "Couldn't find report section for export.",
+      variant: "destructive"
+    });
+    return;
+  }
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    const link = document.createElement("a");
+    const period = `_${from.toLocaleDateString("en-GB").replace(/\//g, "-")}_to_${to.toLocaleDateString("en-GB").replace(/\//g, "-")}`;
+    link.download = `blood_drive_report${period}.jpeg`;
+    link.href = canvas.toDataURL("image/jpeg", 0.95);
+    link.click();
+    toast({ title: "Exported!", description: "Report exported as JPEG." });
+  } catch (e) {
+    toast({
+      title: "Export Error",
+      description: "Failed to export JPEG.",
+      variant: "destructive"
+    });
+  }
+}
+
 export default function BloodDriveReport() {
   // Fiscal year defaults
   const fiscalStart = new Date(2024, 6, 1); // July 1, 2024
@@ -125,6 +206,8 @@ export default function BloodDriveReport() {
     from: fiscalStart,
     to: fiscalEnd,
   });
+
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const { data: drives, isFetching, error } = useQuery({
     queryKey: ["blood-drive-report", dateRange.from, dateRange.to],
@@ -145,8 +228,14 @@ export default function BloodDriveReport() {
       title: "Filter cancelled"
     });
   }
-  function handleExport() {
+  function handleExportCSV() {
     exportCsvWithHeadings(drives, dateRange.from, dateRange.to);
+  }
+  function handleExportPDF() {
+    exportPdf(reportRef, dateRange.from, dateRange.to);
+  }
+  function handleExportJPEG() {
+    exportJpeg(reportRef, dateRange.from, dateRange.to);
   }
   function handleExit() {
     window.history.back();
@@ -163,10 +252,26 @@ export default function BloodDriveReport() {
       <BloodDriveReportFilter
         onOk={handleOk}
         onCancel={handleCancel}
-        onExport={handleExport}
+        onExport={handleExportCSV}
         onExit={handleExit}
       />
-      <div className="w-full max-w-4xl bg-white rounded shadow border mt-8 p-6">
+      {/* Export buttons - PDF, JPEG, CSV */}
+      <div className="w-full max-w-4xl flex justify-end gap-2 mb-2">
+        <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={handleExportCSV}>
+          <Download className="w-4 h-4" />
+          CSV
+        </Button>
+        <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={handleExportPDF}>
+          <Download className="w-4 h-4" />
+          PDF
+        </Button>
+        <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={handleExportJPEG}>
+          <Download className="w-4 h-4" />
+          JPEG
+        </Button>
+      </div>
+      {/* Report Table for export */}
+      <div ref={reportRef} className="w-full max-w-4xl bg-white rounded shadow border mt-2 p-6">
         <Table>
           <TableCaption className="mb-4">
             {isFetching && <span>Loading blood drive requests...</span>}
