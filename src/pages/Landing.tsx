@@ -110,9 +110,9 @@ const Landing = () => {
       donations: "15+ donations"
     },
     {
-      name: "Sarah Johnson",
+      name: "Junaid",
       story: "I've been donating blood for over 10 years. Knowing that my donations help children with blood disorders fills my heart with joy. Every drop makes a difference.",
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop",
+      image: "/lovable-uploads/4d14b0f7-5ff9-4a60-b530-403bb8afb485.png",
       donations: "50+ donations"
     },
     {
