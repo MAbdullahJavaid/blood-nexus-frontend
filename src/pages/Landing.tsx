@@ -149,11 +149,39 @@ const Landing = () => {
     setCurrentDonor((prev) => (prev - 1 + donorStories.length) % donorStories.length);
   };
 
-  const handleDonate = () => {
-    toast({
-      title: "Thank you for your interest!",
-      description: "Donation portal will be available soon. Please contact us for immediate assistance.",
-    });
+  const handleDonate = async () => {
+    try {
+      // Optional: allow easy override for test/dev
+      const amount = 5000; // $50 in cents
+      const { data, error } = await window.supabase.functions.invoke("create-payment", {
+        body: { amount, currency: "usd" },
+      });
+
+      if (error) {
+        toast({
+          title: "Error connecting to payment gateway",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      } else {
+        toast({
+          title: "Error launching Stripe checkout",
+          description: "Unable to start payment session. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error launching Stripe checkout",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVolunteer = () => {
