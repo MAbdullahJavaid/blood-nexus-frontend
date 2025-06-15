@@ -156,6 +156,12 @@ const Landing = () => {
       story: "Donating blood is more than just giving; it's about creating hope. Every donation brings these brave children one step closer to their dreams.",
       image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop",
       donations: "45+ donations"
+    },
+    {
+      name: "Nayyer",
+      story: "Donating blood is a gift of life. By giving, we create hope and healthier futures for children in need.",
+      image: "/lovable-uploads/51ca8b54-9d1b-4f95-ab33-e606a913781d.png",
+      donations: "5+ donations"
     }
   ];
 
