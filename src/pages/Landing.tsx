@@ -18,8 +18,7 @@ import {
   Droplets,
   Stethoscope,
   UserCheck,
-  Calendar,
-  Whatsapp
+  Calendar
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VolunteerModal from "@/components/modals/VolunteerModal";
@@ -687,7 +686,8 @@ const Landing = () => {
           onClick={handleWhatsAppClick}
           aria-label="Chat on WhatsApp"
         >
-          <Whatsapp className="h-5 w-5" />
+          {/* Replace Whatsapp icon with Phone icon */}
+          <Phone className="h-5 w-5" />
         </Button>
         <Button 
           size="lg"
