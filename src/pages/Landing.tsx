@@ -401,7 +401,7 @@ const Landing = () => {
       </section>
 
       {/* Services */}
-      <section className="py-20">
+      <section className="py-20" id="services-section">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Services</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -679,8 +679,8 @@ const Landing = () => {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {/* WhatsApp floating button - image ONLY as button */}
         <img
-          src="/whatsapp.png"
-          alt="WhatsApp"
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJgAAACYCAMAAABL1r1/AAAAVFBMVEX///8AAAB8fHxsbGzX19d2dnZmZmZJSUlAQECQkJDd3d1TU1O2trZcXFzt7e1sbGwaGhpMTEwgICBYWFhOTk6ioqKEhIRbW1tGRkaCgoJ1dXVbW1t2dnZbW1vHICo0AAABt0lEQVR4nO2YTWrDMAxA6QEJ3yN9/7zcRUGpMEABdOJG57GeqlnDK6Acf+V6wmtSmKDAK7KOdLR53bLCQnNsJ6v6wa133MGDZB4ymPB2pRx9eFjDYy81Gxk6FqwmNJcYuRqRpqPiaTm0YKY1TGy6nwrJDfgfk04zUxK3IwXQk0h6nCwzEE8jRyUwr3kT6n5VUKeA1Q/fQnT0rg7rFd++RvoxnWKM0KM9MKOf+A4zZQSTyK2BjEXhy3TPRhAZ8GoGSqvcoA0ByK8t8A8ThK1E6tXZ+8OSztNiom+wdmd15UmR0HuQXOtxEu+F7SU4eH8mCa3ON6mOGPoFEFay5kI878n0r98T2kq0XcrcXiJu6jojFwQ2h7N/5qCh7C1Vat7BYRlZq903wkOjhvIMkw8fs/AuuoksC3r0tQTCO8Pk9YT6AaMXa1t6M4N4wDquekOQ5rcX6xF3S1/7npfcvUhRk48vw/kbRG+jv1kAqzAJGb1ET3wAAAAASUVORK5CYII="
+          alt=""
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer border-4 border-white object-cover bg-white"
           style={{
             boxShadow: "0 2px 8px 0 rgba(0,150,0,0.18)",
@@ -691,6 +691,18 @@ const Landing = () => {
           role="button"
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") handleWhatsAppClick();
+          }}
+          onError={e => {
+            // Fallback: if the image can't load, show a green circle with a W
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+            // Add fallback node if not present
+            if (!target.nextSibling) {
+              const fallback = document.createElement("div");
+              fallback.innerText = "W";
+              fallback.style.cssText = "height:56px;width:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:bold;box-shadow:0 2px 8px 0 rgba(0,150,0,0.18);";
+              target.parentNode?.appendChild(fallback);
+            }
           }}
         />
         <Button 
