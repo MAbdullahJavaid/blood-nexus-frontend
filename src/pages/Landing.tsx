@@ -116,9 +116,9 @@ const Landing = () => {
       donations: "50+ donations"
     },
     {
-      name: "Michael Chen", 
+      name: "Usman", 
       story: "As a regular donor, I've seen firsthand how blood donations save lives. It's a small act that creates a huge impact for families in need.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      image: "/lovable-uploads/da418146-fd5b-47bc-8447-d67059e38eee.png",
       donations: "75+ donations"
     },
     {
