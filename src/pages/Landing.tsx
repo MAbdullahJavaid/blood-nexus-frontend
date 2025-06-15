@@ -483,15 +483,15 @@ const Landing = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Phone className="h-5 w-5 text-blood" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>+92 3464688765</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-blood" />
-                  <span>info@bloodcare.org</span>
+                  <span>mabdullahjaved764@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="h-5 w-5 text-blood" />
-                  <span>123 Care Street, Medical District</span>
+                  <span>123 Care Street, Gujranwala</span>
                 </div>
               </div>
             </div>
