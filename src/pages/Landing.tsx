@@ -21,12 +21,14 @@ import {
   Calendar
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import VolunteerModal from "@/components/modals/VolunteerModal";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [currentStory, setCurrentStory] = useState(0);
   const [currentDonor, setCurrentDonor] = useState(0);
+  const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
 
   const patientStories = [
     {
@@ -155,10 +157,7 @@ const Landing = () => {
   };
 
   const handleVolunteer = () => {
-    toast({
-      title: "Thank you for volunteering!",
-      description: "Our team will contact you soon with volunteer opportunities.",
-    });
+    setIsVolunteerModalOpen(true);
   };
 
   const handleOrganizeDrive = () => {
@@ -548,6 +547,12 @@ const Landing = () => {
           Donate
         </Button>
       </div>
+
+      {/* Volunteer Modal */}
+      <VolunteerModal 
+        isOpen={isVolunteerModalOpen}
+        onClose={() => setIsVolunteerModalOpen(false)}
+      />
     </div>
   );
 };
