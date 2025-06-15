@@ -49,13 +49,10 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
       return;
     }
 
-    // date_preference in DB is a date, use null if blank
-    const date_for_db =
-      form.date_preference && form.date_preference.length > 0
-        ? form.date_preference
-        : null;
+    const date_for_db = form.date_preference && form.date_preference.length > 0
+      ? form.date_preference
+      : null;
 
-    // Insert, explicitly providing types so TS will not error
     const { error } = await supabase
       .from("blood_drive_requests")
       .insert([
@@ -97,19 +94,16 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
 
   return (
     <Dialog open={isOpen} onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent
-        className="max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden"
-        style={{ padding: 0 }}
-      >
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
           <DialogTitle>Organize a Blood Drive</DialogTitle>
           <DialogDescription>
             Would you like to organize a blood drive at your school, company, or community center? Fill out the form below and our team will contact you soon.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Scrollable form body */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-0 h-full">
+          {/* Scrollable form fields */}
+          <div className="flex-1 overflow-y-auto space-y-4 py-2">
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="contact_name">Your Name *</label>
               <Input id="contact_name" name="contact_name" value={form.contact_name} onChange={handleChange} required />
@@ -140,16 +134,16 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
             </div>
           </div>
           {/* Sticky footer */}
-          <DialogFooter className="sticky bottom-0 bg-white/95 border-t border-gray-200 px-6 py-4 z-10 flex-shrink-0">
-            <Button type="submit" className="bg-blood text-white" disabled={loading}>
+          <div className="sticky bottom-0 left-0 w-full bg-white/95 border-t border-gray-200 px-0 py-4 z-10 flex gap-2">
+            <Button type="submit" className="bg-blood text-white min-w-[120px]" disabled={loading}>
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
             <DialogClose asChild>
-              <Button type="button" variant="ghost">
+              <Button type="button" variant="ghost" className="min-w-[100px]">
                 Cancel
               </Button>
             </DialogClose>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
