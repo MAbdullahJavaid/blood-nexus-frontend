@@ -47,6 +47,75 @@ function formatDateTime(dateStr: string | null): string {
   return d.toLocaleString("en-GB");
 }
 
+function exportCsvWithHeadings(
+  drives: BloodDriveRequest[] | undefined,
+  from: Date,
+  to: Date
+) {
+  if (!drives) {
+    toast({
+      title: "No Data",
+      description: "There is no data to export.",
+      variant: "destructive"
+    });
+    return;
+  }
+
+  // Report title and subtitle
+  const title = "Blood Care Foundation";
+  const subtitle = "Blood Drive Report";
+
+  // Add filter range subtitle if needed
+  const range = `From: ${from.toLocaleDateString()} To: ${to.toLocaleDateString()}`;
+
+  // Table headers
+  const headers = [
+    "#",
+    "Created At",
+    "Date Preference",
+    "Organization",
+    "Contact Name",
+    "Location",
+    "Email",
+    "Phone",
+    "Additional Info"
+  ];
+
+  // Convert each row to CSV, escaping values if needed
+  const csvRows = drives.map((drive, idx) => [
+    idx + 1,
+    formatDateTime(drive.created_at),
+    formatDate(drive.date_preference),
+    drive.org_name ?? "-",
+    drive.contact_name,
+    drive.location,
+    drive.contact_email,
+    drive.phone,
+    drive.additional_info ?? "-"
+  ]);
+
+  // Combine everything
+  let csvContent =
+    `"${title}"\r\n` +
+    `"${subtitle}"\r\n` +
+    `"${range}"\r\n` +
+    headers.map(h => `"${h}"`).join(",") + "\r\n" +
+    csvRows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+
+  // Download as file
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "blood_drive_report.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast({
+    title: "Exported!",
+    description: "Blood Drive Report exported as CSV with headings.",
+  });
+}
+
 export default function BloodDriveReport() {
   // Fiscal year defaults
   const fiscalStart = new Date(2024, 6, 1); // July 1, 2024
@@ -77,10 +146,7 @@ export default function BloodDriveReport() {
     });
   }
   function handleExport() {
-    toast({
-      title: "Export",
-      description: "Export not yet implemented."
-    });
+    exportCsvWithHeadings(drives, dateRange.from, dateRange.to);
   }
   function handleExit() {
     window.history.back();
