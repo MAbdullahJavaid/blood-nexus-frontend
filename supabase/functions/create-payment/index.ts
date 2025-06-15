@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
@@ -19,8 +18,13 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe secret key not set.");
 
-    const { amount = 5000, currency = "usd", email } = await req.json().catch(() => ({}));
-    // amount is in cents; default to $50 if not provided
+    // Accept redirectOrigin from frontend for correct redirect
+    const { amount = 5000, currency = "usd", email, redirectOrigin } = await req.json().catch(() => ({}));
+    let frontendOrigin = redirectOrigin;
+    if (!frontendOrigin) {
+      // fallback (should not happen in FE, just in case)
+      frontendOrigin = "http://localhost:3000";
+    }
 
     // Create Supabase client (for auth, optional)
     let customerEmail = email;
@@ -48,8 +52,7 @@ serve(async (req) => {
       customerId = custList.data[0].id;
     }
 
-    const { origin } = new URL(req.url);
-
+    // Use frontendOrigin for success/cancel URL!
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : customerEmail,
@@ -64,8 +67,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/?donation=success`,
-      cancel_url: `${origin}/?donation=canceled`,
+      success_url: `${frontendOrigin}/?donation=success`,
+      cancel_url: `${frontendOrigin}/?donation=canceled`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

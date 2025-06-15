@@ -185,10 +185,14 @@ const Landing = () => {
 
   const handleDonate = async () => {
     try {
-      // Optional: allow easy override for test/dev
+      // Detect the current frontend URL to use as success/cancel redirect
       const amount = 5000; // $50 in cents
+      const redirectOrigin =
+        window.location.origin ||
+        "http://localhost:3000"; // fallback for SSR
+
       const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { amount, currency: "usd" },
+        body: { amount, currency: "usd", redirectOrigin },
       });
 
       if (error) {
