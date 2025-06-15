@@ -97,43 +97,50 @@ const OrganizeDriveModal: React.FC<OrganizeDriveModalProps> = ({ isOpen, onClose
 
   return (
     <Dialog open={isOpen} onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent
+        className="max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden"
+        style={{ padding: 0 }}
+      >
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Organize a Blood Drive</DialogTitle>
           <DialogDescription>
             Would you like to organize a blood drive at your school, company, or community center? Fill out the form below and our team will contact you soon.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="contact_name">Your Name *</label>
-            <Input id="contact_name" name="contact_name" value={form.contact_name} onChange={handleChange} required />
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          {/* Scrollable form body */}
+          <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="contact_name">Your Name *</label>
+              <Input id="contact_name" name="contact_name" value={form.contact_name} onChange={handleChange} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="contact_email">Email *</label>
+              <Input id="contact_email" name="contact_email" type="email" value={form.contact_email} onChange={handleChange} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="phone">Phone *</label>
+              <Input id="phone" name="phone" value={form.phone} onChange={handleChange} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="org_name">Organization Name</label>
+              <Input id="org_name" name="org_name" value={form.org_name} onChange={handleChange} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="date_preference">Preferred Date</label>
+              <Input id="date_preference" name="date_preference" type="date" value={form.date_preference} onChange={handleChange} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="location">Location *</label>
+              <Input id="location" name="location" value={form.location} onChange={handleChange} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="additional_info">Additional Information</label>
+              <Textarea id="additional_info" name="additional_info" value={form.additional_info} onChange={handleChange} />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="contact_email">Email *</label>
-            <Input id="contact_email" name="contact_email" type="email" value={form.contact_email} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="phone">Phone *</label>
-            <Input id="phone" name="phone" value={form.phone} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="org_name">Organization Name</label>
-            <Input id="org_name" name="org_name" value={form.org_name} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="date_preference">Preferred Date</label>
-            <Input id="date_preference" name="date_preference" type="date" value={form.date_preference} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="location">Location *</label>
-            <Input id="location" name="location" value={form.location} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="additional_info">Additional Information</label>
-            <Textarea id="additional_info" name="additional_info" value={form.additional_info} onChange={handleChange} />
-          </div>
-          <DialogFooter>
+          {/* Sticky footer */}
+          <DialogFooter className="sticky bottom-0 bg-white/95 border-t border-gray-200 px-6 py-4 z-10 flex-shrink-0">
             <Button type="submit" className="bg-blood text-white" disabled={loading}>
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
