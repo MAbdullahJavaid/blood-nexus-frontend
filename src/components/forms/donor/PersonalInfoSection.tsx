@@ -29,7 +29,7 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }
 
   return (
     <div className="space-y-4 mb-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <Label htmlFor="regNo" className="mb-1 block">Reg No:</Label>
           <div className="flex items-center gap-2">
@@ -64,17 +64,16 @@ const PersonalInfoSection = ({ isEditable, isSearchEnabled, isDeleting = false }
             placeholder="Enter donor name"
           />
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1">
         <div>
           <Label htmlFor="date" className="mb-1 block">Date:</Label>
-          <ShadcnDatePicker
-            value={donorData.date}
-            onChange={(value) => handleInputChange("date", value)}
-            disabled={!isEditable || isSubmitting}
-            placeholder="Select registration date"
-          />
+          <div className="w-48">
+            <ShadcnDatePicker
+              value={donorData.date}
+              onChange={(value) => handleInputChange("date", value)}
+              disabled={!isEditable || isSubmitting}
+              placeholder="Select registration date"
+            />
+          </div>
         </div>
       </div>
     </div>
