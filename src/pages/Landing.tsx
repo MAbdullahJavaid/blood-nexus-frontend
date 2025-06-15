@@ -25,6 +25,7 @@ import VolunteerModal from "@/components/modals/VolunteerModal";
 import OrganizeDriveModal from "@/components/modals/OrganizeDriveModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -686,8 +687,7 @@ const Landing = () => {
           onClick={handleWhatsAppClick}
           aria-label="Chat on WhatsApp"
         >
-          {/* Replace Whatsapp icon with Phone icon */}
-          <Phone className="h-5 w-5" />
+          <WhatsAppIcon size={20} />
         </Button>
         <Button 
           size="lg"
