@@ -3,6 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Download, FilePdf, FileImage } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "@/hooks/use-toast";
 
 type Donation = {
   id: string;
@@ -93,6 +98,116 @@ export default function DonationsReport() {
       ? donations.reduce((sum, d) => sum + d.amount, 0)
       : 0;
 
+  // EXPORT PDF
+  const handleExportPDF = async () => {
+    const tableElement = document.getElementById("donations-report-table");
+    if (!tableElement) {
+      toast({
+        title: "Export error",
+        description: "Could not find the report content to export.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Exporting PDF",
+        description: "Generating PDF, please wait...",
+      });
+
+      // Hide export buttons in PDF
+      const exportButtons = document.querySelectorAll('.export-hide');
+      exportButtons.forEach(el => (el as HTMLElement).style.display = 'none');
+
+      const canvas = await html2canvas(tableElement, {
+        useCORS: true,
+        backgroundColor: "#fff",
+        scale: 2,
+        logging: false
+      });
+
+      exportButtons.forEach(el => (el as HTMLElement).style.display = '');
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const imgWidth = 297; // landscape
+      const pageHeight = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save('donations-report.pdf');
+
+      toast({
+        title: "PDF Exported",
+        description: "PDF saved to your device!",
+      });
+    } catch (err) {
+      toast({
+        title: "Export Error",
+        description: "Could not export as PDF.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // EXPORT JPEG
+  const handleExportJPEG = async () => {
+    const tableElement = document.getElementById("donations-report-table");
+    if (!tableElement) {
+      toast({
+        title: "Export error",
+        description: "Could not find the report content to export.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Exporting JPEG",
+        description: "Generating JPEG, please wait...",
+      });
+      // Hide export buttons in JPEG
+      const exportButtons = document.querySelectorAll('.export-hide');
+      exportButtons.forEach(el => (el as HTMLElement).style.display = 'none');
+      const canvas = await html2canvas(tableElement, {
+        useCORS: true,
+        backgroundColor: "#fff",
+        scale: 2,
+        logging: false
+      });
+      exportButtons.forEach(el => (el as HTMLElement).style.display = '');
+
+      const link = document.createElement("a");
+      link.download = "donations-report.jpg";
+      link.href = canvas.toDataURL("image/jpeg", 0.94);
+      link.click();
+
+      toast({
+        title: "JPEG Exported",
+        description: "JPEG saved to your device!",
+      });
+    } catch (err) {
+      toast({
+        title: "Export Error",
+        description: "Could not export as JPEG.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="p-8 flex flex-col items-center min-h-screen bg-gray-50">
       <h1 className="text-3xl font-extrabold mb-2 tracking-wide">Blood Care Foundation</h1>
@@ -106,6 +221,14 @@ export default function DonationsReport() {
       />
       {/* Table */}
       <div className="w-full max-w-2xl bg-white rounded shadow border mt-8 p-6">
+        <div className="flex gap-2 mb-4 export-hide">
+          <Button onClick={handleExportPDF} variant="default" className="flex items-center gap-2" size="sm">
+            <FilePdf className="h-4 w-4" /> Export PDF
+          </Button>
+          <Button onClick={handleExportJPEG} variant="outline" className="flex items-center gap-2" size="sm">
+            <FileImage className="h-4 w-4" /> Export JPEG
+          </Button>
+        </div>
         <Table>
           <TableCaption>
             {isFetching && <span>Loading donations...</span>}
