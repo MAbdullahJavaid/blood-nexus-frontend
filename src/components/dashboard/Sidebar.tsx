@@ -16,7 +16,8 @@ import {
   SettingsIcon,
   ListTodoIcon,
   BarChartIcon,
-  FileTextIcon
+  FileTextIcon,
+  ShieldIcon // Optionally use for Admin section icon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -60,11 +61,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
   // State to control which main accordion item is open
   const [openMainItem, setOpenMainItem] = useState<string | null>(null);
   
-  // State to control which nested accordion items are open
+  // Add "admin" to the nested items state structure
   const [openNestedItems, setOpenNestedItems] = useState<{
     reception?: boolean;
     bds?: boolean;
     lab?: boolean;
+    admin?: boolean;
   }>({});
 
   const handleNavigate = (path: string) => {
@@ -91,7 +93,8 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
       const newState = {
         reception: false,
         bds: false,
-        lab: false
+        lab: false,
+        admin: false
       };      
       if (prev[value as keyof typeof prev] !== true) {
         newState[value as keyof typeof newState] = true;
@@ -205,10 +208,17 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
               <div className="space-y-2">
                 <Accordion 
                   type="single" 
-                  value={openNestedItems.reception ? "reception" : (openNestedItems.bds ? "bds" : (openNestedItems.lab ? "lab" : ""))}
+                  value={
+                    openNestedItems.reception ? "reception"
+                      : openNestedItems.bds ? "bds"
+                      : openNestedItems.lab ? "lab"
+                      : openNestedItems.admin ? "admin"
+                      : ""
+                  }
                   onValueChange={handleNestedAccordionChange}
                   collapsible
                 >
+                  {/* Existing Reception Section */}
                   <AccordionItem value="reception" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>Reception</span>
@@ -237,6 +247,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionContent>
                   </AccordionItem>
                   
+                  {/* Existing BDS Section */}
                   <AccordionItem value="bds" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>BDS</span>
@@ -283,6 +294,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionContent>
                   </AccordionItem>
                   
+                  {/* Existing Lab Section */}
                   <AccordionItem value="lab" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>LAB</span>
@@ -307,7 +319,35 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
                           active={activePage === '/reports/lab/product-wise-blood-issue'}
                         />
-                       
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* New Admin Section */}
+                  <AccordionItem value="admin" className="border-b-0">
+                    <AccordionTrigger className="py-1">
+                      <span>Admin</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-4">
+                      <div className="flex flex-col gap-1">
+                        <SidebarItem
+                          icon={ShieldIcon}
+                          label="Donations"
+                          onClick={() => handleReportNavigate('/reports/admin/donations')}
+                          active={activePage === '/reports/admin/donations'}
+                        />
+                        <SidebarItem
+                          icon={DropletIcon}
+                          label="Blood Drive"
+                          onClick={() => handleReportNavigate('/reports/admin/blood-drive')}
+                          active={activePage === '/reports/admin/blood-drive'}
+                        />
+                        <SidebarItem
+                          icon={GroupIcon}
+                          label="Volunteer"
+                          onClick={() => handleReportNavigate('/reports/admin/volunteer')}
+                          active={activePage === '/reports/admin/volunteer'}
+                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
