@@ -24,6 +24,7 @@ import { toast } from "@/hooks/use-toast";
 import VolunteerModal from "@/components/modals/VolunteerModal";
 import OrganizeDriveModal from "@/components/modals/OrganizeDriveModal";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -33,6 +34,11 @@ const Landing = () => {
   const [currentDonor, setCurrentDonor] = useState(0);
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
   const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
+
+  // MODAL state for donating
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [donationAmount, setDonationAmount] = useState(5000); // cents; default $50
+  const [isLoadingDonation, setIsLoadingDonation] = useState(false);
 
   // Watch for donation result in URL and show toast
   useEffect(() => {
@@ -185,14 +191,26 @@ const Landing = () => {
     setCurrentDonor((prev) => (prev - 1 + donorStories.length) % donorStories.length);
   };
 
-  const handleDonate = async () => {
-    try {
-      // Detect the current frontend URL to use as success/cancel redirect
-      const amount = 5000; // $50 in cents
-      const redirectOrigin =
-        window.location.origin ||
-        "http://localhost:3000"; // fallback for SSR
+  const handleDonate = () => {
+    setIsDonateModalOpen(true);
+    setDonationAmount(5000); // Reset to default $50 if opened again
+  };
 
+  const payDonationAmount = async () => {
+    setIsLoadingDonation(true);
+    try {
+      const amount = Number(donationAmount);
+      if (!amount || amount < 100) {
+        toast({
+          title: "Invalid amount",
+          description: "Please enter a valid donation amount (minimum $1).",
+          variant: "destructive",
+        });
+        setIsLoadingDonation(false);
+        return;
+      }
+      const redirectOrigin =
+        window.location.origin || "http://localhost:3000";
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: { amount, currency: "usd", redirectOrigin },
       });
@@ -203,11 +221,13 @@ const Landing = () => {
           description: error.message || "Please try again later.",
           variant: "destructive",
         });
+        setIsLoadingDonation(false);
         return;
       }
 
       if (data?.url) {
         window.open(data.url, "_blank");
+        setIsDonateModalOpen(false);
       } else {
         toast({
           title: "Error launching Stripe checkout",
@@ -221,6 +241,8 @@ const Landing = () => {
         description: (err as Error).message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingDonation(false);
     }
   };
 
@@ -293,6 +315,51 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* DONATE MODAL */}
+      <Dialog open={isDonateModalOpen} onOpenChange={setIsDonateModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Donate to Support Children
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="block mb-2 font-medium text-gray-700">
+              Donation Amount (USD)
+            </label>
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={donationAmount ? (donationAmount / 100).toString() : ""}
+              onChange={e => {
+                // keep value in cents internally
+                const value = e.target.value;
+                setDonationAmount(Number(value) * 100);
+              }}
+              className="rounded-md px-4 py-3 text-xl border border-gray-300"
+              placeholder="Enter amount (e.g., 50)"
+              disabled={isLoadingDonation}
+            />
+            <div className="text-xs text-gray-500 mt-2">
+              Minimum amount is $1. All proceeds go to children with blood disorders.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              className="bg-blood text-white rounded-full px-6" 
+              onClick={payDonationAmount}
+              disabled={isLoadingDonation}
+            >
+              {isLoadingDonation ? "Processing..." : "Proceed to Donate"}
+            </Button>
+            <Button variant="ghost" onClick={() => setIsDonateModalOpen(false)} disabled={isLoadingDonation}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* About Us */}
       <section id="about-section" className="py-20 bg-gray-50">
