@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -13,7 +12,7 @@ import TestInformationForm from "@/components/forms/TestInformationForm";
 import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
 import ThanksLetter from "@/components/thanks-letter/ThanksLetter";
-// Import required for PDF export
+import DonationsReport from "@/components/reports/DonationsReport";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -43,6 +42,9 @@ const Dashboard = () => {
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
   const thanksLetterRef = useRef<HTMLDivElement | null>(null);
+
+  // Helper for admin report routes
+  const isDonationsReport = location.pathname === "/reports/admin/donations";
 
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -242,6 +244,10 @@ const Dashboard = () => {
           </div>
         );
       default:
+        // For admin reports route, show DonationsReport if route matches
+        if (isDonationsReport) {
+          return <DonationsReport />;
+        }
         return null;
     }
   };
