@@ -122,42 +122,6 @@ const Landing = () => {
       donations: "75+ donations"
     },
     {
-      name: "Emma Rodriguez",
-      story: "Donating blood is my way of giving back to the community. When I think about the children who receive this gift of life, it motivates me to continue.",
-      image: "https://images.unsplash.com/photo-1494725176-7c40e5a71c5e?w=400&h=300&fit=crop",
-      donations: "30+ donations"
-    },
-    {
-      name: "David Thompson",
-      story: "I started donating after learning about thalassemia. These brave children inspire me to be a regular donor and advocate for blood donation awareness.",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop",
-      donations: "40+ donations"
-    },
-    {
-      name: "Lisa Williams",
-      story: "Every time I donate, I remember that somewhere a child is getting a chance at a normal life. It's the most rewarding feeling in the world.",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop",
-      donations: "60+ donations"
-    },
-    {
-      name: "James Miller",
-      story: "Being a blood donor has taught me the true meaning of compassion. These children are fighters, and I'm honored to support their journey.",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop",
-      donations: "25+ donations"
-    },
-    {
-      name: "Maria Garcia",
-      story: "I believe everyone deserves a chance at life. Through blood donation, I can be part of these children's success stories and their bright futures.",
-      image: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&h=300&fit=crop",
-      donations: "35+ donations"
-    },
-    {
-      name: "Robert Davis",
-      story: "Donating blood is more than just giving; it's about creating hope. Every donation brings these brave children one step closer to their dreams.",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop",
-      donations: "45+ donations"
-    },
-    {
       name: "Usama",
       story: "I believe everyone deserves a chance at life. Through blood donation, I can be part of these children's success stories and their bright futures.",
       image: "/lovable-uploads/3fb86a0d-0fc2-4cff-a267-7455c70dd4e6.png",
