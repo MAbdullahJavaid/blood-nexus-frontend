@@ -1,16 +1,68 @@
 
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import BloodDriveReportFilter from "@/components/reports/BloodDriveReportFilter";
+import { supabase } from "@/integrations/supabase/client";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 
+type BloodDriveRequest = {
+  id: string;
+  contact_name: string;
+  contact_email: string;
+  phone: string;
+  org_name: string | null;
+  date_preference: string | null;
+  location: string;
+  additional_info: string | null;
+  created_at: string;
+};
+
+async function fetchBloodDrives(from: Date, to: Date): Promise<BloodDriveRequest[]> {
+  // Select rows where date_preference is within the chosen range (inclusive).
+  const { data, error } = await supabase
+    .from("blood_drive_requests")
+    .select("*")
+    .gte("date_preference", from.toISOString().slice(0,10))
+    .lte("date_preference", to.toISOString().slice(0,10))
+    .order("date_preference", { ascending: true });
+  if (error) throw error;
+  return data as BloodDriveRequest[];
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("en-GB");
+}
+
 export default function BloodDriveReport() {
-  // Placeholder handlers for filter actions
+  // Fiscal year defaults
+  const fiscalStart = new Date(2024, 6, 1); // July 1, 2024
+  const fiscalEnd = new Date(2025, 5, 30);  // June 30, 2025
+
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: fiscalStart,
+    to: fiscalEnd,
+  });
+
+  const { data: drives, isFetching, error, refetch } = useQuery({
+    queryKey: ["blood-drive-report", dateRange.from, dateRange.to],
+    queryFn: () => fetchBloodDrives(dateRange.from, dateRange.to),
+  });
+
+  // Filter callbacks
   function handleOk(from: Date, to: Date) {
+    setDateRange({ from, to });
+    // Automatic refetch due to queryKey dependency
     toast({
       title: "Filter applied",
       description: `From ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
     });
   }
   function handleCancel() {
+    setDateRange({ from: fiscalStart, to: fiscalEnd });
     toast({
       title: "Filter cancelled"
     });
@@ -35,9 +87,50 @@ export default function BloodDriveReport() {
         onExport={handleExport}
         onExit={handleExit}
       />
-      {/* Replace below with actual blood drive table/report */}
-      <div className="w-full max-w-2xl bg-white rounded shadow border mt-8 p-6">
-        <p className="text-gray-700">Feature coming soon. Your blood drive data will be shown here.</p>
+      <div className="w-full max-w-4xl bg-white rounded shadow border mt-8 p-6">
+        <Table>
+          <TableCaption className="mb-4">
+            {isFetching && <span>Loading blood drive requests...</span>}
+            {error && <span className="text-red-600">Failed to load data</span>}
+            {drives && drives.length === 0 && !isFetching && (
+              <span>No blood drive requests found for selected dates.</span>
+            )}
+          </TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              <TableHead>Date Preference</TableHead>
+              <TableHead>Organization</TableHead>
+              <TableHead>Contact Name</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Additional Info</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {drives && drives.map((drive, idx) => (
+              <TableRow key={drive.id}>
+                <TableCell>{idx + 1}</TableCell>
+                <TableCell>{formatDate(drive.date_preference)}</TableCell>
+                <TableCell>{drive.org_name ?? "-"}</TableCell>
+                <TableCell>{drive.contact_name}</TableCell>
+                <TableCell>{drive.location}</TableCell>
+                <TableCell>
+                  <a className="text-blue-600 underline" href={`mailto:${drive.contact_email}`}>
+                    {drive.contact_email}
+                  </a>
+                </TableCell>
+                <TableCell>
+                  <a className="text-blue-600 underline" href={`tel:${drive.phone}`}>
+                    {drive.phone}
+                  </a>
+                </TableCell>
+                <TableCell>{drive.additional_info ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
