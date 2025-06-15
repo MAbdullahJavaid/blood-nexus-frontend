@@ -19,13 +19,16 @@ type BloodDriveRequest = {
 };
 
 async function fetchBloodDrives(from: Date, to: Date): Promise<BloodDriveRequest[]> {
-  // Select rows where date_preference is within the chosen range (inclusive).
+  // Now filter by created_at (date & time) field (ISO format: with time)
+  const fromISO = from.toISOString();
+  // For inclusivity, set `to` to the last millisecond of that day
+  const toISO = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999).toISOString();
   const { data, error } = await supabase
     .from("blood_drive_requests")
     .select("*")
-    .gte("date_preference", from.toISOString().slice(0,10))
-    .lte("date_preference", to.toISOString().slice(0,10))
-    .order("date_preference", { ascending: true });
+    .gte("created_at", fromISO)
+    .lte("created_at", toISO)
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return data as BloodDriveRequest[];
 }
@@ -35,6 +38,13 @@ function formatDate(dateStr: string | null): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-GB");
+}
+
+function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-GB");
 }
 
 export default function BloodDriveReport() {
@@ -47,7 +57,7 @@ export default function BloodDriveReport() {
     to: fiscalEnd,
   });
 
-  const { data: drives, isFetching, error, refetch } = useQuery({
+  const { data: drives, isFetching, error } = useQuery({
     queryKey: ["blood-drive-report", dateRange.from, dateRange.to],
     queryFn: () => fetchBloodDrives(dateRange.from, dateRange.to),
   });
@@ -55,7 +65,6 @@ export default function BloodDriveReport() {
   // Filter callbacks
   function handleOk(from: Date, to: Date) {
     setDateRange({ from, to });
-    // Automatic refetch due to queryKey dependency
     toast({
       title: "Filter applied",
       description: `From ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
@@ -99,6 +108,7 @@ export default function BloodDriveReport() {
           <TableHeader>
             <TableRow>
               <TableHead>#</TableHead>
+              <TableHead>Created At</TableHead>
               <TableHead>Date Preference</TableHead>
               <TableHead>Organization</TableHead>
               <TableHead>Contact Name</TableHead>
@@ -112,6 +122,7 @@ export default function BloodDriveReport() {
             {drives && drives.map((drive, idx) => (
               <TableRow key={drive.id}>
                 <TableCell>{idx + 1}</TableCell>
+                <TableCell>{formatDateTime(drive.created_at)}</TableCell>
                 <TableCell>{formatDate(drive.date_preference)}</TableCell>
                 <TableCell>{drive.org_name ?? "-"}</TableCell>
                 <TableCell>{drive.contact_name}</TableCell>
