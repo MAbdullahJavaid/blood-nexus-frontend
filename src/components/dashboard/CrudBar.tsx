@@ -41,10 +41,12 @@ interface CrudBarProps {
   onSaveClick?: () => void;
   onAddItemClick?: () => void;
   onDeleteItemClick?: () => void;
+  onPrintClick?: () => void;
   activeForm?: string;
   isEditing: boolean;
   isAdding: boolean;
   isDeleting?: boolean;
+  onlyPrintAndClose?: boolean;
 }
 
 export function CrudBar({ 
@@ -56,10 +58,12 @@ export function CrudBar({
   onSaveClick,
   onAddItemClick,
   onDeleteItemClick,
+  onPrintClick,
   activeForm,
   isEditing,
   isAdding,
-  isDeleting = false
+  isDeleting = false,
+  onlyPrintAndClose = false
 }: CrudBarProps) {
   // Determine which buttons should be enabled
   const isFormActive = activeForm !== null;
@@ -69,7 +73,8 @@ export function CrudBar({
                         activeForm === 'bleeding';
   
   const isPatientInvoiceForm = activeForm === 'patientInvoice';
-  
+
+  // If in onlyPrintAndClose mode, only enable "Print" and "Close"
   return (
     <div className={cn(
       "bg-white border-b border-border p-2",
@@ -79,61 +84,64 @@ export function CrudBar({
         icon={PlusIcon} 
         label="Add" 
         onClick={onAddClick} 
-        disabled={isEditingOrAdding}
+        disabled={onlyPrintAndClose || isEditingOrAdding}
       />
       <CrudButton 
         icon={PenIcon} 
         label="Edit" 
         onClick={onEditClick} 
-        disabled={isEditingOrAdding || !isFormActive}
+        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive}
       />
       <CrudButton 
         icon={TrashIcon} 
         label="Delete" 
         onClick={onDeleteClick}
-        disabled={isEditingOrAdding || !isFormActive}
+        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive}
       />
       <CrudButton 
         icon={SearchIcon} 
         label="Retrieve" 
-        disabled={isEditingOrAdding}
+        disabled={onlyPrintAndClose || isEditingOrAdding}
       />
       <CrudButton 
         icon={PlusIcon} 
         label="Add Item" 
         onClick={onAddItemClick}
-        disabled={!isEditingOrAdding || !isPatientInvoiceForm}
+        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm}
       />
       <CrudButton 
         icon={TrashIcon} 
         label="Delete Item" 
         onClick={onDeleteItemClick}
-        disabled={!isEditingOrAdding || !isPatientInvoiceForm}
+        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm}
       />
       <CrudButton 
         icon={SaveIcon} 
         label="Save" 
         onClick={onSaveClick}
-        disabled={!isEditingOrAdding}
+        disabled={onlyPrintAndClose || !isEditingOrAdding}
       />
       <CrudButton 
         icon={CircleXIcon} 
         label="Cancel" 
         onClick={onCancelClick}
-        disabled={!isEditingOrAdding}
+        disabled={onlyPrintAndClose || !isEditingOrAdding}
       />
       {!isPrintHidden && (
         <CrudButton 
           icon={PrinterIcon} 
           label="Print" 
-          disabled={isEditingOrAdding}
+          onClick={onPrintClick}
+          disabled={onlyPrintAndClose ? false : isEditingOrAdding}
         />
       )}
       <CrudButton 
         icon={XIcon} 
         label="Close" 
         onClick={onCloseClick}
+        disabled={false}
       />
     </div>
   );
 }
+

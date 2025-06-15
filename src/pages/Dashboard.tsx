@@ -13,6 +13,9 @@ import TestInformationForm from "@/components/forms/TestInformationForm";
 import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
 import ThanksLetter from "@/components/thanks-letter/ThanksLetter";
+// Import required for PDF export
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | 'thanksLetter' | null;
 
@@ -37,6 +40,9 @@ const Dashboard = () => {
   });
   
   const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
+
+  // We'll store the ref to the ThanksLetter DOM node for PDF export
+  const thanksLetterRef = useRef<HTMLDivElement | null>(null);
 
   const handleFormButtonClick = (formType: FormType) => {
     setShowCrudBar(true);
@@ -139,6 +145,42 @@ const Dashboard = () => {
     }
   };
 
+  // PRINT (to PDF) LOGIC for ThanksLetter
+  const handlePrintThanksLetter = async () => {
+    if (thanksLetterRef.current) {
+      const input = thanksLetterRef.current;
+      // Optionally, scroll into view so all styles are resolved
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // wait a short moment to ensure fully rendered
+      await new Promise(res => setTimeout(res, 200));
+      html2canvas(input, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        // Letter size in mm for A4: 210 x 297
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        // Center the image (about 170mm usable width)
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pdfWidth - 20; // horizontal padding
+        const imgProps = canvas.width / canvas.height;
+        const imgHeight = imgWidth / imgProps;
+
+        let y = (pdfHeight - imgHeight) / 2;
+        if (y < 10) y = 10;
+        pdf.addImage(imgData, 'PNG', 10, y, imgWidth, imgHeight);
+        pdf.save("ThankYouLetter.pdf");
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Could not find the letter to print."
+      });
+    }
+  };
+
   const renderActiveForm = () => {
     const isEditable = isEditing || isAdding;
     
@@ -194,13 +236,18 @@ const Dashboard = () => {
       case 'thanksLetter':
         return (
           <div className="flex w-full justify-center mt-8">
-            <ThanksLetter />
+            <div ref={thanksLetterRef}>
+              <ThanksLetter />
+            </div>
           </div>
         );
       default:
         return null;
     }
   };
+
+  // Is thanks letter active?
+  const onlyPrintAndClose = activeForm === "thanksLetter";
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -219,10 +266,12 @@ const Dashboard = () => {
             onSaveClick={handleSaveClick}
             onAddItemClick={handleAddItemClick}
             onDeleteItemClick={handleDeleteItemClick}
+            onPrintClick={onlyPrintAndClose ? handlePrintThanksLetter : undefined}
             activeForm={activeForm}
             isEditing={isEditing}
             isAdding={isAdding}
             isDeleting={isDeleting}
+            onlyPrintAndClose={onlyPrintAndClose}
           />
         )}
         <div className="flex-1 overflow-auto p-6">
