@@ -8,6 +8,40 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFoo
 import { DollarSign, Mail, CalendarDays, CircleCheck, CircleX } from "lucide-react";
 import DonationsReportFilter from "./DonationsReportFilter";
 
+// New: get user and profile info
+function useUserProfile() {
+  const { data, isLoading: userLoading, error: userError } = useQuery({
+    queryKey: ["supabase-user"],
+    queryFn: async () => {
+      const { data: user, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return user.user;
+    }
+  });
+
+  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ["user-profile", data?.id],
+    queryFn: async () => {
+      if (!data?.id) return null;
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (error) throw error;
+      return profiles;
+    },
+    enabled: !!data?.id
+  });
+
+  return {
+    user: data,
+    profile,
+    isLoading: userLoading || profileLoading,
+    error: userError || profileError
+  };
+}
+
 type Donation = {
   id: string;
   email: string;
@@ -43,11 +77,20 @@ export default function DonationsReport() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
 
-  // Fetch donations, optionally filtered by date range
+  // New: check if the current user is an admin
+  const { user, profile, isLoading: isProfileLoading, error: profileError } = useUserProfile();
+  const isAdmin = profile?.role === "admin";
+
+  // Fetch donations, with conditional logic for admin vs regular user
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["donations-report", fromDate, toDate],
+    queryKey: ["donations-report", fromDate, toDate, isAdmin],
     queryFn: async () => {
       let query = supabase.from("donations").select("*").order("created_at", { ascending: false });
+
+      // Only add filtering for regular users (admins can already see all by policy)
+      if (!isAdmin && user?.id) {
+        query = query.eq("user_id", user.id);
+      }
 
       if (fromDate) query = query.gte("created_at", fromDate + "T00:00:00.000Z");
       if (toDate) query = query.lte("created_at", toDate + "T23:59:59.999Z");
@@ -55,13 +98,13 @@ export default function DonationsReport() {
       const { data, error } = await query;
       if (error) throw error;
       return data as Donation[];
-    }
+    },
+    enabled: !!(user && (isAdmin !== undefined)) // wait until user & role are loaded
   });
 
   const handleFilterApply = (from: string, to: string) => {
     setFromDate(from);
     setToDate(to);
-    // The query will refetch automatically because keys changed
   };
 
   // Calculate grand total using useMemo for efficiency
@@ -80,9 +123,13 @@ export default function DonationsReport() {
       </h2>
 
       {/* Filter Panel */}
-      <DonationsReportFilter onApply={handleFilterApply} loading={isLoading || isRefetching} />
+      <DonationsReportFilter onApply={handleFilterApply} loading={isLoading || isRefetching || isProfileLoading} />
 
-      {isLoading ? (
+      {isProfileLoading ? (
+        <p className="text-gray-500 mt-6">Loading user info...</p>
+      ) : profileError ? (
+        <div className="text-red-500 mt-6">Failed to load user profile.</div>
+      ) : isLoading ? (
         <p className="text-gray-500 mt-6">Loading donations...</p>
       ) : error ? (
         <div className="text-red-500 mt-6">Failed to load donations.</div>
