@@ -4,7 +4,7 @@ import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, FilePdf, FileImage } from "lucide-react";
+import { file as File } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "@/hooks/use-toast";
@@ -222,11 +222,12 @@ export default function DonationsReport() {
       {/* Table */}
       <div className="w-full max-w-2xl bg-white rounded shadow border mt-8 p-6">
         <div className="flex gap-2 mb-4 export-hide">
+          {/* Both export buttons now use the File icon */}
           <Button onClick={handleExportPDF} variant="default" className="flex items-center gap-2" size="sm">
-            <FilePdf className="h-4 w-4" /> Export PDF
+            <File className="h-4 w-4" /> Export PDF
           </Button>
           <Button onClick={handleExportJPEG} variant="outline" className="flex items-center gap-2" size="sm">
-            <FileImage className="h-4 w-4" /> Export JPEG
+            <File className="h-4 w-4" /> Export JPEG
           </Button>
         </div>
         <Table>
