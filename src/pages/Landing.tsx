@@ -92,6 +92,18 @@ const Landing = () => {
 
   const donorStories = [
     {
+      name: "Ali Hussnain",
+      story: "I'm proud to be a regular donor. Each donation is my way of supporting children with blood disorders and giving them hope.",
+      image: "/lovable-uploads/4c117c44-fc87-4900-a712-aeee276ba1a4.png",
+      donations: "20+ donations"
+    },
+    {
+      name: "Ahmed Hassan", 
+      story: "Seeing the impact of blood donation motivates me to keep giving. Together, we can change lives and create brighter futures.",
+      image: "/lovable-uploads/f69c9119-a84c-4ec2-b9cc-1340589385ca.png",
+      donations: "15+ donations"
+    },
+    {
       name: "Sarah Johnson",
       story: "I've been donating blood for over 10 years. Knowing that my donations help children with blood disorders fills my heart with joy. Every drop makes a difference.",
       image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop",
