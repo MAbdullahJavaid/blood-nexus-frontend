@@ -18,7 +18,8 @@ import {
   Droplets,
   Stethoscope,
   UserCheck,
-  Calendar
+  Calendar,
+  Whatsapp
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VolunteerModal from "@/components/modals/VolunteerModal";
@@ -258,6 +259,12 @@ const Landing = () => {
     // Scroll to about section
     const aboutSection = document.querySelector('#about-section');
     aboutSection?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // WhatsApp floating action handler
+  const handleWhatsAppClick = () => {
+    // Open WhatsApp chat to the number in a new tab
+    window.open("https://wa.me/923464688765", "_blank");
   };
 
   return (
@@ -669,7 +676,19 @@ const Landing = () => {
       </footer>
 
       {/* Sticky Donate Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {/* WhatsApp floating button (appears above Donate, slides in similar location) */}
+        <Button
+          size="lg"
+          className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5 py-4 shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          style={{
+            boxShadow: "0 2px 8px 0 rgba(0,150,0,0.18)",
+          }}
+          onClick={handleWhatsAppClick}
+          aria-label="Chat on WhatsApp"
+        >
+          <Whatsapp className="h-5 w-5" />
+        </Button>
         <Button 
           size="lg"
           className="bg-blood hover:bg-blood-dark text-white rounded-full px-6 py-4 shadow-lg hover:shadow-xl transition-all"
