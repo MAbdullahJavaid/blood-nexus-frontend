@@ -20,6 +20,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 
 const dateOptions = [
   { label: "This Fiscal Year", value: "fiscal" },
@@ -117,6 +118,12 @@ export default function DonationsReport() {
   const fromDate = parseDDMMYYYY(fromDateStr);
   const toDate = parseDDMMYYYY(toDateStr);
 
+  // Add diagnostic logs for state changes
+  console.log("Selected Option:", selectedOption);
+  console.log("From Date String:", fromDateStr, "->", fromDate);
+  console.log("To Date String:", toDateStr, "->", toDate);
+  console.log("Show Results:", showResults);
+
   // Auto update from/to when dropdown changes
   function handleOptionChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
@@ -139,12 +146,23 @@ export default function DonationsReport() {
   // Manual input
   function handleFromInput(e: React.ChangeEvent<HTMLInputElement>) {
     setFromDateStr(e.target.value);
+    setShowResults(false);
   }
   function handleToInput(e: React.ChangeEvent<HTMLInputElement>) {
     setToDateStr(e.target.value);
+    setShowResults(false);
   }
 
   function handleOK() {
+    if (!fromDate || !toDate) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Date(s)",
+        description: "Please enter valid 'From' and 'To' dates in dd/mm/yyyy format.",
+      });
+      setShowResults(false);
+      return;
+    }
     setShowResults(true);
   }
   function handleCancel() {
@@ -195,6 +213,7 @@ export default function DonationsReport() {
       showResults
     ],
     queryFn: async () => {
+      console.log("Running donations query with:", { fromDateStr, toDateStr, isAdmin, user });
       let query = supabase.from("donations").select("*").order("created_at", { ascending: false });
       if (!isAdmin && user?.id) {
         query = query.eq("user_id", user.id);
@@ -207,6 +226,7 @@ export default function DonationsReport() {
         .toString()
         .padStart(2, "0")}-${toDate.getDate().toString().padStart(2, "0")}T23:59:59.999Z`);
       const { data, error } = await query;
+      console.log("Donations loaded:", data, "Error:", error);
       if (error) throw error;
       return data as Donation[];
     },
@@ -263,7 +283,7 @@ export default function DonationsReport() {
                   ))}
                 </select>
               </div>
-              {/* From Date */}
+              {/* From Date (calendar and manual input) */}
               <div className="p-3 border-r">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -289,8 +309,17 @@ export default function DonationsReport() {
                     />
                   </PopoverContent>
                 </Popover>
+                <Input
+                  type="text"
+                  className="w-full mt-1 text-sm"
+                  value={fromDateStr}
+                  onChange={handleFromInput}
+                  placeholder="dd/mm/yyyy"
+                  inputMode="numeric"
+                  pattern="\d{2}/\d{2}/\d{4}"
+                />
               </div>
-              {/* To Date */}
+              {/* To Date (calendar and manual input) */}
               <div className="p-3">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -316,6 +345,15 @@ export default function DonationsReport() {
                     />
                   </PopoverContent>
                 </Popover>
+                <Input
+                  type="text"
+                  className="w-full mt-1 text-sm"
+                  value={toDateStr}
+                  onChange={handleToInput}
+                  placeholder="dd/mm/yyyy"
+                  inputMode="numeric"
+                  pattern="\d{2}/\d{2}/\d{4}"
+                />
               </div>
             </div>
           </div>
