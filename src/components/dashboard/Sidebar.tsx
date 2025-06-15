@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -17,8 +16,7 @@ import {
   SettingsIcon,
   ListTodoIcon,
   BarChartIcon,
-  FileTextIcon,
-  UsersIcon // for Volunteer
+  FileTextIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -29,8 +27,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import BloodDriveFilterModal from "@/components/modals/BloodDriveFilterModal";
-import PatientRequestReportFilter from "@/components/reports/PatientRequestReportFilter";
 
 type SidebarItemProps = {
   icon: React.ElementType;
@@ -70,12 +66,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     bds?: boolean;
     lab?: boolean;
   }>({});
-
-  // State to control the filter modal
-  const [bloodDriveFilterOpen, setBloodDriveFilterOpen] = useState(false);
-  
-  // State to control the patient request report filter
-  const [patientReportFilterOpen, setPatientReportFilterOpen] = useState(false);
 
   const handleNavigate = (path: string) => {
     setActivePage(path);
@@ -125,38 +115,8 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
     ? user.username.replace(/@gmail\.com$/, "")
     : "";
 
-  // For demonstration: You could add real filter logic here later.
-  const handleBloodDriveFilterApply = (date: string) => {
-    // TODO: Call a fetch or context/filter function with `date`
-    // For now just log:
-    console.log("Apply Blood Drive Date Filter:", date);
-  };
-
-  // Handle patient request report filter
-  const handlePatientReportFilterApply = (from: string, to: string) => {
-    console.log("Apply Patient Request Report Filter:", { from, to });
-    // TODO: Add filter logic here
-    setPatientReportFilterOpen(false);
-  };
-
-  const handlePatientReportFilterCancel = () => {
-    setPatientReportFilterOpen(false);
-  };
-
   return (
     <div className="w-64 h-screen bg-sidebar border-r border-border flex flex-col">
-      {/* Show Patient Report Filter when open */}
-      {patientReportFilterOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <PatientRequestReportFilter
-              onOk={handlePatientReportFilterApply}
-              onCancel={handlePatientReportFilterCancel}
-            />
-          </div>
-        </div>
-      )}
-
       <div className="p-4 flex items-center gap-3">
         <DropletIcon className="h-8 w-8 text-blood" />
         <div>
@@ -200,17 +160,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   icon={TestTubeIcon} 
                   label="Test Information" 
                   onClick={() => handleFormClick('testInformation')}
-                />
-                {/* CHANGE: Open Filter Modal */}
-                <SidebarItem 
-                  icon={DropletIcon}
-                  label="Blood Drive"
-                  onClick={() => setBloodDriveFilterOpen(true)}
-                />
-                <SidebarItem
-                  icon={UsersIcon}
-                  label="Volunteer"
-                  onClick={() => handleFormClick('volunteer')}
                 />
                 <SidebarItem icon={MailIcon} label="Thanks Letter" />
               </div>
@@ -269,17 +218,20 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                         <SidebarItem 
                           icon={FileTextIcon} 
                           label="Patient Request" 
-                          onClick={() => setPatientReportFilterOpen(true)}
+                          onClick={() => handleReportNavigate('/reports/reception/patient-request')}
+                          active={activePage === '/reports/reception/patient-request'}
                         />
                         <SidebarItem 
                           icon={ReceiptIcon} 
                           label="Patient Request Summary" 
-                          onClick={() => setPatientReportFilterOpen(true)}
+                          onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
+                          active={activePage === '/reports/reception/patient-request-summary'}
                         />
                         <SidebarItem 
                           icon={HistoryIcon} 
                           label="Patient Transfusion History" 
-                          onClick={() => setPatientReportFilterOpen(true)}
+                          onClick={() => handleReportNavigate('/reports/reception/patient-transfusion-history')}
+                          active={activePage === '/reports/reception/patient-transfusion-history'}
                         />
                       </div>
                     </AccordionContent>
@@ -387,12 +339,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
           Logout
         </Button>
       </div>
-      {/* Blood Drive Filter Modal */}
-      <BloodDriveFilterModal
-        isOpen={bloodDriveFilterOpen}
-        onClose={() => setBloodDriveFilterOpen(false)}
-        onApply={handleBloodDriveFilterApply}
-      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 
-import React from "react";
+import React, { useRef } from "react";
+import { toast } from "@/hooks/use-toast";
 import { FileText, LogOut } from "lucide-react";
+import html2canvas from "html2canvas";
 
 interface Props {
   onExportPDF: () => void;
@@ -51,3 +53,4 @@ export default function PatientRequestReportActions({
     </div>
   );
 }
+
