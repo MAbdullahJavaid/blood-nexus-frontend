@@ -687,7 +687,8 @@ const Landing = () => {
           onClick={handleWhatsAppClick}
           aria-label="Chat on WhatsApp"
         >
-          <WhatsAppIcon size={20} />
+          {/* Use exact user-provided PNG image for WhatsApp */}
+          <img src="/whatsapp.png" alt="WhatsApp" className="h-6 w-6" />
         </Button>
         <Button 
           size="lg"
