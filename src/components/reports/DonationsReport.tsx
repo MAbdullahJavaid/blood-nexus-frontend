@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -290,13 +289,6 @@ export default function DonationsReport() {
                     />
                   </PopoverContent>
                 </Popover>
-                <Input
-                  type="text"
-                  className="w-full mt-1 text-sm"
-                  value={fromDateStr}
-                  onChange={handleFromInput}
-                  placeholder="dd/mm/yyyy"
-                />
               </div>
               {/* To Date */}
               <div className="p-3">
@@ -324,13 +316,6 @@ export default function DonationsReport() {
                     />
                   </PopoverContent>
                 </Popover>
-                <Input
-                  type="text"
-                  className="w-full mt-1 text-sm"
-                  value={toDateStr}
-                  onChange={handleToInput}
-                  placeholder="dd/mm/yyyy"
-                />
               </div>
             </div>
           </div>
