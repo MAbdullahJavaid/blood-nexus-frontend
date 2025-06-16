@@ -39,7 +39,6 @@ const HBAndDateSection = ({
           type="text" 
           className="h-8 bg-gray-50" 
           value={formattedDate} 
-          readOnly 
         />
       </div>
     </div>
