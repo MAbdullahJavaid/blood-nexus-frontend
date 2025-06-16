@@ -1,18 +1,17 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ShadcnDatePicker } from "@/components/ui/ShadcnDatePicker";
 import { useBleedingForm } from "./BleedingFormContext";
 
 interface HBAndDateSectionProps {
   isEditable: boolean;
-  formattedDate: string;
 }
 
 const HBAndDateSection = ({
   isEditable,
-  formattedDate,
 }: HBAndDateSectionProps) => {
-  const { donorPatientValues, handleDonorPatientValueChange } = useBleedingForm();
+  const { donorPatientValues, handleDonorPatientValueChange, preparationDate, setPreparationDate } = useBleedingForm();
   
   return (
     <div className="grid grid-cols-2 gap-6 mb-4">
@@ -34,12 +33,11 @@ const HBAndDateSection = ({
       {/* Preparation Date */}
       <div className="flex items-center gap-2">
         <Label htmlFor="prepDate" className="whitespace-nowrap">Preparation Date:</Label>
-        <Input 
-          id="prepDate" 
-          type="text" 
-          className="h-8 bg-gray-50" 
-          value={formattedDate} 
-          readOnly 
+        <ShadcnDatePicker
+          value={preparationDate}
+          onChange={setPreparationDate}
+          disabled={!isEditable}
+          placeholder="Select preparation date"
         />
       </div>
     </div>

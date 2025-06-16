@@ -20,6 +20,8 @@ interface BleedingFormContextType {
   setDonorCategory: (category: string) => void;
   bleedingDate: string;
   setBleedingDate: (date: string) => void;
+  preparationDate: string;
+  setPreparationDate: (date: string) => void;
   donorPatientValues: DonorPatientValues;
   setDonorPatientValues: React.Dispatch<React.SetStateAction<DonorPatientValues>>;
   results: TestResults;
@@ -72,6 +74,10 @@ export const BleedingFormProvider: React.FC<{
   // Change: set donorCategory default to "Self Donor"
   const [donorCategory, setDonorCategory] = useState("Self Donor");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
+  const [preparationDate, setPreparationDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize with random values
@@ -90,6 +96,8 @@ export const BleedingFormProvider: React.FC<{
     setBagType("double");
     setDonorCategory("Self Donor"); // match new default
     setBleedingDate(getFormattedDate());
+    const today = new Date();
+    setPreparationDate(`${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`);
     setDonorPatientValues(getDefaultDonorPatientValues());
     setProductInfo(getDefaultProductInfo());
   };
@@ -147,6 +155,12 @@ export const BleedingFormProvider: React.FC<{
         const bleedingDateObj = new Date(bleedingRecord.bleeding_date);
         const formattedBleedingDate = `${bleedingDateObj.getDate().toString().padStart(2, '0')}/${(bleedingDateObj.getMonth() + 1).toString().padStart(2, '0')}/${bleedingDateObj.getFullYear()}`;
         setBleedingDate(formattedBleedingDate);
+
+        // Set preparation date from database if available, otherwise use current date
+        if (bleedingRecord.created_at) {
+          const prepDate = new Date(bleedingRecord.created_at);
+          setPreparationDate(`${prepDate.getFullYear()}-${(prepDate.getMonth() + 1).toString().padStart(2, '0')}-${prepDate.getDate().toString().padStart(2, '0')}`);
+        }
 
         // Load screening results from the database columns
         if (bleedingRecord.hbsag !== null || bleedingRecord.hcv !== null || 
@@ -340,6 +354,8 @@ export const BleedingFormProvider: React.FC<{
       setDonorCategory,
       bleedingDate,
       setBleedingDate,
+      preparationDate,
+      setPreparationDate,
       donorPatientValues,
       setDonorPatientValues,
       results,
