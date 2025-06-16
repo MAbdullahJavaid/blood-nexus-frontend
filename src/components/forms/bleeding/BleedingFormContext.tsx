@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -21,8 +20,6 @@ interface BleedingFormContextType {
   setDonorCategory: (category: string) => void;
   bleedingDate: string;
   setBleedingDate: (date: string) => void;
-  preparationDate: string;
-  setPreparationDate: (date: string) => void;
   donorPatientValues: DonorPatientValues;
   setDonorPatientValues: React.Dispatch<React.SetStateAction<DonorPatientValues>>;
   results: TestResults;
@@ -75,7 +72,6 @@ export const BleedingFormProvider: React.FC<{
   // Change: set donorCategory default to "Self Donor"
   const [donorCategory, setDonorCategory] = useState("Self Donor");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
-  const [preparationDate, setPreparationDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize with random values
@@ -94,7 +90,6 @@ export const BleedingFormProvider: React.FC<{
     setBagType("double");
     setDonorCategory("Self Donor"); // match new default
     setBleedingDate(getFormattedDate());
-    setPreparationDate(new Date().toISOString().split('T')[0]);
     setDonorPatientValues(getDefaultDonorPatientValues());
     setProductInfo(getDefaultProductInfo());
   };
@@ -152,13 +147,6 @@ export const BleedingFormProvider: React.FC<{
         const bleedingDateObj = new Date(bleedingRecord.bleeding_date);
         const formattedBleedingDate = `${bleedingDateObj.getDate().toString().padStart(2, '0')}/${(bleedingDateObj.getMonth() + 1).toString().padStart(2, '0')}/${bleedingDateObj.getFullYear()}`;
         setBleedingDate(formattedBleedingDate);
-
-        // Set preparation date from bleeding record or default to today
-        if (bleedingRecord.preparation_date) {
-          setPreparationDate(bleedingRecord.preparation_date);
-        } else {
-          setPreparationDate(new Date().toISOString().split('T')[0]);
-        }
 
         // Load screening results from the database columns
         if (bleedingRecord.hbsag !== null || bleedingRecord.hcv !== null || 
@@ -218,7 +206,6 @@ export const BleedingFormProvider: React.FC<{
       console.log("Submitting bleeding record with data:", {
         donor_id: selectedDonor.id,
         bleeding_date: formattedBleedingDate,
-        preparation_date: preparationDate,
         technician: "Current User",
         donor_category: donorCategory, // Save the current UI value!
         bag_type: bagType,
@@ -236,12 +223,11 @@ export const BleedingFormProvider: React.FC<{
         .insert({
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
-          preparation_date: preparationDate,
           technician: "Current User", // You might want to get this from user context
           donor_category: donorCategory, // Only use the value from context/UI
           bag_type: bagType,
           hbsag: parseFloat(donorPatientValues.hepB) || null,
-          hcv: parseFloat(donorPatientValues.hcv) || null,
+          hcv: parseFloat(donorPatientValues.hepC) || null,
           hiv: parseFloat(donorPatientValues.hiv) || null,
           vdrl: parseFloat(donorPatientValues.vdrl) || null,
           hb: parseFloat(donorPatientValues.hb) || null,
@@ -354,8 +340,6 @@ export const BleedingFormProvider: React.FC<{
       setDonorCategory,
       bleedingDate,
       setBleedingDate,
-      preparationDate,
-      setPreparationDate,
       donorPatientValues,
       setDonorPatientValues,
       results,
@@ -377,7 +361,6 @@ export const BleedingFormProvider: React.FC<{
     </BleedingFormContext.Provider>
   );
 };
-
 export const useBleedingForm = () => {
   const context = useContext(BleedingFormContext);
   if (context === undefined) {

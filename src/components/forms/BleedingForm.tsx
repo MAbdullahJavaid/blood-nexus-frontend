@@ -24,6 +24,7 @@ interface BleedingFormRef {
 const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
   ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
     const { clearForm } = useBleedingForm();
+    const formattedDate = getFormattedDate();
 
     useImperativeHandle(ref, () => ({
       clearForm
@@ -50,7 +51,7 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
         </div>
         
         <ScreeningResultsPanel isEditable={isEditable} />
-        <HBAndDateSection isEditable={isEditable} formattedDate={getFormattedDate()} />
+        <HBAndDateSection isEditable={isEditable} formattedDate={formattedDate} />
         <ProductInfoSection isEditable={isEditable} />
         <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
       </form>
@@ -77,3 +78,4 @@ BleedingForm.displayName = "BleedingForm";
 BleedingFormContent.displayName = "BleedingFormContent";
 
 export default BleedingForm;
+
