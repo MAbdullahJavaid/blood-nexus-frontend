@@ -45,9 +45,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     const [bottleQuantity, setBottleQuantity] = useState("1");
     const [requiredUnit, setRequiredUnit] = useState("bag");
     const [dob, setDob] = useState("");
-    
-    // Set current date as default
-    const currentDate = new Date().toISOString().split('T')[0];
+    const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
 
     const clearForm = () => {
       setName("");
@@ -67,6 +65,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setDob("");
       setPostfix("000");
       setSelectedPatient(null);
+      setFormDate(new Date().toISOString().split('T')[0]);
     };
 
     useImperativeHandle(ref, () => ({
@@ -306,7 +305,14 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           <div></div>
           <div>
             <Label htmlFor="date" className="mb-1 block">Date:</Label>
-            <Input id="date" className="h-9" type="date" value={currentDate} disabled={!isEditable} />
+            <Input 
+              id="date" 
+              className="h-9" 
+              type="date" 
+              value={formDate} 
+              onChange={(e) => setFormDate(e.target.value)}
+              disabled={!isEditable} 
+            />
           </div>
         </div>
 
