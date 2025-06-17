@@ -34,7 +34,7 @@ export const CrossmatchFormHeader = ({
             className="h-9" 
             disabled={!isEditable} 
             value={crossmatchNo}
-            readOnly
+            
             {/* onChange={(e) => setCrossmatchNo(e.target.value)} */}
           />
           {isEditable && (
