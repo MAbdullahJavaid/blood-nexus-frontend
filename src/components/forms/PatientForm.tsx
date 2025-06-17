@@ -20,6 +20,8 @@ interface PatientFormProps {
 
 interface PatientFormRef {
   clearForm: () => void;
+  handleSave: () => Promise<{ success: boolean }>;
+  handleDelete: () => Promise<{ success: boolean }>;
 }
 
 const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
@@ -85,7 +87,9 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     };
 
     useImperativeHandle(ref, () => ({
-      clearForm
+      clearForm,
+      handleSave,
+      handleDelete
     }));
 
     const handleSearch = async () => {
@@ -163,12 +167,12 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         
         if (!name.trim()) {
           toast.error("Patient name is required");
-          return;
+          return { success: false };
         }
         
         if (phone && phone.length > 11) {
           toast.error("Phone number cannot exceed 11 digits");
-          return;
+          return { success: false };
         }
         
         const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
@@ -235,9 +239,11 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           toast.success("Patient saved successfully!");
         }
         
+        return { success: true };
       } catch (error) {
         console.error("Error saving patient:", error);
         toast.error("Failed to save patient");
+        return { success: false };
       } finally {
         setLoading(false);
       }
@@ -246,7 +252,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     const handleDelete = async () => {
       if (!selectedPatient) {
         toast.error("No patient selected for deletion");
-        return;
+        return { success: false };
       }
 
       try {
@@ -261,9 +267,11 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         
         toast.success("Patient deleted successfully!");
         clearForm();
+        return { success: true };
       } catch (error) {
         console.error("Error deleting patient:", error);
         toast.error("Failed to delete patient");
+        return { success: false };
       } finally {
         setLoading(false);
       }

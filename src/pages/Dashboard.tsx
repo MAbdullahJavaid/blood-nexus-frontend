@@ -23,6 +23,7 @@ interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  handleDelete?: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
 }
 
