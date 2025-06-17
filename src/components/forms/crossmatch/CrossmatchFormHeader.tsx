@@ -32,10 +32,8 @@ export const CrossmatchFormHeader = ({
           <Input 
             id="caseNo" 
             className="h-9" 
-            disabled={!isEditable} 
+            readOnly
             value={crossmatchNo}
-            
-             onChange={(e) => setCrossmatchNo(e.target.value)} 
           />
           {isEditable && (
             <div className="flex gap-1">
