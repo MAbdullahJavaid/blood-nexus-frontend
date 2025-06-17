@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
@@ -190,13 +189,14 @@ const CrossmatchForm = ({ isSearchEnabled = false, isEditable = false }: Crossma
   const handleSaveCrossmatch = async () => {
     console.log("Starting crossmatch save process...");
     
-    if (!selectedInvoice && !isEditing) {
-      toast.error("Please select a patient first");
+    // Validation: Check if document number is provided
+    if (!crossmatchNo.trim()) {
+      toast.error("Document number is required and cannot be empty");
       return;
     }
 
-    if (!crossmatchNo.trim()) {
-      toast.error("Crossmatch number is required");
+    if (!selectedInvoice && !isEditing) {
+      toast.error("Please select a patient first");
       return;
     }
 

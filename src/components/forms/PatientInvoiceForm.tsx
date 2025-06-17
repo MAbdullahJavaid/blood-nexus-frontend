@@ -364,15 +364,20 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       try {
         setLoading(true);
         
-        // Validate required fields
+        // Validation: Check required fields
+        if (!patientID.trim()) {
+          toast.error("Patient ID is required");
+          return { success: false, error: "Patient ID is required" };
+        }
+        
         if (!patientName.trim()) {
           toast.error("Patient name is required");
           return { success: false, error: "Patient name is required" };
         }
         
-        if (patientType === "opd" && !patientID.trim()) {
-          toast.error("Patient ID is required for OPD patients");
-          return { success: false, error: "Patient ID is required" };
+        if (items.length === 0) {
+          toast.error("At least one test must be selected");
+          return { success: false, error: "At least one test must be selected" };
         }
 
         // Generate document number only at the time of saving if it's a new document
