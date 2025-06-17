@@ -1,5 +1,5 @@
 
-export { default as PersonalInfoSection } from './PersonalInfoSection';
+export { PersonalInfoSection } from './PersonalInfoSection';
 export { default as AddressSection } from './AddressSection';
 export { default as DemographicsSection } from './DemographicsSection';
 export { default as BloodGroupSection } from './BloodGroupSection';
