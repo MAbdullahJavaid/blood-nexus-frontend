@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -30,6 +31,8 @@ interface DonorFormContextType {
   isDeleting: boolean;
   loadDonorData: (donor: any) => void;
   clearForm: () => void;
+  isEditing: boolean;
+  setIsEditing: (isEditing: boolean) => void;
 }
 
 const defaultDonorData: DonorData = {
@@ -63,10 +66,12 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const [donorData, setDonorData] = useState<DonorData>(defaultDonorData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const clearForm = () => {
     setDonorData(defaultDonorData);
     setIsSearchModalOpen(false);
+    setIsEditing(false);
   };
 
   const handleInputChange = (field: keyof DonorData, value: string | boolean) => {
@@ -100,6 +105,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       remarks: '',
       status: donor.status !== undefined ? donor.status : true // Load from DB, default to true if undefined
     });
+    setIsEditing(true); // Mark as editing when loading existing donor data
   };
 
   const handleSubmit = async () => {
@@ -115,6 +121,34 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     try {
       setIsSubmitting(true);
 
+      // Check if donor with this ID already exists (only for new records, not when editing)
+      if (!isEditing) {
+        const { data: existingDonor, error: checkError } = await supabase
+          .from('donors')
+          .select('donor_id')
+          .eq('donor_id', donorData.regNo)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error("Error checking for existing donor:", checkError);
+          toast({
+            title: "Error",
+            description: "Failed to validate donor registration number",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (existingDonor) {
+          toast({
+            title: "Error",
+            description: `Donor with registration number ${donorData.regNo} already exists`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       let bloodGroupSeparate = null;
       let rhFactor = null;
       let combinedBloodGroup = null;
@@ -126,48 +160,76 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
         combinedBloodGroup = `${donorData.group}${rhValue}`;
       }
 
-      const { error } = await supabase
-        .from('donors')
-        .upsert({
-          donor_id: donorData.regNo,
-          name: donorData.name,
-          address: donorData.address,
-          gender: donorData.sex,
-          blood_group: combinedBloodGroup as any,
-          blood_group_separate: bloodGroupSeparate,
-          rh_factor: rhFactor,
-          phone: donorData.phoneRes,
-          email: "",
-          date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
-          last_donation_date: donorData.date,
-          status: donorData.status // <-- ADD THIS
-        }, {
-          onConflict: 'donor_id'
-        });
+      if (isEditing) {
+        // Update existing donor
+        const { error } = await supabase
+          .from('donors')
+          .update({
+            name: donorData.name,
+            address: donorData.address,
+            gender: donorData.sex,
+            blood_group: combinedBloodGroup as any,
+            blood_group_separate: bloodGroupSeparate,
+            rh_factor: rhFactor,
+            phone: donorData.phoneRes,
+            email: "",
+            date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
+            last_donation_date: donorData.date,
+            status: donorData.status
+          })
+          .eq('donor_id', donorData.regNo);
 
-      if (error) {
-        if (
-          error.code === "23505" ||
-          (typeof error.message === "string" && error.message.includes("donor_id"))
-        ) {
+        if (error) {
           toast({
             title: "Error",
-            description: "Donor already exists",
+            description: "Failed to update donor information",
             variant: "destructive",
           });
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to save donor information",
-            variant: "destructive",
-          });
+          return;
         }
-        return;
+      } else {
+        // Insert new donor
+        const { error } = await supabase
+          .from('donors')
+          .insert({
+            donor_id: donorData.regNo,
+            name: donorData.name,
+            address: donorData.address,
+            gender: donorData.sex,
+            blood_group: combinedBloodGroup as any,
+            blood_group_separate: bloodGroupSeparate,
+            rh_factor: rhFactor,
+            phone: donorData.phoneRes,
+            email: "",
+            date_of_birth: donorData.age ? new Date(new Date().getFullYear() - parseInt(donorData.age), 0, 1).toISOString().split('T')[0] : null,
+            last_donation_date: donorData.date,
+            status: donorData.status
+          });
+
+        if (error) {
+          if (
+            error.code === "23505" ||
+            (typeof error.message === "string" && error.message.includes("donor_id"))
+          ) {
+            toast({
+              title: "Error",
+              description: "Donor with this registration number already exists",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to save donor information",
+              variant: "destructive",
+            });
+          }
+          return;
+        }
       }
 
       toast({
         title: "Success",
-        description: "Donor information saved successfully",
+        description: isEditing ? "Donor information updated successfully" : "Donor information saved successfully",
       });
 
       clearForm();
@@ -236,7 +298,9 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       setIsSearchModalOpen,
       isDeleting,
       loadDonorData,
-      clearForm
+      clearForm,
+      isEditing,
+      setIsEditing
     }}>
       {children}
     </DonorFormContext.Provider>
