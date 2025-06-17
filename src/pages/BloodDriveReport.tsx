@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BloodDriveReportFilter from "@/components/reports/BloodDriveReportFilter";
@@ -243,18 +244,19 @@ export default function BloodDriveReport() {
 
   return (
     <div className="p-8 flex flex-col items-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-4xl mb-2">
-        <h1 className="text-3xl font-extrabold mb-2 text-center">Blood Care Foundation</h1>
-        <h2 className="text-xl italic underline mb-6 text-center text-gray-700">
-          Blood Drive Report
-        </h2>
-      </div>
       <BloodDriveReportFilter
         onOk={handleOk}
         onCancel={handleCancel}
         onExport={handleExportCSV}
         onExit={handleExit}
       />
+      {/* Title and Subtitle before the table */}
+      <div className="w-full max-w-4xl mb-2">
+        <h1 className="text-3xl font-extrabold mb-2 text-center">Blood Care Foundation</h1>
+        <h2 className="text-xl italic underline mb-6 text-center text-gray-700">
+          Blood Drive Report
+        </h2>
+      </div>
       {/* Export buttons - PDF, JPEG, CSV */}
       <div className="w-full max-w-4xl flex justify-end gap-2 mb-2">
         <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={handleExportCSV}>

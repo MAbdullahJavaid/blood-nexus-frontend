@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
@@ -209,8 +210,6 @@ export default function DonationsReport() {
 
   return (
     <div className="p-8 flex flex-col items-center min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-extrabold mb-2 tracking-wide">Blood Care Foundation</h1>
-      <h2 className="text-xl italic underline mb-6 text-gray-700">Donation Summary</h2>
       {/* Filter */}
       <DonationsReportFilter
         onOk={handleOk}
@@ -218,8 +217,13 @@ export default function DonationsReport() {
         onExport={handleExport}
         onExit={handleExit}
       />
+      {/* Title and Subtitle before the table */}
+      <div className="w-full max-w-4xl mb-8">
+        <h1 className="text-3xl font-extrabold mb-2 text-center tracking-wide">Blood Care Foundation</h1>
+        <h2 className="text-xl italic underline mb-6 text-center text-gray-700">Donation Summary</h2>
+      </div>
       {/* Table */}
-      <div className="w-full max-w-2xl bg-white rounded shadow border mt-8 p-6">
+      <div id="donations-report-table" className="w-full max-w-2xl bg-white rounded shadow border mt-8 p-6">
         <div className="flex gap-2 mb-4 export-hide">
           {/* Both export buttons now use the File icon */}
           <Button onClick={handleExportPDF} variant="default" className="flex items-center gap-2" size="sm">
