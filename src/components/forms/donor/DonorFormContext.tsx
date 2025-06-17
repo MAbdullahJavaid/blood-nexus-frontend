@@ -1,7 +1,8 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useFormValidation, FormValidationConfig } from "@/hooks/useFormValidation";
+import { FieldValidationRules } from "@/lib/validation";
 
 interface DonorData {
   regNo: string;
@@ -33,6 +34,9 @@ interface DonorFormContextType {
   clearForm: () => void;
   isEditing: boolean;
   setIsEditing: (isEditing: boolean) => void;
+  validationErrors: Record<string, string>;
+  isFormValid: boolean;
+  validateField: (field: keyof DonorData, value: string) => boolean;
 }
 
 const defaultDonorData: DonorData = {
@@ -47,7 +51,16 @@ const defaultDonorData: DonorData = {
   phoneRes: "",
   phoneOffice: "",
   remarks: "",
-  status: true, // Default to active
+  status: true,
+};
+
+const validationConfig: FormValidationConfig = {
+  regNo: FieldValidationRules.regNo,
+  name: FieldValidationRules.name,
+  address: { ...FieldValidationRules.address, required: false },
+  age: FieldValidationRules.age,
+  phoneRes: FieldValidationRules.phone,
+  phoneOffice: FieldValidationRules.phone,
 };
 
 const DonorFormContext = createContext<DonorFormContextType | undefined>(undefined);
@@ -68,10 +81,33 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const {
+    fields,
+    updateField,
+    validateForm,
+    resetForm,
+    isFormValid,
+    setFieldError,
+  } = useFormValidation(defaultDonorData, validationConfig);
+
+  const validationErrors = Object.keys(fields).reduce((acc, key) => {
+    acc[key] = fields[key].error;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const validateField = (field: keyof DonorData, value: string): boolean => {
+    const rule = validationConfig[field];
+    if (!rule) return true;
+    
+    const result = require("@/lib/validation").validateField(value, rule);
+    return result.isValid;
+  };
+
   const clearForm = () => {
     setDonorData(defaultDonorData);
     setIsSearchModalOpen(false);
     setIsEditing(false);
+    resetForm();
   };
 
   const handleInputChange = (field: keyof DonorData, value: string | boolean) => {
@@ -79,6 +115,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       ...prev,
       [field]: value
     }));
+
+    // Update validation for string fields
+    if (typeof value === "string" && validationConfig[field]) {
+      updateField(field, value, validateField(field, value));
+    }
   };
 
   const loadDonorData = (donor: any) => {
@@ -103,12 +144,22 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       phoneRes: donor.phone || '',
       phoneOffice: '',
       remarks: '',
-      status: donor.status !== undefined ? donor.status : true // Load from DB, default to true if undefined
+      status: donor.status !== undefined ? donor.status : true
     });
-    setIsEditing(true); // Mark as editing when loading existing donor data
+    setIsEditing(true);
   };
 
   const handleSubmit = async () => {
+    // Validate form before submission
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!donorData.name || !donorData.regNo) {
       toast({
         title: "Error",
@@ -121,7 +172,6 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     try {
       setIsSubmitting(true);
 
-      // Check if donor with this ID already exists (only for new records, not when editing)
       if (!isEditing) {
         const { data: existingDonor, error: checkError } = await supabase
           .from('donors')
@@ -129,7 +179,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           .eq('donor_id', donorData.regNo)
           .single();
 
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
+        if (checkError && checkError.code !== 'PGRST116') {
           console.error("Error checking for existing donor:", checkError);
           toast({
             title: "Error",
@@ -161,7 +211,6 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       }
 
       if (isEditing) {
-        // Update existing donor
         const { error } = await supabase
           .from('donors')
           .update({
@@ -188,7 +237,6 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           return;
         }
       } else {
-        // Insert new donor
         const { error } = await supabase
           .from('donors')
           .insert({
@@ -300,7 +348,10 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       loadDonorData,
       clearForm,
       isEditing,
-      setIsEditing
+      setIsEditing,
+      validationErrors,
+      isFormValid,
+      validateField
     }}>
       {children}
     </DonorFormContext.Provider>

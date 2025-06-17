@@ -1,5 +1,6 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
-import { Input } from "@/components/ui/input";
+import { ValidatedInput } from "@/components/ui/validated-input";
+import { ValidatedSelect } from "@/components/ui/validated-select";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchIcon } from "lucide-react";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShadcnDatePicker } from "@/components/ui/ShadcnDatePicker";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { FieldValidationRules } from "@/lib/validation";
 
 interface PatientFormProps {
   isSearchEnabled?: boolean;
@@ -47,6 +50,13 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
     const [dob, setDob] = useState("");
     const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
 
+    // Validation states
+    const [nameError, setNameError] = useState("");
+    const [phoneError, setPhoneError] = useState("");
+    const [addressError, setAddressError] = useState("");
+    const [amountError, setAmountError] = useState("");
+    const [weightError, setWeightError] = useState("");
+
     const clearForm = () => {
       setName("");
       setFName("");
@@ -66,6 +76,12 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setPostfix("000");
       setSelectedPatient(null);
       setFormDate(new Date().toISOString().split('T')[0]);
+      // Clear validation errors
+      setNameError("");
+      setPhoneError("");
+      setAddressError("");
+      setAmountError("");
+      setWeightError("");
     };
 
     useImperativeHandle(ref, () => ({
@@ -109,7 +125,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       console.log("Selected patient:", patient);
       setSelectedPatient(patient);
       setName(patient.name || "");
-      setFName(""); // F.Name not stored in database
+      setFName("");
       setGender(patient.gender || "Male");
       setAddress(patient.address || "");
       setPhone(patient.phone || "");
@@ -118,7 +134,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setBottleQuantity(patient.bottle_quantity?.toString() || "1");
       setRequiredUnit(patient.bottle_unit_type || "bag");
       
-      // Parse blood group
       if (patient.blood_group) {
         const bloodGroupStr = patient.blood_group;
         if (bloodGroupStr.includes('+')) {
@@ -133,7 +148,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         }
       }
       
-      // Set registration number
       if (patient.patient_id) {
         setPrefix(patient.patient_id.charAt(0));
         setPostfix(patient.patient_id.slice(1));
@@ -147,19 +161,16 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       try {
         setLoading(true);
         
-        // Validate required fields
         if (!name.trim()) {
           toast.error("Patient name is required");
           return;
         }
         
-        // Validate phone number length
         if (phone && phone.length > 11) {
           toast.error("Phone number cannot exceed 11 digits");
           return;
         }
         
-        // Map blood group to the format expected by the database
         const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
           "A+": "A+", "A-": "A-", "B+": "B+", "B-": "B-", 
           "AB+": "AB+", "AB-": "AB-", "O+": "O+", "O-": "O-",
@@ -168,7 +179,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         
         const mappedBloodGroup = bloodGroupMap[`${bloodGroup}${rhType}`] || bloodGroupMap[bloodGroup] || "O+";
         
-        // Calculate age from DOB if provided
         let calculatedAge = null;
         if (dob) {
           const dobDate = new Date(dob);
@@ -195,7 +205,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         };
         
         if (selectedPatient) {
-          // Update existing patient
           const { error } = await supabase
             .from('patients')
             .update(patientData)
@@ -204,14 +213,12 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           if (error) throw error;
           toast.success("Patient updated successfully!");
         } else {
-          // Generate registration number for new patient
           const { data: regData, error: regError } = await supabase.rpc('generate_patient_reg_number', {
             prefix_type: prefix
           });
           
           if (regError) throw regError;
           
-          // Create new patient
           const { data, error } = await supabase
             .from('patients')
             .insert({
@@ -223,8 +230,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             
           if (error) throw error;
           
-          // Update the form with the generated registration number
-          setPostfix(regData.slice(1)); // Remove the prefix to show just the number part
+          setPostfix(regData.slice(1));
           setSelectedPatient(data);
           toast.success("Patient saved successfully!");
         }
@@ -263,7 +269,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       }
     };
 
-    // Display the current registration number or "Auto-generated on save" if new
     const displayRegNo = postfix === "000" ? "" : postfix;
     const regNoPlaceholder = postfix === "000" ? "Auto-generated on save" : "";
 
@@ -284,9 +289,10 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
                     <SelectItem value="S">S</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input 
+                <ValidatedInput 
                   id="regNo" 
                   value={displayRegNo} 
+                  onChange={() => {}}
                   className="h-9 w-24 rounded-l-none bg-green-100" 
                   readOnly 
                   placeholder={regNoPlaceholder}
@@ -305,12 +311,12 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           <div></div>
           <div>
             <Label htmlFor="date" className="mb-1 block">Date:</Label>
-            <Input 
+            <ValidatedInput 
               id="date" 
               className="h-9" 
               type="date" 
               value={formDate} 
-              onChange={(e) => setFormDate(e.target.value)}
+              onChange={(value) => setFormDate(value)}
               disabled={!isEditable} 
             />
           </div>
@@ -319,47 +325,67 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="name" className="mb-1 block">Name:</Label>
-            <Input 
+            <ValidatedInput 
               id="name" 
               className="h-9" 
+              validationType="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!isEditable} 
+              onChange={(value, isValid) => {
+                setName(value);
+                if (!isValid) {
+                  setNameError("Please enter a valid name");
+                } else {
+                  setNameError("");
+                }
+              }}
+              disabled={!isEditable}
+              errorMessage={nameError}
             />
           </div>
           <div>
             <Label htmlFor="fName" className="mb-1 block">F.Name:</Label>
-            <Input 
+            <ValidatedInput 
               id="fName" 
               className="h-9" 
+              validationType="name"
               value={fName}
-              onChange={(e) => setFName(e.target.value)}
+              onChange={(value) => setFName(value)}
               disabled={!isEditable} 
             />
           </div>
           <div>
             <Label htmlFor="gender" className="mb-1 block">Gender:</Label>
-            <Select value={gender} onValueChange={setGender} disabled={!isEditable}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-              </SelectContent>
-            </Select>
+            <ValidatedSelect 
+              value={gender} 
+              onValueChange={(value) => setGender(value)} 
+              disabled={!isEditable}
+              options={[
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" }
+              ]}
+              className="h-9"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 mb-4">
           <div>
             <Label htmlFor="address" className="mb-1 block">Address:</Label>
-            <Input 
+            <ValidatedInput 
               id="address" 
               className="h-9" 
+              validationType="address"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              disabled={!isEditable} 
+              onChange={(value, isValid) => {
+                setAddress(value);
+                if (!isValid) {
+                  setAddressError("Please enter a valid address");
+                } else {
+                  setAddressError("");
+                }
+              }}
+              disabled={!isEditable}
+              errorMessage={addressError}
             />
           </div>
         </div>
@@ -367,23 +393,32 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="diagnosis" className="mb-1 block">Diagnosis:</Label>
-            <Input 
+            <ValidatedInput 
               id="diagnosis" 
               className="h-9" 
               value={diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
+              onChange={(value) => setDiagnosis(value)}
               disabled={!isEditable} 
             />
           </div>
           <div>
             <Label htmlFor="amount" className="mb-1 block">Amount:</Label>
-            <Input 
+            <ValidatedInput 
               id="amount" 
               className="h-9" 
-              type="number" 
+              type="number"
+              validationType="amount"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              disabled={!isEditable} 
+              onChange={(value, isValid) => {
+                setAmount(value);
+                if (!isValid) {
+                  setAmountError("Please enter a valid amount");
+                } else {
+                  setAmountError("");
+                }
+              }}
+              disabled={!isEditable}
+              errorMessage={amountError}
             />
           </div>
           <div></div>
@@ -392,109 +427,129 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="phone" className="mb-1 block">Phone:</Label>
-            <Input 
+            <ValidatedInput 
               id="phone" 
               className="h-9" 
+              validationType="phone"
               value={phone}
-              onChange={(e) => {
-                const value = e.target.value;
+              onChange={(value, isValid) => {
                 if (value.length <= 11) {
                   setPhone(value);
+                  if (!isValid) {
+                    setPhoneError("Please enter a valid phone number");
+                  } else {
+                    setPhoneError("");
+                  }
                 }
               }}
               disabled={!isEditable} 
               maxLength={11}
+              errorMessage={phoneError}
             />
           </div>
           <div>
             <Label htmlFor="bloodGroup" className="mb-1 block">Blood Group:</Label>
             <div className="flex gap-2">
-              <Select value={bloodGroup} onValueChange={setBloodGroup} disabled={!isEditable}>
-                <SelectTrigger className="h-9 flex-1">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="O">O</SelectItem>
-                  <SelectItem value="AB">AB</SelectItem>
-                  <SelectItem value="--">--</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={rhType} onValueChange={setRhType} disabled={!isEditable}>
-                <SelectTrigger className="h-9 flex-1">
-                  <SelectValue placeholder="Rh" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="+ve">+ve</SelectItem>
-                  <SelectItem value="-ve">-ve</SelectItem>
-                  <SelectItem value="--">--</SelectItem>
-                </SelectContent>
-              </Select>
+              <ValidatedSelect 
+                value={bloodGroup} 
+                onValueChange={(value) => setBloodGroup(value)} 
+                disabled={!isEditable}
+                options={[
+                  { value: "A", label: "A" },
+                  { value: "B", label: "B" },
+                  { value: "O", label: "O" },
+                  { value: "AB", label: "AB" },
+                  { value: "--", label: "--" }
+                ]}
+                className="h-9 flex-1"
+              />
+              <ValidatedSelect 
+                value={rhType} 
+                onValueChange={(value) => setRhType(value)} 
+                disabled={!isEditable}
+                options={[
+                  { value: "+ve", label: "+ve" },
+                  { value: "-ve", label: "-ve" },
+                  { value: "--", label: "--" }
+                ]}
+                className="h-9 flex-1"
+              />
             </div>
           </div>
           <div>
             <Label htmlFor="bgCategory" className="mb-1 block">BG Category:</Label>
-            <Select value={bgCategory} onValueChange={setBgCategory} disabled={!isEditable}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="WB">WB</SelectItem>
-                <SelectItem value="FWB">FWB</SelectItem>
-                <SelectItem value="PLT">PLT</SelectItem>
-                <SelectItem value="PC">PC</SelectItem>
-                <SelectItem value="CP">CP</SelectItem>
-              </SelectContent>
-            </Select>
+            <ValidatedSelect 
+              value={bgCategory} 
+              onValueChange={(value) => setBgCategory(value)} 
+              disabled={!isEditable}
+              options={[
+                { value: "WB", label: "WB" },
+                { value: "FWB", label: "FWB" },
+                { value: "PLT", label: "PLT" },
+                { value: "PC", label: "PC" },
+                { value: "CP", label: "CP" }
+              ]}
+              className="h-9"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="weight" className="mb-1 block">Weight:</Label>
-            <Input 
+            <ValidatedInput 
               id="weight" 
               className="h-9" 
-              type="number" 
+              type="number"
+              validationType="weight"
               value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              disabled={!isEditable} 
+              onChange={(value, isValid) => {
+                setWeight(value);
+                if (!isValid) {
+                  setWeightError("Please enter a valid weight");
+                } else {
+                  setWeightError("");
+                }
+              }}
+              disabled={!isEditable}
+              errorMessage={weightError}
             />
           </div>
           <div>
             <Label htmlFor="hospital" className="mb-1 block">Hospital Name:</Label>
-            <Input 
+            <ValidatedInput 
               id="hospital" 
               className="h-9" 
               value={hospital}
-              onChange={(e) => setHospital(e.target.value)}
+              onChange={(value) => setHospital(value)}
               disabled={!isEditable} 
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label htmlFor="bottle" className="mb-1 block">Bottle:</Label>
-              <Input 
+              <ValidatedInput 
                 id="bottle" 
                 className="h-9" 
-                type="number" 
+                type="number"
+                validationType="quantity"
                 value={bottleQuantity}
-                onChange={(e) => setBottleQuantity(e.target.value)}
+                onChange={(value) => setBottleQuantity(value)}
                 disabled={!isEditable} 
               />
             </div>
             <div>
               <Label htmlFor="required" className="mb-1 block">Required:</Label>
-              <Select value={requiredUnit} onValueChange={setRequiredUnit} disabled={!isEditable}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ml">ml</SelectItem>
-                  <SelectItem value="bag">bag</SelectItem>
-                </SelectContent>
-              </Select>
+              <ValidatedSelect 
+                value={requiredUnit} 
+                onValueChange={(value) => setRequiredUnit(value)} 
+                disabled={!isEditable}
+                options={[
+                  { value: "ml", label: "ml" },
+                  { value: "bag", label: "bag" }
+                ]}
+                className="h-9"
+              />
             </div>
           </div>
         </div>
@@ -550,10 +605,10 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
             </DialogHeader>
             <div className="py-4">
               <div className="flex gap-2 mb-4">
-                <Input 
+                <ValidatedInput 
                   placeholder="Enter registration number, name, or phone" 
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(value) => setSearchQuery(value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
                 <Button onClick={handleSearch} disabled={loading}>
