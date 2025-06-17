@@ -54,23 +54,6 @@ const defaultDonorData: DonorData = {
   status: true,
 };
 
-// Create a string-only version for validation
-const getStringFieldsForValidation = (data: DonorData): Record<string, string> => {
-  return {
-    regNo: data.regNo,
-    name: data.name,
-    date: data.date,
-    address: data.address,
-    age: data.age,
-    sex: data.sex,
-    group: data.group,
-    rh: data.rh,
-    phoneRes: data.phoneRes,
-    phoneOffice: data.phoneOffice,
-    remarks: data.remarks,
-  };
-};
-
 const validationConfig: FormValidationConfig = {
   regNo: FieldValidationRules.regNo,
   name: FieldValidationRules.name,
@@ -105,7 +88,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     resetForm,
     isFormValid,
     setFieldError,
-  } = useFormValidation(getStringFieldsForValidation(defaultDonorData), validationConfig);
+  } = useFormValidation(defaultDonorData, validationConfig);
 
   const validationErrors = Object.keys(fields).reduce((acc, key) => {
     acc[key] = fields[key].error;
@@ -133,7 +116,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       [field]: value
     }));
 
-    // Update validation for string fields only
+    // Update validation for string fields
     if (typeof value === "string" && validationConfig[field]) {
       updateField(field, value, validateField(field, value));
     }
