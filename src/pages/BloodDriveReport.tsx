@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BloodDriveReportFilter from "@/components/reports/BloodDriveReportFilter";
@@ -283,6 +282,16 @@ export default function BloodDriveReport() {
             )}
           </TableCaption>
           <TableHeader>
+            <TableRow>
+              <TableHead colSpan={9} className="text-center text-xl font-bold py-4 bg-gray-50">
+                Blood Care Foundation
+              </TableHead>
+            </TableRow>
+            <TableRow>
+              <TableHead colSpan={9} className="text-center text-lg italic underline py-3 bg-gray-50">
+                Blood Drive Report
+              </TableHead>
+            </TableRow>
             <TableRow>
               <TableHead>#</TableHead>
               <TableHead>Created At</TableHead>

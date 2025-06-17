@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
@@ -242,6 +241,16 @@ export default function DonationsReport() {
             )}
           </TableCaption>
           <TableHeader>
+            <TableRow>
+              <TableHead colSpan={5} className="text-center text-xl font-bold py-4 bg-gray-50">
+                Blood Care Foundation
+              </TableHead>
+            </TableRow>
+            <TableRow>
+              <TableHead colSpan={5} className="text-center text-lg italic underline py-3 bg-gray-50">
+                Donation Summary
+              </TableHead>
+            </TableRow>
             <TableRow>
               <TableHead>#</TableHead>
               <TableHead>Donor Email</TableHead>
