@@ -21,7 +21,7 @@ type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoic
 interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
-  handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  handleSave: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
   handleDelete?: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
 }
@@ -36,7 +36,8 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<string[]>([]);
   
   const activeFormRef = useRef<FormRef>({
-    clearForm: () => {}
+    clearForm: () => {},
+    handleSave: async () => ({ success: false, error: "No save handler available" })
   });
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
@@ -51,7 +52,8 @@ const Dashboard = () => {
     setIsDeleting(false);
     
     activeFormRef.current = {
-      clearForm: () => {}
+      clearForm: () => {},
+      handleSave: async () => ({ success: false, error: "No save handler available" })
     };
   };
 
