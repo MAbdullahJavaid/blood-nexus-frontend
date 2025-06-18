@@ -1,15 +1,6 @@
 
 import React, { forwardRef, useImperativeHandle } from "react";
-import { PatientInvoiceFormProvider, usePatientInvoiceState } from "./patient-invoice/hooks/usePatientInvoiceState";
-import { PatientInfoSection } from "./patient-invoice/PatientInfoSection";
-import { HospitalDetailsSection } from "./patient-invoice/HospitalDetailsSection";
-import { BloodDetailsSection } from "./patient-invoice/BloodDetailsSection";
-import { TestsSection } from "./patient-invoice/TestsSection";
-import { TotalSection } from "./patient-invoice/TotalSection";
-import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
-import { TestSearchModal } from "./patient-invoice/TestSearchModal";
-import { DocumentSearchModal } from "./patient-invoice/DocumentSearchModal";
-import { useSaveInvoice } from "./patient-invoice/hooks/useSaveInvoice";
+import PatientInvoiceFormComponent from "./patient-invoice/PatientInvoiceForm";
 
 interface PatientInvoiceFormProps {
   isSearchEnabled?: boolean;
@@ -24,131 +15,50 @@ interface PatientInvoiceFormRef {
   handleDeleteItem: () => void;
 }
 
-const PatientInvoiceFormContent = forwardRef<PatientInvoiceFormRef, PatientInvoiceFormProps>(
+const PatientInvoiceForm = forwardRef<PatientInvoiceFormRef, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
-    const {
-      patientInfo,
-      hospitalDetails,
-      bloodDetails,
-      tests,
-      totals,
-      isPatientModalOpen,
-      setIsPatientModalOpen,
-      isTestModalOpen,
-      setIsTestModalOpen,
-      isDocumentModalOpen,
-      setIsDocumentModalOpen,
-      addTest,
-      removeTest,
-      clearForm,
-      ...handlers
-    } = usePatientInvoiceState();
-
-    const { saveInvoice } = useSaveInvoice();
+    const innerRef = React.useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
-      clearForm,
-      handleSave: async () => {
-        try {
-          const result = await saveInvoice({
-            patientInfo,
-            hospitalDetails,
-            bloodDetails,
-            tests,
-            totals
-          });
-          return { success: true, invoiceId: result.invoiceId };
-        } catch (error) {
-          console.error("Error saving invoice:", error);
-          return { success: false, error };
+      clearForm: () => {
+        if (innerRef.current?.clearForm) {
+          innerRef.current.clearForm();
         }
+      },
+      handleSave: async () => {
+        if (innerRef.current?.handleSave) {
+          return await innerRef.current.handleSave();
+        }
+        return { success: false, error: "No save handler available" };
       },
       handleDelete: async () => {
-        try {
-          // Add delete logic here if needed
-          return { success: true };
-        } catch (error) {
-          console.error("Error deleting invoice:", error);
-          return { success: false, error };
+        if (innerRef.current?.handleDelete) {
+          return await innerRef.current.handleDelete();
+        }
+        return { success: false, error: "No delete handler available" };
+      },
+      handleAddItem: () => {
+        if (innerRef.current?.handleAddItem) {
+          innerRef.current.handleAddItem();
         }
       },
-      handleAddItem: addTest,
       handleDeleteItem: () => {
-        if (tests.length > 0) {
-          removeTest(tests.length - 1);
+        if (innerRef.current?.handleDeleteItem) {
+          innerRef.current.handleDeleteItem();
         }
       }
     }));
 
     return (
-      <div className="bg-white p-4 rounded-md space-y-6">
-        <PatientInfoSection 
-          patientInfo={patientInfo}
-          onPatientInfoChange={handlers.handlePatientInfoChange}
-          onSearchClick={() => setIsPatientModalOpen(true)}
-          isEditable={isEditable}
-          isSearchEnabled={isSearchEnabled}
-        />
-
-        <HospitalDetailsSection 
-          hospitalDetails={hospitalDetails}
-          onHospitalDetailsChange={handlers.handleHospitalDetailsChange}
-          isEditable={isEditable}
-        />
-
-        <BloodDetailsSection 
-          bloodDetails={bloodDetails}
-          onBloodDetailsChange={handlers.handleBloodDetailsChange}
-          isEditable={isEditable}
-        />
-
-        <TestsSection 
-          tests={tests}
-          onTestChange={handlers.handleTestChange}
-          onAddTest={() => setIsTestModalOpen(true)}
-          onRemoveTest={removeTest}
-          isEditable={isEditable}
-        />
-
-        <TotalSection totals={totals} />
-
-        <PatientSearchModal
-          isOpen={isPatientModalOpen}
-          onClose={() => setIsPatientModalOpen(false)}
-          onSelectPatient={handlers.handlePatientSelect}
-        />
-
-        <TestSearchModal
-          isOpen={isTestModalOpen}
-          onClose={() => setIsTestModalOpen(false)}
-          onSelectTest={handlers.handleTestSelect}
-        />
-
-        <DocumentSearchModal
-          isOpen={isDocumentModalOpen}
-          onClose={() => setIsDocumentModalOpen(false)}
-          onSelectDocument={handlers.handleDocumentSelect}
-        />
-      </div>
-    );
-  }
-);
-
-const PatientInvoiceForm = forwardRef<PatientInvoiceFormRef, PatientInvoiceFormProps>(
-  ({ isSearchEnabled = false, isEditable = false }, ref) => {
-    return (
-      <PatientInvoiceFormProvider>
-        <PatientInvoiceFormContent 
-          ref={ref}
-          isSearchEnabled={isSearchEnabled}
-          isEditable={isEditable}
-        />
-      </PatientInvoiceFormProvider>
+      <PatientInvoiceFormComponent
+        ref={innerRef}
+        isSearchEnabled={isSearchEnabled}
+        isEditable={isEditable}
+      />
     );
   }
 );
 
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
-PatientInvoiceFormContent.displayName = "PatientInvoiceFormContent";
 
 export default PatientInvoiceForm;

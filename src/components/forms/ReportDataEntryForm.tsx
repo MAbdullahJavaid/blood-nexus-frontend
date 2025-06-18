@@ -16,6 +16,8 @@ interface ReportDataEntryFormProps {
 
 interface ReportDataEntryFormRef {
   clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const ReportDataEntryForm = forwardRef<ReportDataEntryFormRef, ReportDataEntryFormProps>(
@@ -32,6 +34,7 @@ const ReportDataEntryForm = forwardRef<ReportDataEntryFormRef, ReportDataEntryFo
       highFlag: false,
       testId: ""
     });
+    const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
     const clearForm = () => {
       setFormData({
@@ -46,11 +49,8 @@ const ReportDataEntryForm = forwardRef<ReportDataEntryFormRef, ReportDataEntryFo
         highFlag: false,
         testId: ""
       });
+      setSelectedRecord(null);
     };
-
-    useImperativeHandle(ref, () => ({
-      clearForm
-    }));
 
     const handleSave = async () => {
       if (!formData.documentNo.trim() || !formData.testName.trim()) {
@@ -58,28 +58,79 @@ const ReportDataEntryForm = forwardRef<ReportDataEntryFormRef, ReportDataEntryFo
       }
 
       try {
-        const { error } = await supabase
-          .from('test_report_results')
-          .insert({
-            document_no: formData.documentNo,
-            test_name: formData.testName,
-            user_value: formData.userValue,
-            low_value: formData.lowValue,
-            high_value: formData.highValue,
-            measuring_unit: formData.measuringUnit,
-            category: formData.category,
-            low_flag: formData.lowFlag,
-            high_flag: formData.highFlag,
-            test_id: formData.testId ? parseInt(formData.testId) : null
-          });
+        if (selectedRecord) {
+          // Update existing record
+          const { error } = await supabase
+            .from('test_report_results')
+            .update({
+              document_no: formData.documentNo,
+              test_name: formData.testName,
+              user_value: formData.userValue,
+              low_value: formData.lowValue,
+              high_value: formData.highValue,
+              measuring_unit: formData.measuringUnit,
+              category: formData.category,
+              low_flag: formData.lowFlag,
+              high_flag: formData.highFlag,
+              test_id: formData.testId ? parseInt(formData.testId) : null
+            })
+            .eq('id', selectedRecord.id);
 
-        if (error) throw error;
+          if (error) throw error;
+        } else {
+          // Create new record
+          const { error } = await supabase
+            .from('test_report_results')
+            .insert({
+              document_no: formData.documentNo,
+              test_name: formData.testName,
+              user_value: formData.userValue,
+              low_value: formData.lowValue,
+              high_value: formData.highValue,
+              measuring_unit: formData.measuringUnit,
+              category: formData.category,
+              low_flag: formData.lowFlag,
+              high_flag: formData.highFlag,
+              test_id: formData.testId ? parseInt(formData.testId) : null
+            });
+
+          if (error) throw error;
+        }
+
         clearForm();
+        return { success: true };
       } catch (error) {
         console.error("Error saving report data:", error);
         throw error;
       }
     };
+
+    const handleDelete = async () => {
+      if (!selectedRecord) {
+        throw new Error("No record selected for deletion");
+      }
+
+      try {
+        const { error } = await supabase
+          .from('test_report_results')
+          .delete()
+          .eq('id', selectedRecord.id);
+
+        if (error) throw error;
+
+        clearForm();
+        return { success: true };
+      } catch (error) {
+        console.error("Error deleting report data:", error);
+        throw error;
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      clearForm,
+      handleSave,
+      handleDelete
+    }));
 
     return (
       <div className="bg-white p-4 rounded-md space-y-6">

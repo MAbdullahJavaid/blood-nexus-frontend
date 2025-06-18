@@ -38,8 +38,6 @@ const Dashboard = () => {
   const activeFormRef = useRef<FormRef>({
     clearForm: () => {}
   });
-  
-  const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
   const thanksLetterRef = useRef<HTMLDivElement | null>(null);
@@ -60,9 +58,6 @@ const Dashboard = () => {
   const clearActiveForm = () => {
     if (activeFormRef.current && activeFormRef.current.clearForm) {
       activeFormRef.current.clearForm();
-    }
-    if (activeForm === "reportDataEntry" && reportFormRef.current && reportFormRef.current.clearForm) {
-      reportFormRef.current.clearForm();
     }
   };
 
@@ -254,7 +249,7 @@ const Dashboard = () => {
             isEditable={isEditable}
             isDeleting={isDeleting}
             key="report-data-entry"
-            ref={reportFormRef}
+            ref={activeFormRef as any}
           />
         );
       case 'thanksLetter':
