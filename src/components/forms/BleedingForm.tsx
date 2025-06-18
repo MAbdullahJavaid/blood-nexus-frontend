@@ -6,7 +6,6 @@ import DonorInfoSection from "./bleeding/DonorInfoSection";
 import BagInfoSection from "./bleeding/BagInfoSection";
 import BloodGroupSection from "./bleeding/BloodGroupSection";
 import AddressSection from "./bleeding/AddressSection";
-// Removed DonorCategorySection import
 import ScreeningResultsPanel from "./bleeding/ScreeningResultsPanel";
 import HBAndDateSection from "./bleeding/HBAndDateSection";
 import ProductInfoSection from "./bleeding/ProductInfoSection";
@@ -18,14 +17,34 @@ interface ExtendedBleedingFormProps extends BleedingFormProps {
 
 interface BleedingFormRef {
   clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
   ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
-    const { clearForm } = useBleedingForm();
+    const { clearForm, handleSubmit, handleDelete } = useBleedingForm();
 
     useImperativeHandle(ref, () => ({
-      clearForm
+      clearForm,
+      handleSave: async () => {
+        try {
+          await handleSubmit();
+          return { success: true };
+        } catch (error) {
+          console.error("Error saving bleeding record:", error);
+          return { success: false, error };
+        }
+      },
+      handleDelete: async () => {
+        try {
+          await handleDelete();
+          return { success: true };
+        } catch (error) {
+          console.error("Error deleting bleeding record:", error);
+          return { success: false, error };
+        }
+      }
     }));
 
     return (
@@ -42,7 +61,6 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
         />
         <BloodGroupSection />
         <AddressSection />
-        {/* DonorCategorySection has been removed per your request */}
 
         <div className="mt-6 mb-2">
           <h3 className="text-lg font-medium text-red-600">Screening Results</h3>

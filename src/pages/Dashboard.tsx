@@ -216,7 +216,11 @@ const Dashboard = () => {
                  ref={activeFormRef as any}
                />;
       case 'crossmatch':
-        return <CrossmatchForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return <CrossmatchForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable} 
+                 ref={activeFormRef as any}
+               />;
       case 'patientInvoice':
         return <PatientInvoiceForm 
                  isSearchEnabled={isSearchEnabled} 
