@@ -83,40 +83,38 @@ const Dashboard = () => {
   };
 
   const handleDeleteClick = async () => {
-    if (activeForm === 'crossmatch' || activeForm === 'patient' || activeForm === 'bleeding' || activeForm === 'donor') {
-      // For forms with delete functionality, set deleting state and enable search
-      setIsDeleting(true);
-      setIsSearchEnabled(true);
-      setIsEditing(false);
-      setIsAdding(false);
-      clearActiveForm();
-    } else {
-      // For other forms, handle deletion differently if needed
-      setIsDeleting(true);
-      setIsSearchEnabled(true);
-      setIsEditing(false);
-      setIsAdding(false);
-      clearActiveForm();
-    }
+    setIsDeleting(true);
+    setIsSearchEnabled(true);
+    setIsEditing(false);
+    setIsAdding(false);
+    clearActiveForm();
   };
 
   const handleSaveClick = async () => {
     if (activeFormRef.current && activeFormRef.current.handleSave) {
-      const result = await activeFormRef.current.handleSave();
-      if (result.success) {
-        toast({
-          title: "Form Saved",
-          description: `${activeForm} data has been saved successfully.`
-        });
-        setIsEditing(false);
-        setIsAdding(false);
-        setIsDeleting(false);
-        setIsSearchEnabled(false);
-        clearActiveForm();
-      } else {
+      try {
+        const result = await activeFormRef.current.handleSave();
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `${activeForm} data has been saved successfully.`
+          });
+          setIsEditing(false);
+          setIsAdding(false);
+          setIsDeleting(false);
+          setIsSearchEnabled(false);
+          clearActiveForm();
+        } else {
+          toast({
+            title: "Save Failed",
+            description: result.error?.message || `Failed to save ${activeForm} data.`,
+            variant: "destructive"
+          });
+        }
+      } catch (error: any) {
         toast({
           title: "Save Failed",
-          description: `Failed to save ${activeForm} data.`,
+          description: error.message || `Failed to save ${activeForm} data.`,
           variant: "destructive"
         });
       }
@@ -148,7 +146,7 @@ const Dashboard = () => {
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
-    clearActiveForm(); // Clear form when closing
+    clearActiveForm();
   };
 
   const handleAddItemClick = () => {
@@ -237,7 +235,11 @@ const Dashboard = () => {
                  ref={activeFormRef}
                />;
       case 'category':
-        return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
+        return <CategoryForm 
+                 isSearchEnabled={isSearchEnabled} 
+                 isEditable={isEditable}
+                 ref={activeFormRef as any}
+               />;
       case 'testInformation':
         return <TestInformationForm 
                  isSearchEnabled={isSearchEnabled} 

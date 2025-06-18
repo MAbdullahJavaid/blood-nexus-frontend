@@ -1,119 +1,188 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, forwardRef, useImperativeHandle } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CategoryFormProps {
-  isEditable?: boolean;
   isSearchEnabled?: boolean;
+  isEditable?: boolean;
 }
 
-const CategoryForm = ({ isEditable = false, isSearchEnabled = false }: CategoryFormProps) => {
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [newCategory, setNewCategory] = useState('');
-  const [loading, setLoading] = useState(false);
+interface CategoryFormRef {
+  clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
+}
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+const CategoryForm = forwardRef<CategoryFormRef, CategoryFormProps>(
+  ({ isSearchEnabled = false, isEditable = false }, ref) => {
+    const [formData, setFormData] = useState({
+      name: "",
+      description: ""
+    });
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
-  const fetchCategories = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('test_categories')
-      .select('id, name')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories');
-    } else {
-      setCategories(data || []);
-    }
-    setLoading(false);
-  };
+    const clearForm = () => {
+      setFormData({ name: "", description: "" });
+      setSelectedCategory(null);
+    };
 
-  const handleAddCategory = async () => {
-    if (newCategory.trim() && isEditable) {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('test_categories')
-        .insert({ name: newCategory.trim() })
-        .select();
-      
-      if (error) {
-        console.error('Error adding category:', error);
-        toast.error('Failed to add category');
-      } else if (data) {
-        setCategories([...categories, data[0]]);
-        setNewCategory('');
-        toast.success('Category added successfully');
+    const handleSave = async () => {
+      if (!formData.name.trim()) {
+        throw new Error("Category name is required");
       }
-      
-      setLoading(false);
-    }
-  };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleAddCategory();
-    }
-  };
+      try {
+        if (selectedCategory) {
+          // Update existing category
+          const { error } = await supabase
+            .from('test_categories')
+            .update({
+              name: formData.name,
+              description: formData.description
+            })
+            .eq('id', selectedCategory.id);
 
-  return (
-    <Card className="border shadow-sm p-4 max-w-md mx-auto">
-      <div className="flex justify-center mb-2">
-        <h2 className="text-xl font-medium">Category Name</h2>
-      </div>
-      
-      {isEditable && (
-        <div className="flex mb-4">
-          <Input 
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="mr-2"
-            disabled={!isEditable || loading}
-            placeholder="Enter new category name"
-          />
-          <Button 
-            onClick={handleAddCategory} 
-            disabled={!newCategory.trim() || loading}
-          >
-            Add
-          </Button>
-        </div>
-      )}
-      
-      <ScrollArea className="h-[400px] border rounded-md">
-        <div className="p-1">
-          {loading && categories.length === 0 ? (
-            <div className="text-center text-gray-400 p-4">
-              Loading categories...
+          if (error) throw error;
+        } else {
+          // Create new category
+          const { error } = await supabase
+            .from('test_categories')
+            .insert({
+              name: formData.name,
+              description: formData.description
+            });
+
+          if (error) throw error;
+        }
+
+        clearForm();
+        return { success: true };
+      } catch (error) {
+        console.error("Error saving category:", error);
+        throw error;
+      }
+    };
+
+    const handleDelete = async () => {
+      if (!selectedCategory) {
+        throw new Error("No category selected for deletion");
+      }
+
+      try {
+        const { error } = await supabase
+          .from('test_categories')
+          .delete()
+          .eq('id', selectedCategory.id);
+
+        if (error) throw error;
+
+        clearForm();
+        return { success: true };
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        throw error;
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      clearForm,
+      handleSave,
+      handleDelete
+    }));
+
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('test_categories')
+          .select('*')
+          .order('name');
+
+        if (error) throw error;
+        setCategories(data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    React.useEffect(() => {
+      if (isSearchEnabled) {
+        fetchCategories();
+      }
+    }, [isSearchEnabled]);
+
+    const handleCategorySelect = (category: any) => {
+      setSelectedCategory(category);
+      setFormData({
+        name: category.name,
+        description: category.description || ""
+      });
+    };
+
+    return (
+      <div className="bg-white p-4 rounded-md space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Category Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="name">Category Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={!isEditable}
+                required
+              />
             </div>
-          ) : (
-            <>
-              {categories.map((category) => (
-                <div key={category.id} className="mb-2">
-                  <Input value={category.name} readOnly className="bg-gray-50" />
-                </div>
-              ))}
-              {categories.length === 0 && (
-                <div className="text-center text-gray-400 p-4">
-                  No categories added yet.
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </ScrollArea>
-    </Card>
-  );
-};
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                disabled={!isEditable}
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {isSearchEnabled && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Existing Categories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {categories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleCategorySelect(category)}
+                  >
+                    <div className="font-medium">{category.name}</div>
+                    {category.description && (
+                      <div className="text-sm text-gray-600">{category.description}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+);
+
+CategoryForm.displayName = "CategoryForm";
 
 export default CategoryForm;

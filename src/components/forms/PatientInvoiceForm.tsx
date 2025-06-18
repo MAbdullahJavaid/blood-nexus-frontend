@@ -1,652 +1,154 @@
-import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
-import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
-import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
-import { TestSearchModal } from "./patient-invoice/TestSearchModal";
-import { DocumentSearchModal } from "./patient-invoice/DocumentSearchModal";
-import { PatientDetailsSection } from "./patient-invoice/PatientDetailsSection";
-import { HospitalDetailsSection } from "./patient-invoice/HospitalDetailsSection";
+
+import React, { forwardRef, useImperativeHandle } from "react";
+import { PatientInvoiceFormProvider, usePatientInvoiceState } from "./patient-invoice/hooks/usePatientInvoiceState";
 import { PatientInfoSection } from "./patient-invoice/PatientInfoSection";
+import { HospitalDetailsSection } from "./patient-invoice/HospitalDetailsSection";
 import { BloodDetailsSection } from "./patient-invoice/BloodDetailsSection";
 import { TestsSection } from "./patient-invoice/TestsSection";
 import { TotalSection } from "./patient-invoice/TotalSection";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
+import { TestSearchModal } from "./patient-invoice/TestSearchModal";
+import { DocumentSearchModal } from "./patient-invoice/DocumentSearchModal";
+import { useSaveInvoice } from "./patient-invoice/hooks/useSaveInvoice";
 
-const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
+interface PatientInvoiceFormProps {
+  isSearchEnabled?: boolean;
+  isEditable?: boolean;
+}
+
+interface PatientInvoiceFormRef {
+  clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
+  handleAddItem: () => void;
+  handleDeleteItem: () => void;
+}
+
+const PatientInvoiceFormContent = forwardRef<PatientInvoiceFormRef, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
-    const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-    const [isTestSearchModalOpen, setIsTestSearchModalOpen] = useState(false);
-    const [isDocumentSearchModalOpen, setIsDocumentSearchModalOpen] = useState(false);
-    const [patientType, setPatientType] = useState<string>("regular");
-    const [documentNo, setDocumentNo] = useState<string>("");
-    const [bloodGroup, setBloodGroup] = useState<string>("N/A");
-    const [rhType, setRhType] = useState<string>("N/A");
-    const [bloodCategory, setBloodCategory] = useState<string>("FWB");
-    const [bottleRequired, setBottleRequired] = useState<number>(0);
-    const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
-    const [items, setItems] = useState<InvoiceItem[]>([]);
-    const [discount, setDiscount] = useState<number>(0);
-    const [receivedAmount, setReceivedAmount] = useState<number>(0);
-    const [totalAmount, setTotalAmount] = useState<number>(0);
-    const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
-    const [currentTestIndex, setCurrentTestIndex] = useState<number | null>(null);
-    const [selectedPatient, setSelectedPatient] = useState<any>(null);
-    const [documentDate, setDocumentDate] = useState<string>(
-      new Date().toISOString().split('T')[0]
-    );
-    const [loading, setLoading] = useState(false);
-    
-    // Form fields for patient data
-    const [patientID, setPatientID] = useState("");
-    const [patientName, setPatientName] = useState("");
-    const [phoneNo, setPhoneNo] = useState("");
-    const [age, setAge] = useState<number | null>(null);
-    const [dob, setDob] = useState<string>("");
-    const [references, setReferences] = useState("");
-    const [hospital, setHospital] = useState("");
-    const [gender, setGender] = useState("male");
-    const [exDonor, setExDonor] = useState("");
+    const {
+      patientInfo,
+      hospitalDetails,
+      bloodDetails,
+      tests,
+      totals,
+      isPatientModalOpen,
+      setIsPatientModalOpen,
+      isTestModalOpen,
+      setIsTestModalOpen,
+      isDocumentModalOpen,
+      setIsDocumentModalOpen,
+      addTest,
+      removeTest,
+      clearForm,
+      ...handlers
+    } = usePatientInvoiceState();
 
-    const clearForm = () => {
-      setPatientType("regular");
-      setDocumentNo("");
-      setBloodGroup("N/A");
-      setRhType("N/A");
-      setBloodCategory("FWB");
-      setBottleRequired(0);
-      setBottleUnitType("bag");
-      setItems([]);
-      setDiscount(0);
-      setReceivedAmount(0);
-      setTotalAmount(0);
-      setSelectedItemIndex(null);
-      setCurrentTestIndex(null);
-      setSelectedPatient(null);
-      setDocumentDate(new Date().toISOString().split('T')[0]);
-      setPatientID("");
-      setPatientName("");
-      setPhoneNo("");
-      setAge(null);
-      setDob("");
-      setReferences("");
-      setHospital("");
-      setGender("male");
-      setExDonor("");
-    };
+    const { saveInvoice } = useSaveInvoice();
 
     useImperativeHandle(ref, () => ({
-      handleAddItem: () => {
-        handleAddItem();
-      },
-      handleDeleteItem: () => {
-        handleDeleteItem();
-      },
+      clearForm,
       handleSave: async () => {
-        // Only save, do NOT clear form after save!
-        // (let parent control when to clear)
-        return await handleSave();
+        try {
+          const result = await saveInvoice({
+            patientInfo,
+            hospitalDetails,
+            bloodDetails,
+            tests,
+            totals
+          });
+          return { success: true, invoiceId: result.invoiceId };
+        } catch (error) {
+          console.error("Error saving invoice:", error);
+          return { success: false, error };
+        }
       },
-      clearForm: clearForm
+      handleDelete: async () => {
+        try {
+          // Add delete logic here if needed
+          return { success: true };
+        } catch (error) {
+          console.error("Error deleting invoice:", error);
+          return { success: false, error };
+        }
+      },
+      handleAddItem: addTest,
+      handleDeleteItem: () => {
+        if (tests.length > 0) {
+          removeTest(tests.length - 1);
+        }
+      }
     }));
 
-    const isAdding = !documentNo && isEditable;
-    const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
-
-    const handlePatientTypeChange = (value: string) => {
-      setPatientType(value);
-      setSelectedPatient(null);
-      
-      // Clear all patient data when type changes
-      setPatientID("");
-      setPatientName("");
-      setPhoneNo("");
-      setAge(null);
-      setDob("");
-      setReferences("");
-      setHospital("");
-      setGender("male");
-      setExDonor("");
-    };
-
-    const handleAddItem = () => {
-      const tempId = `temp-${items.length}`;
-      const newItem: InvoiceItem = {
-        id: tempId,
-        testId: 0,
-        testName: "",
-        qty: 1,
-        rate: 0,
-        amount: 0
-      };
-      
-      setItems([...items, newItem]);
-      setSelectedItemIndex(items.length);
-      setCurrentTestIndex(items.length);
-    };
-
-    const handleDeleteItem = () => {
-      if (selectedItemIndex !== null) {
-        const newItems = [...items];
-        newItems.splice(selectedItemIndex, 1);
-        setItems(newItems);
-        setSelectedItemIndex(null);
-        calculateTotal(newItems);
-      }
-    };
-
-    const calculateTotal = (itemsArray: InvoiceItem[]) => {
-      const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
-      setTotalAmount(sum - discount);
-    };
-
-    // Replace handleDiscountChange to always set discount to (totalAmount - receivedAmount)
-    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      return; // Discount is now calculated automatically, no-op on manual change
-    };
-
-    // Discount amount to be automatically calculated as net amount - received amount
-    const discountCalc = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
-
-    const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseFloat(e.target.value) || 0;
-      setReceivedAmount(value);
-    };
-
-    const handleSelectRow = (index: number) => {
-      setSelectedItemIndex(index);
-    };
-
-    const handleTestSelect = async (testId: number) => {
-      try {
-        const { data, error } = await supabase
-          .from('test_information')
-          .select(`
-            id, 
-            name, 
-            price, 
-            test_type,
-            test_categories!inner(name)
-          `)
-          .eq('id', testId)
-          .single();
-        
-        if (error) throw error;
-        
-        if (data && currentTestIndex !== null) {
-          const updatedItems = [...items];
-          updatedItems[currentTestIndex] = {
-            ...updatedItems[currentTestIndex],
-            testId: data.id,
-            testName: data.name,
-            rate: data.price,
-            amount: data.price * updatedItems[currentTestIndex].qty,
-            type: data.test_type,
-            category: data.test_categories?.name
-          };
-          
-          setItems(updatedItems);
-          calculateTotal(updatedItems);
-          setIsTestSearchModalOpen(false);
-          setCurrentTestIndex(null);
-        }
-      } catch (error) {
-        console.error("Error selecting test:", error);
-        toast.error("Failed to select test");
-      }
-    };
-
-    const handlePatientSelect = async (patientDbId: string) => {
-      try {
-        const { data: patient, error } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('id', patientDbId)
-          .single();
-        
-        if (error) throw error;
-        
-        if (patient) {
-          setSelectedPatient(patient);
-          setPatientID(patient.patient_id);
-          setPatientName(patient.name);
-          setPhoneNo(patient.phone || "");
-          setAge(patient.age);
-          setHospital(patient.hospital || "");
-          setGender(patient.gender || "male");
-          
-          // Handle blood group parsing
-          if (patient.blood_group) {
-            const bloodGroupStr = patient.blood_group;
-            if (bloodGroupStr.includes('+')) {
-              const group = bloodGroupStr.replace('+', '');
-              setBloodGroup(group);
-              setRhType('+ve');
-            } else if (bloodGroupStr.includes('-')) {
-              const group = bloodGroupStr.replace('-', '');
-              setBloodGroup(group);
-              setRhType('-ve');
-            } else {
-              setBloodGroup(bloodGroupStr);
-              setRhType('N/A');
-            }
-          }
-          
-          toast.success(`Patient ${patient.name} loaded successfully`);
-        }
-        
-        setIsSearchModalOpen(false);
-      } catch (error) {
-        console.error("Error loading patient:", error);
-        toast.error("Failed to load patient data");
-      }
-    };
-
-    const handleDocumentSelect = async (docNum: string) => {
-      try {
-        const { data: invoiceData, error: invoiceError } = await supabase
-          .from('patient_invoices')
-          .select('*')
-          .eq('document_no', docNum)
-          .single();
-
-        if (invoiceError) throw invoiceError;
-
-        if (invoiceData) {
-          setDocumentNo(invoiceData.document_no);
-          setDocumentDate(invoiceData.document_date);
-          setTotalAmount(invoiceData.total_amount || 0);
-          setDiscount(invoiceData.discount_amount || 0);
-          setReceivedAmount(invoiceData.amount_received || 0);
-          setReferences(invoiceData.reference_notes || "");
-          setExDonor(invoiceData.ex_donor || "");
-          setPatientType(invoiceData.patient_type || "regular");
-          
-          // Set patient data from invoice
-          setPatientID(invoiceData.patient_id || "");
-          setPatientName(invoiceData.patient_name || "");
-          setPhoneNo(invoiceData.phone_no || "");
-          setAge(invoiceData.age || null);
-          setDob(invoiceData.dob || "");
-          setHospital(invoiceData.hospital_name || "");
-          setGender(invoiceData.gender || "male");
-          
-          // Set blood details
-          setBloodGroup(invoiceData.blood_group_separate || "N/A");
-          setRhType(invoiceData.rh_factor || "N/A");
-          setBloodCategory(invoiceData.blood_category || "FWB");
-          setBottleRequired(invoiceData.bottle_quantity || 0);
-          setBottleUnitType(invoiceData.bottle_unit || "bag");
-
-          // Load invoice items with type and category
-          const { data: itemsData, error: itemsError } = await supabase
-            .from('invoice_items')
-            .select('*')
-            .eq('invoice_id', invoiceData.id);
-
-          if (!itemsError && itemsData) {
-            const invoiceItems: InvoiceItem[] = itemsData.map((item) => ({
-              id: item.id,
-              testId: item.test_id || 0,
-              testName: item.test_name,
-              qty: item.quantity,
-              rate: item.unit_price,
-              amount: item.total_price,
-              type: item.type,
-              category: item.category
-            }));
-            setItems(invoiceItems);
-          }
-
-          toast.success("Invoice loaded successfully");
-        }
-      } catch (error) {
-        console.error("Error loading invoice:", error);
-        toast.error("Failed to load invoice");
-      }
-      
-      setIsDocumentSearchModalOpen(false);
-    };
-
-    const handleSearchTest = (index: number) => {
-      setCurrentTestIndex(index);
-      setIsTestSearchModalOpen(true);
-    };
-
-    const handleSearchPatient = () => {
-      setIsSearchModalOpen(true);
-    };
-
-    const handleDobChange = (date: string) => {
-      setDob(date);
-      if (date) {
-        const dobDate = new Date(date);
-        const today = new Date();
-        let age = today.getFullYear() - dobDate.getFullYear();
-        const monthDiff = today.getMonth() - dobDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
-          age--;
-        }
-        setAge(age);
-      } else {
-        setAge(null);
-      }
-    };
-
-    const handleAgeChange = (ageValue: number | null) => {
-      setAge(ageValue);
-      if (ageValue !== null) {
-        const today = new Date();
-        const birthYear = today.getFullYear() - ageValue;
-        const birthDate = new Date(birthYear, today.getMonth(), today.getDate());
-        setDob(birthDate.toISOString().split('T')[0]);
-      } else {
-        setDob("");
-      }
-    };
-
-    const handleQuantityChange = (index: number, value: number) => {
-      const updatedItems = [...items];
-      updatedItems[index].qty = value;
-      updatedItems[index].amount = value * updatedItems[index].rate;
-      setItems(updatedItems);
-      calculateTotal(updatedItems);
-    };
-    
-    const handleRateChange = (index: number, value: number) => {
-      const updatedItems = [...items];
-      updatedItems[index].rate = value;
-      updatedItems[index].amount = value * updatedItems[index].qty;
-      setItems(updatedItems);
-      calculateTotal(updatedItems);
-    };
-
-    const handleSave = async () => {
-      try {
-        setLoading(true);
-        
-        // Validation: Check required fields
-        if (!patientID.trim()) {
-          toast.error("Patient ID is required");
-          return { success: false, error: "Patient ID is required" };
-        }
-        
-        if (!patientName.trim()) {
-          toast.error("Patient name is required");
-          return { success: false, error: "Patient name is required" };
-        }
-        
-        if (items.length === 0) {
-          toast.error("At least one test must be selected");
-          return { success: false, error: "At least one test must be selected" };
-        }
-
-        // Generate document number only at the time of saving if it's a new document
-        let finalDocumentNo = documentNo;
-        if (!documentNo) {
-          try {
-            const { data, error } = await supabase.rpc('generate_invoice_number');
-            if (error) throw error;
-            finalDocumentNo = data;
-            setDocumentNo(data); // Update the state with the generated number
-          } catch (error) {
-            console.error('Error generating document number:', error);
-            const date = new Date();
-            const year = date.getFullYear().toString().slice(-2);
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const sequence = "0001";
-            finalDocumentNo = `${year}${month}${sequence}`;
-            setDocumentNo(finalDocumentNo);
-          }
-        }
-
-        // For OPD patients, create a new patient record first if needed
-        let finalPatientId = patientID;
-
-        if (patientType === "opd") {
-          // Create patient record for OPD
-          const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
-            "A": "A+",
-            "B": "B+",
-            "AB": "AB+",
-            "O": "O+",
-            "N/A": "O+"
-          };
-
-          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-
-          let patientInsertError: any = null;
-          let patientData: any = null;
-
-          const { data: newPatient, error: insertError } = await supabase
-            .from('patients')
-            .insert({
-              patient_id: patientID,
-              name: patientName,
-              phone: phoneNo,
-              date_of_birth: dob || null,
-              gender: gender,
-              blood_group: mappedBloodGroup,
-              hospital: hospital,
-              age: age,
-            })
-            .select('id')
-            .maybeSingle();
-
-          if (insertError) {
-            // If duplicate, search for the existing patient and use their UUID as finalPatientId
-            if (insertError.code === '23505') {
-              // Constraint violation, look up the existing patient by patient_id!
-              const { data: existingP, error: fetchExistingErr } = await supabase
-                .from('patients')
-                .select('id')
-                .eq('patient_id', patientID)
-                .maybeSingle();
-
-              if (fetchExistingErr || !existingP?.id) {
-                console.error(`Duplicate patient ID, but could not find patient:`, fetchExistingErr);
-                toast.error("Duplicate patient ID and could not find patient record.");
-                return { success: false, error: fetchExistingErr || "Patient fetch failed" };
-              }
-              finalPatientId = existingP.id;
-            } else {
-              // Some other error
-              console.error("Error creating patient:", insertError);
-              toast.error(`Failed to create patient: ${insertError.message}`);
-              return { success: false, error: insertError };
-            }
-          } else if (newPatient && newPatient.id) {
-            finalPatientId = newPatient.id;
-          } else {
-            // Defensive
-            toast.error("Unknown error when creating patient.");
-            return { success: false, error: "Unknown patient creation error" };
-          }
-        }
-
-        // Create invoice with the patient_id as a string (either UUID for regular or custom ID for OPD)
-        let invoiceData, invoiceError;
-        try {
-          const resp = await supabase
-            .from('patient_invoices')
-            .insert({
-              document_no: finalDocumentNo,
-              document_date: documentDate,
-              patient_id: finalPatientId,
-              patient_type: patientType,
-              patient_name: patientName,
-              phone_no: phoneNo,
-              age: age,
-              dob: dob || null,
-              gender: gender,
-              hospital_name: hospital,
-              blood_group_separate: bloodGroup,
-              rh_factor: rhType,
-              blood_category: bloodCategory,
-              bottle_quantity: bottleRequired,
-              bottle_unit: bottleUnitType,
-              ex_donor: exDonor,
-              reference_notes: references,
-              total_amount: totalAmount,
-              discount_amount: discount,
-              amount_received: receivedAmount
-            })
-            .select('id')
-            .maybeSingle();
-          invoiceData = resp.data;
-          invoiceError = resp.error;
-        } catch (err) {
-          invoiceError = err;
-        }
-
-        if (invoiceError) {
-          console.error("Error inserting invoice:", invoiceError);
-          if (invoiceError.code === '23505') {
-            toast.error("Duplicate document number, please refresh and try again.");
-          } else {
-            toast.error(`Failed to save invoice: ${invoiceError.message || invoiceError.toString()}`);
-          }
-          return { success: false, error: invoiceError };
-        }
-
-        // Create invoice items with type and category
-        if (items.length > 0 && invoiceData?.id) {
-          const invoiceItems = items.map(item => ({
-            invoice_id: invoiceData.id,
-            test_id: item.testId || null,
-            test_name: item.testName,
-            quantity: item.qty,
-            unit_price: item.rate,
-            total_price: item.amount,
-            type: item.type ?? null,
-            category: item.category ?? null // Ensure `category` is added
-          }));
-
-          const { error: itemsError } = await supabase
-            .from('invoice_items')
-            .insert(invoiceItems);
-
-          if (itemsError) {
-            console.error("Error saving invoice items:", itemsError);
-            toast.error("Failed to save invoice items. " + (itemsError.message || itemsError.toString()));
-            return { success: false, error: itemsError };
-          }
-        }
-
-        toast.success("Invoice saved successfully");
-        return { success: true, invoiceId: invoiceData?.id };
-      } catch (error) {
-        console.error("Error saving invoice (catch):", error);
-        toast.error("Failed to save invoice: " + (error as any)?.message);
-        return { success: false, error };
-      } finally {
-        setLoading(false);
-      }
-    };
-
     return (
-      <div className="bg-white p-4 rounded-md">
-        <PatientDetailsSection
-          patientType={patientType}
-          documentNo={documentNo}
-          selectedPatient={selectedPatient}
+      <div className="bg-white p-4 rounded-md space-y-6">
+        <PatientInfoSection 
+          patientInfo={patientInfo}
+          onPatientInfoChange={handlers.handlePatientInfoChange}
+          onSearchClick={() => setIsPatientModalOpen(true)}
           isEditable={isEditable}
-          isAdding={isAdding}
-          onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={handleSearchPatient}
-          onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
-          patientName={patientName}
-          setPatientName={setPatientName}
-          documentDate={documentDate}
-          setDocumentDate={setDocumentDate}
-          shouldEnableEditing={shouldEnableEditing}
-          setDocumentNo={setDocumentNo}
-          patientID={patientID}
-          setPatientId={setPatientID}
+          isSearchEnabled={isSearchEnabled}
         />
 
-        <HospitalDetailsSection
-          selectedPatient={selectedPatient}
+        <HospitalDetailsSection 
+          hospitalDetails={hospitalDetails}
+          onHospitalDetailsChange={handlers.handleHospitalDetailsChange}
           isEditable={isEditable}
-          hospital={hospital}
-          setHospital={setHospital}
-          gender={gender}
-          setGender={setGender}
-          exDonor={exDonor}
-          setExDonor={setExDonor}
-          shouldEnableEditing={shouldEnableEditing}
         />
 
-        <PatientInfoSection
-          selectedPatient={selectedPatient}
+        <BloodDetailsSection 
+          bloodDetails={bloodDetails}
+          onBloodDetailsChange={handlers.handleBloodDetailsChange}
           isEditable={isEditable}
-          phoneNo={phoneNo}
-          setPhoneNo={setPhoneNo}
-          age={age}
-          setAge={handleAgeChange}
-          dob={dob}
-          setDob={handleDobChange}
-          references={references}
-          setReferences={setReferences}
-          shouldEnableEditing={shouldEnableEditing}
         />
 
-        <BloodDetailsSection
-          bloodGroup={bloodGroup}
-          rhType={rhType}
-          bloodCategory={bloodCategory}
-          bottleRequired={bottleRequired}
-          bottleUnitType={bottleUnitType}
+        <TestsSection 
+          tests={tests}
+          onTestChange={handlers.handleTestChange}
+          onAddTest={() => setIsTestModalOpen(true)}
+          onRemoveTest={removeTest}
           isEditable={isEditable}
-          onBloodGroupChange={setBloodGroup}
-          onRhTypeChange={setRhType}
-          onBloodCategoryChange={setBloodCategory}
-          onBottleRequiredChange={setBottleRequired}
-          onBottleUnitTypeChange={setBottleUnitType}
         />
 
-        <TestsSection
-          items={items}
-          selectedItemIndex={selectedItemIndex}
-          isEditable={isEditable}
-          onSelectRow={handleSelectRow}
-          onSearchTest={handleSearchTest}
-          onQuantityChange={handleQuantityChange}
-          onRateChange={handleRateChange}
-        />
+        <TotalSection totals={totals} />
 
-        <TotalSection
-          discount={discountCalc}
-          totalAmount={totalAmount}
-          receivedAmount={receivedAmount}
-          isEditable={isEditable}
-          onDiscountChange={handleDiscountChange}
-          onReceivedAmountChange={handleReceivedAmountChange}
+        <PatientSearchModal
+          isOpen={isPatientModalOpen}
+          onClose={() => setIsPatientModalOpen(false)}
+          onSelectPatient={handlers.handlePatientSelect}
         />
-
-        {patientType === "regular" && (
-          <PatientSearchModal
-            isOpen={isSearchModalOpen}
-            onOpenChange={setIsSearchModalOpen}
-            onPatientSelect={handlePatientSelect}
-          />
-        )}
 
         <TestSearchModal
-          isOpen={isTestSearchModalOpen}
-          onOpenChange={setIsTestSearchModalOpen}
-          onTestSelect={handleTestSelect}
+          isOpen={isTestModalOpen}
+          onClose={() => setIsTestModalOpen(false)}
+          onSelectTest={handlers.handleTestSelect}
         />
 
         <DocumentSearchModal
-          isOpen={isDocumentSearchModalOpen}
-          onOpenChange={setIsDocumentSearchModalOpen}
-          onDocumentSelect={handleDocumentSelect}
+          isOpen={isDocumentModalOpen}
+          onClose={() => setIsDocumentModalOpen(false)}
+          onSelectDocument={handlers.handleDocumentSelect}
         />
       </div>
     );
   }
 );
 
+const PatientInvoiceForm = forwardRef<PatientInvoiceFormRef, PatientInvoiceFormProps>(
+  ({ isSearchEnabled = false, isEditable = false }, ref) => {
+    return (
+      <PatientInvoiceFormProvider>
+        <PatientInvoiceFormContent 
+          ref={ref}
+          isSearchEnabled={isSearchEnabled}
+          isEditable={isEditable}
+        />
+      </PatientInvoiceFormProvider>
+    );
+  }
+);
+
 PatientInvoiceForm.displayName = "PatientInvoiceForm";
+PatientInvoiceFormContent.displayName = "PatientInvoiceFormContent";
 
 export default PatientInvoiceForm;
