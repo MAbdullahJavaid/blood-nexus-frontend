@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -202,6 +203,7 @@ export const BleedingFormProvider: React.FC<{
       }
     } catch (error) {
       console.error('Error loading bleeding record:', error);
+      throw error;
     }
   };
 
@@ -297,7 +299,7 @@ export const BleedingFormProvider: React.FC<{
 
   const handleDelete = async () => {
     if (!bagNo || bagNo === "Auto-generated on save") {
-      return;
+      throw new Error("Please select a bleeding record to delete");
     }
 
     try {
@@ -377,6 +379,7 @@ export const BleedingFormProvider: React.FC<{
     </BleedingFormContext.Provider>
   );
 };
+
 export const useBleedingForm = () => {
   const context = useContext(BleedingFormContext);
   if (context === undefined) {

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -169,21 +170,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const handleSubmit = async () => {
     // Validate form before submission
     if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form before submitting",
-        variant: "destructive",
-      });
-      return;
+      throw new Error("Please fix the errors in the form before submitting");
     }
 
     if (!donorData.name || !donorData.regNo) {
-      toast({
-        title: "Error",
-        description: "Please provide registration number and name",
-        variant: "destructive",
-      });
-      return;
+      throw new Error("Please provide registration number and name");
     }
     
     try {
@@ -198,21 +189,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
 
         if (checkError && checkError.code !== 'PGRST116') {
           console.error("Error checking for existing donor:", checkError);
-          toast({
-            title: "Error",
-            description: "Failed to validate donor registration number",
-            variant: "destructive",
-          });
-          return;
+          throw new Error("Failed to validate donor registration number");
         }
 
         if (existingDonor) {
-          toast({
-            title: "Error",
-            description: `Donor with registration number ${donorData.regNo} already exists`,
-            variant: "destructive",
-          });
-          return;
+          throw new Error(`Donor with registration number ${donorData.regNo} already exists`);
         }
       }
 
@@ -246,12 +227,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
           .eq('donor_id', donorData.regNo);
 
         if (error) {
-          toast({
-            title: "Error",
-            description: "Failed to update donor information",
-            variant: "destructive",
-          });
-          return;
+          throw new Error("Failed to update donor information");
         }
       } else {
         const { error } = await supabase
@@ -276,36 +252,18 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
             error.code === "23505" ||
             (typeof error.message === "string" && error.message.includes("donor_id"))
           ) {
-            toast({
-              title: "Error",
-              description: "Donor with this registration number already exists",
-              variant: "destructive",
-            });
+            throw new Error("Donor with this registration number already exists");
           } else {
-            toast({
-              title: "Error",
-              description: "Failed to save donor information",
-              variant: "destructive",
-            });
+            throw new Error("Failed to save donor information");
           }
-          return;
         }
       }
-
-      toast({
-        title: "Success",
-        description: isEditing ? "Donor information updated successfully" : "Donor information saved successfully",
-      });
 
       clearForm();
       
     } catch (error) {
       console.error("Error saving donor:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save donor information",
-        variant: "destructive",
-      });
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -313,12 +271,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
 
   const handleDelete = async () => {
     if (!donorData.regNo) {
-      toast({
-        title: "Error",
-        description: "Please select a donor to delete",
-        variant: "destructive",
-      });
-      return;
+      throw new Error("Please select a donor to delete");
     }
     
     try {
@@ -331,20 +284,11 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Donor deleted successfully",
-      });
-
       clearForm();
       
     } catch (error) {
       console.error("Error deleting donor:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete donor",
-        variant: "destructive",
-      });
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
