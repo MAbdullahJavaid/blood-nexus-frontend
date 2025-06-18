@@ -1,4 +1,3 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -83,12 +82,22 @@ const Dashboard = () => {
     clearActiveForm();
   };
 
-  const handleDeleteClick = () => {
-    setIsDeleting(true);
-    setIsSearchEnabled(true);
-    setIsEditing(false);
-    setIsAdding(false);
-    clearActiveForm();
+  const handleDeleteClick = async () => {
+    if (activeForm === 'crossmatch' || activeForm === 'patient' || activeForm === 'bleeding' || activeForm === 'donor') {
+      // For forms with delete functionality, set deleting state and enable search
+      setIsDeleting(true);
+      setIsSearchEnabled(true);
+      setIsEditing(false);
+      setIsAdding(false);
+      clearActiveForm();
+    } else {
+      // For other forms, handle deletion differently if needed
+      setIsDeleting(true);
+      setIsSearchEnabled(true);
+      setIsEditing(false);
+      setIsAdding(false);
+      clearActiveForm();
+    }
   };
 
   const handleSaveClick = async () => {

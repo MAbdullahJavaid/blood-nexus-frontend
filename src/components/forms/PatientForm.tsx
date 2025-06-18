@@ -21,6 +21,7 @@ interface PatientFormProps {
 interface PatientFormRef {
   clearForm: () => void;
   handleSave: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
@@ -176,8 +177,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
 
     const handleDelete = async () => {
       if (!selectedPatient) {
-        toast.error("No patient selected for deletion");
-        return { success: false, error: "No patient selected for deletion" };
+        throw new Error("No patient selected for deletion");
       }
 
       try {
@@ -190,13 +190,11 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
         
         if (error) throw error;
         
-        toast.success("Patient deleted successfully!");
         clearForm();
         return { success: true };
       } catch (error) {
         console.error("Error deleting patient:", error);
-        toast.error("Failed to delete patient");
-        return { success: false, error };
+        throw error;
       } finally {
         setLoading(false);
       }
