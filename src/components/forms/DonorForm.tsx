@@ -20,14 +20,24 @@ interface DonorFormProps {
 
 interface DonorFormRef {
   clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, error?: any}>;
 }
 
 const DonorFormContent = forwardRef<DonorFormRef, DonorFormProps>(
   ({ isSearchEnabled = false, isEditable = false, isDeleting = false }, ref) => {
-    const { clearForm } = useDonorForm();
+    const { clearForm, handleSubmit } = useDonorForm();
 
     useImperativeHandle(ref, () => ({
-      clearForm
+      clearForm,
+      handleSave: async () => {
+        try {
+          await handleSubmit();
+          return { success: true };
+        } catch (error) {
+          console.error("Error saving donor:", error);
+          return { success: false, error };
+        }
+      }
     }));
 
     return (

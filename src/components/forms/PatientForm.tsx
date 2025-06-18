@@ -20,6 +20,7 @@ interface PatientFormProps {
 
 interface PatientFormRef {
   clearForm: () => void;
+  handleSave: () => Promise<{success: boolean, error?: any}>;
 }
 
 const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
@@ -84,8 +85,127 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       setWeightError("");
     };
 
+    const handleSave = async () => {
+      try {
+        setLoading(true);
+        
+        if (!name.trim()) {
+          toast.error("Patient name is required");
+          return { success: false, error: "Patient name is required" };
+        }
+        
+        if (phone && phone.length > 11) {
+          toast.error("Phone number cannot exceed 11 digits");
+          return { success: false, error: "Phone number cannot exceed 11 digits" };
+        }
+        
+        const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
+          "A+": "A+", "A-": "A-", "B+": "B+", "B-": "B-", 
+          "AB+": "AB+", "AB-": "AB-", "O+": "O+", "O-": "O-",
+          "A": "A+", "B": "B+", "AB": "AB+", "O": "O+"
+        };
+        
+        const mappedBloodGroup = bloodGroupMap[`${bloodGroup}${rhType}`] || bloodGroupMap[bloodGroup] || "O+";
+        
+        let calculatedAge = null;
+        if (dob) {
+          const dobDate = new Date(dob);
+          const today = new Date();
+          let age = today.getFullYear() - dobDate.getFullYear();
+          const monthDiff = today.getMonth() - dobDate.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+            age--;
+          }
+          calculatedAge = age;
+        }
+
+        const patientData = {
+          name: name.trim(),
+          phone: phone || null,
+          gender: gender || null,
+          address: address || null,
+          blood_group: mappedBloodGroup,
+          hospital: hospital || null,
+          date_of_birth: dob || null,
+          age: calculatedAge,
+          bottle_quantity: parseInt(bottleQuantity) || 1,
+          bottle_unit_type: requiredUnit
+        };
+        
+        if (selectedPatient) {
+          const { error } = await supabase
+            .from('patients')
+            .update(patientData)
+            .eq('id', selectedPatient.id);
+            
+          if (error) throw error;
+          toast.success("Patient updated successfully!");
+        } else {
+          const { data: regData, error: regError } = await supabase.rpc('generate_patient_reg_number', {
+            prefix_type: prefix
+          });
+          
+          if (regError) throw regError;
+          
+          const { data, error } = await supabase
+            .from('patients')
+            .insert({
+              patient_id: regData,
+              ...patientData
+            })
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          setPostfix(regData.slice(1));
+          setSelectedPatient(data);
+          toast.success("Patient saved successfully!");
+        }
+        
+        return { success: true };
+        
+      } catch (error) {
+        console.error("Error saving patient:", error);
+        toast.error("Failed to save patient");
+        return { success: false, error };
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleDelete = async () => {
+      if (!selectedPatient) {
+        toast.error("No patient selected for deletion");
+        return { success: false, error: "No patient selected for deletion" };
+      }
+
+      try {
+        setLoading(true);
+        
+        const { error } = await supabase
+          .from('patients')
+          .delete()
+          .eq('id', selectedPatient.id);
+        
+        if (error) throw error;
+        
+        toast.success("Patient deleted successfully!");
+        clearForm();
+        return { success: true };
+      } catch (error) {
+        console.error("Error deleting patient:", error);
+        toast.error("Failed to delete patient");
+        return { success: false, error };
+      } finally {
+        setLoading(false);
+      }
+    };
+
     useImperativeHandle(ref, () => ({
-      clearForm
+      clearForm,
+      handleSave,
+      handleDelete
     }));
 
     const handleSearch = async () => {
@@ -155,118 +275,6 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
       
       setIsSearchModalOpen(false);
       toast.success("Patient data loaded");
-    };
-
-    const handleSave = async () => {
-      try {
-        setLoading(true);
-        
-        if (!name.trim()) {
-          toast.error("Patient name is required");
-          return;
-        }
-        
-        if (phone && phone.length > 11) {
-          toast.error("Phone number cannot exceed 11 digits");
-          return;
-        }
-        
-        const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
-          "A+": "A+", "A-": "A-", "B+": "B+", "B-": "B-", 
-          "AB+": "AB+", "AB-": "AB-", "O+": "O+", "O-": "O-",
-          "A": "A+", "B": "B+", "AB": "AB+", "O": "O+"
-        };
-        
-        const mappedBloodGroup = bloodGroupMap[`${bloodGroup}${rhType}`] || bloodGroupMap[bloodGroup] || "O+";
-        
-        let calculatedAge = null;
-        if (dob) {
-          const dobDate = new Date(dob);
-          const today = new Date();
-          let age = today.getFullYear() - dobDate.getFullYear();
-          const monthDiff = today.getMonth() - dobDate.getMonth();
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
-            age--;
-          }
-          calculatedAge = age;
-        }
-
-        const patientData = {
-          name: name.trim(),
-          phone: phone || null,
-          gender: gender || null,
-          address: address || null,
-          blood_group: mappedBloodGroup,
-          hospital: hospital || null,
-          date_of_birth: dob || null,
-          age: calculatedAge,
-          bottle_quantity: parseInt(bottleQuantity) || 1,
-          bottle_unit_type: requiredUnit
-        };
-        
-        if (selectedPatient) {
-          const { error } = await supabase
-            .from('patients')
-            .update(patientData)
-            .eq('id', selectedPatient.id);
-            
-          if (error) throw error;
-          toast.success("Patient updated successfully!");
-        } else {
-          const { data: regData, error: regError } = await supabase.rpc('generate_patient_reg_number', {
-            prefix_type: prefix
-          });
-          
-          if (regError) throw regError;
-          
-          const { data, error } = await supabase
-            .from('patients')
-            .insert({
-              patient_id: regData,
-              ...patientData
-            })
-            .select()
-            .single();
-            
-          if (error) throw error;
-          
-          setPostfix(regData.slice(1));
-          setSelectedPatient(data);
-          toast.success("Patient saved successfully!");
-        }
-        
-      } catch (error) {
-        console.error("Error saving patient:", error);
-        toast.error("Failed to save patient");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const handleDelete = async () => {
-      if (!selectedPatient) {
-        toast.error("No patient selected for deletion");
-        return;
-      }
-
-      try {
-        setLoading(true);
-        
-        const { error } = await supabase
-          .from('patients')
-          .delete()
-          .eq('id', selectedPatient.id);
-        
-        if (error) throw error;
-        
-        toast.success("Patient deleted successfully!");
-        clearForm();
-      } catch (error) {
-        console.error("Error deleting patient:", error);
-        toast.error("Failed to delete patient");
-      } finally {
-        setLoading(false);
-      }
     };
 
     const displayRegNo = postfix === "000" ? "" : postfix;
@@ -567,25 +575,7 @@ const PatientForm = forwardRef<PatientFormRef, PatientFormProps>(
           <div></div>
         </div>
 
-        {isEditable && (
-          <div className="flex gap-2 mt-6">
-            <Button 
-              onClick={handleSave} 
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {loading ? "Saving..." : selectedPatient ? "Update Patient" : "Save Patient"}
-            </Button>
-            <Button 
-              onClick={clearForm} 
-              variant="outline"
-              disabled={loading}
-            >
-              Clear
-            </Button>
-          </div>
-        )}
-
+        {/* Only show delete button when in deleting mode */}
         {isDeleting && selectedPatient && (
           <div className="flex gap-2 mt-6">
             <Button 

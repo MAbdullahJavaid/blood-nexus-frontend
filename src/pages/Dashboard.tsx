@@ -23,6 +23,7 @@ interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  handleDelete?: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
 }
 
@@ -102,8 +103,16 @@ const Dashboard = () => {
         setIsAdding(false);
         setIsDeleting(false);
         setIsSearchEnabled(false);
+        clearActiveForm();
+      } else {
+        toast({
+          title: "Save Failed",
+          description: `Failed to save ${activeForm} data.`,
+          variant: "destructive"
+        });
       }
     } else {
+      // For forms that don't have integrated save functionality yet
       toast({
         title: "Form Saved",
         description: `${activeForm} data has been saved successfully.`
