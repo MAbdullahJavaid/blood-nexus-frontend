@@ -20,10 +20,10 @@ import html2canvas from "html2canvas";
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | 'thanksLetter' | null;
 
 interface FormRef {
-  handleAddItem: () => void;
-  handleDeleteItem: () => void;
-  handleSave: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
-  handleDelete: () => Promise<{success: boolean, error?: any}>;
+  handleAddItem?: () => void;
+  handleDeleteItem?: () => void;
+  handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
+  handleDelete?: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
 }
 
@@ -37,12 +37,10 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<string[]>([]);
   
   const activeFormRef = useRef<FormRef>({
-    clearForm: () => {},
-    handleSave: async () => ({ success: false, error: "No save handler available" }),
-    handleDelete: async () => ({ success: false, error: "No delete handler available" }),
-    handleAddItem: () => {},
-    handleDeleteItem: () => {}
+    clearForm: () => {}
   });
+  
+  const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
   const thanksLetterRef = useRef<HTMLDivElement | null>(null);
@@ -56,17 +54,16 @@ const Dashboard = () => {
     setIsDeleting(false);
     
     activeFormRef.current = {
-      clearForm: () => {},
-      handleSave: async () => ({ success: false, error: "No save handler available" }),
-      handleDelete: async () => ({ success: false, error: "No delete handler available" }),
-      handleAddItem: () => {},
-      handleDeleteItem: () => {}
+      clearForm: () => {}
     };
   };
 
   const clearActiveForm = () => {
     if (activeFormRef.current && activeFormRef.current.clearForm) {
       activeFormRef.current.clearForm();
+    }
+    if (activeForm === "reportDataEntry" && reportFormRef.current && reportFormRef.current.clearForm) {
+      reportFormRef.current.clearForm();
     }
   };
 
@@ -86,7 +83,7 @@ const Dashboard = () => {
     clearActiveForm();
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = () => {
     setIsDeleting(true);
     setIsSearchEnabled(true);
     setIsEditing(false);
@@ -96,29 +93,21 @@ const Dashboard = () => {
 
   const handleSaveClick = async () => {
     if (activeFormRef.current && activeFormRef.current.handleSave) {
-      try {
-        const result = await activeFormRef.current.handleSave();
-        if (result.success) {
-          toast({
-            title: "Success",
-            description: `${activeForm} data has been saved successfully.`
-          });
-          setIsEditing(false);
-          setIsAdding(false);
-          setIsDeleting(false);
-          setIsSearchEnabled(false);
-          clearActiveForm();
-        } else {
-          toast({
-            title: "Save Failed",
-            description: result.error?.message || `Failed to save ${activeForm} data.`,
-            variant: "destructive"
-          });
-        }
-      } catch (error: any) {
+      const result = await activeFormRef.current.handleSave();
+      if (result.success) {
+        toast({
+          title: "Form Saved",
+          description: `${activeForm} data has been saved successfully.`
+        });
+        setIsEditing(false);
+        setIsAdding(false);
+        setIsDeleting(false);
+        setIsSearchEnabled(false);
+        clearActiveForm();
+      } else {
         toast({
           title: "Save Failed",
-          description: error.message || `Failed to save ${activeForm} data.`,
+          description: `Failed to save ${activeForm} data.`,
           variant: "destructive"
         });
       }
@@ -150,7 +139,7 @@ const Dashboard = () => {
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
-    clearActiveForm();
+    clearActiveForm(); // Clear form when closing
   };
 
   const handleAddItemClick = () => {
@@ -239,11 +228,7 @@ const Dashboard = () => {
                  ref={activeFormRef}
                />;
       case 'category':
-        return <CategoryForm 
-                 isSearchEnabled={isSearchEnabled} 
-                 isEditable={isEditable}
-                 ref={activeFormRef as any}
-               />;
+        return <CategoryForm isSearchEnabled={isSearchEnabled} isEditable={isEditable} />;
       case 'testInformation':
         return <TestInformationForm 
                  isSearchEnabled={isSearchEnabled} 
@@ -258,7 +243,7 @@ const Dashboard = () => {
             isEditable={isEditable}
             isDeleting={isDeleting}
             key="report-data-entry"
-            ref={activeFormRef as any}
+            ref={reportFormRef}
           />
         );
       case 'thanksLetter':

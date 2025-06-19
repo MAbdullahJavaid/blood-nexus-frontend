@@ -9,6 +9,7 @@ import AddressSection from "./bleeding/AddressSection";
 import ScreeningResultsPanel from "./bleeding/ScreeningResultsPanel";
 import HBAndDateSection from "./bleeding/HBAndDateSection";
 import ProductInfoSection from "./bleeding/ProductInfoSection";
+import FormSubmitSection from "./bleeding/FormSubmitSection";
 
 interface ExtendedBleedingFormProps extends BleedingFormProps {
   isDeleting?: boolean;
@@ -68,6 +69,7 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
         <ScreeningResultsPanel isEditable={isEditable} />
         <HBAndDateSection isEditable={isEditable} />
         <ProductInfoSection isEditable={isEditable} />
+        <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
       </form>
     );
   }

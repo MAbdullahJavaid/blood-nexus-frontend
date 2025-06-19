@@ -8,6 +8,7 @@ import {
   BloodGroupSection,
   RemarksSection,
   StatusSection,
+  FormSubmitSection,
   DonorSearchModal
 } from "./donor";
 
@@ -20,12 +21,11 @@ interface DonorFormProps {
 interface DonorFormRef {
   clearForm: () => void;
   handleSave: () => Promise<{success: boolean, error?: any}>;
-  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const DonorFormContent = forwardRef<DonorFormRef, DonorFormProps>(
   ({ isSearchEnabled = false, isEditable = false, isDeleting = false }, ref) => {
-    const { clearForm, handleSubmit, handleDelete } = useDonorForm();
+    const { clearForm, handleSubmit } = useDonorForm();
 
     useImperativeHandle(ref, () => ({
       clearForm,
@@ -35,15 +35,6 @@ const DonorFormContent = forwardRef<DonorFormRef, DonorFormProps>(
           return { success: true };
         } catch (error) {
           console.error("Error saving donor:", error);
-          return { success: false, error };
-        }
-      },
-      handleDelete: async () => {
-        try {
-          await handleDelete();
-          return { success: true };
-        } catch (error) {
-          console.error("Error deleting donor:", error);
           return { success: false, error };
         }
       }
@@ -61,6 +52,7 @@ const DonorFormContent = forwardRef<DonorFormRef, DonorFormProps>(
         <BloodGroupSection isEditable={isEditable} />
         <RemarksSection isEditable={isEditable} />
         <StatusSection isEditable={isEditable} />
+        <FormSubmitSection isEditable={isEditable} isDeleting={isDeleting} />
         
         {/* Donor Search Modal - This will be controlled by the context */}
         <DonorSearchModal />

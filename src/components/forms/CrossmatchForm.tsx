@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,7 +19,6 @@ import {
 interface CrossmatchFormRef {
   clearForm: () => void;
   handleSave: () => Promise<{success: boolean, error?: any}>;
-  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
@@ -358,22 +356,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
       setDonorItems([]);
     };
 
-    const handleDelete = async () => {
-      if (!editingRecord) {
-        throw new Error("No record selected for deletion");
-      }
-
-      const { error } = await supabase
-        .from('crossmatch_records')
-        .delete()
-        .eq('id', editingRecord.id);
-
-      if (error) throw error;
-      
-      resetForm();
-      refetchCrossmatchRecords();
-    };
-
     useImperativeHandle(ref, () => ({
       clearForm: resetForm,
       handleSave: async () => {
@@ -382,15 +364,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
           return { success: true };
         } catch (error) {
           console.error("Error saving crossmatch:", error);
-          return { success: false, error };
-        }
-      },
-      handleDelete: async () => {
-        try {
-          await handleDelete();
-          return { success: true };
-        } catch (error) {
-          console.error("Error deleting crossmatch:", error);
           return { success: false, error };
         }
       }

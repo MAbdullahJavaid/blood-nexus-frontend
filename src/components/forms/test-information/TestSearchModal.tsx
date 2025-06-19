@@ -1,120 +1,192 @@
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect } from 'react';
+import { SearchIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
+import { TestInformation } from './types';
 
 interface TestSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectTest: (test: any) => void;
+  onSelect: (test: TestInformation) => void;
 }
 
-export const TestSearchModal: React.FC<TestSearchModalProps> = ({
-  isOpen,
-  onClose,
-  onSelectTest,
-}) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [tests, setTests] = useState<any[]>([]);
+const TestSearchModal = ({ isOpen, onClose, onSelect }: TestSearchModalProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tests, setTests] = useState<TestInformation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [testIds, setTestIds] = useState<{[key: number]: number}>({});
 
-  const fetchTests = async () => {
+  useEffect(() => {
+    if (isOpen) {
+      fetchTests();
+    }
+  }, [isOpen]);
+
+  const fetchTests = async (search?: string) => {
     setLoading(true);
+    
     try {
       let query = supabase
         .from('test_information')
         .select(`
           *,
-          test_categories (
-            name
-          )
-        `)
-        .order('name');
-
-      if (searchTerm.trim()) {
-        query = query.ilike('name', `%${searchTerm}%`);
+          category:test_categories(id, name)
+        `);
+      
+      if (search && search.trim()) {
+        query = query.ilike('name', `%${search.trim()}%`);
       }
-
-      const { data, error } = await query.limit(50);
-
-      if (error) throw error;
-      setTests(data || []);
+      
+      const { data, error } = await query.order('name');
+      
+      if (error) {
+        console.error('Error fetching tests:', error);
+        setTests([]);
+      } else if (data) {
+        // Filter active tests and map the database fields
+        const activeTests = data.filter(item => {
+          try {
+            // Check if description is a valid JSON string
+            if (item.description) {
+              const parsedDescription = JSON.parse(item.description);
+              return parsedDescription.is_active !== false; // If undefined or true, consider it active
+            }
+            return true; // If no description, consider it active
+          } catch (e) {
+            return true; // If parsing fails, consider it active
+          }
+        });
+        
+        // Map the database 'price' field to 'test_rate' for UI compatibility
+        const mappedData = activeTests.map(item => ({
+          ...item,
+          test_rate: item.price // Add test_rate which maps to price
+        }));
+        
+        setTests(mappedData as TestInformation[]);
+        
+        // For each test, fetch its sequential ID
+        const ids: {[key: number]: number} = {};
+        for (const test of data) {
+          ids[test.id] = test.id; // Since id is now a number, we can use it directly
+        }
+        
+        setTestIds(ids);
+      }
     } catch (error) {
-      console.error("Error fetching tests:", error);
+      console.error('Error fetching tests:', error);
       setTests([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchTests();
-    }
-  }, [isOpen, searchTerm]);
+  const handleSearch = () => {
+    fetchTests(searchTerm);
+  };
 
-  const handleTestSelect = (test: any) => {
-    onSelectTest(test);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const getActiveStatus = (test: TestInformation): boolean => {
+    try {
+      if (test.description) {
+        const parsedDescription = JSON.parse(test.description);
+        return parsedDescription.is_active !== false;
+      }
+      return true;
+    } catch (e) {
+      return true;
+    }
+  };
+
+  const handleTestSelect = (test: TestInformation) => {
+    onSelect(test);
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Search Tests</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="search">Search by test name</Label>
-            <Input
-              id="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Enter test name to search..."
-            />
-          </div>
-
-          {loading ? (
-            <div className="text-center py-4">Loading tests...</div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {tests.map((test) => (
-                <div
-                  key={test.id}
-                  className="p-3 border rounded cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleTestSelect(test)}
-                >
-                  <div className="font-medium">{test.name}</div>
-                  <div className="text-sm text-gray-600">
-                    Price: ${test.price} | Type: {test.test_type}
-                    {test.test_categories && (
-                      <span> | Category: {test.test_categories.name}</span>
-                    )}
-                  </div>
-                  {test.description && (
-                    <div className="text-sm text-gray-500 mt-1">{test.description}</div>
-                  )}
-                </div>
-              ))}
-              
-              {tests.length === 0 && !loading && (
-                <div className="text-center py-4 text-gray-500">
-                  No tests found
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-          </div>
+        <div className="flex gap-2 mb-4 flex-shrink-0">
+          <Input 
+            placeholder="Search by test name..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1"
+          />
+          <Button onClick={handleSearch} variant="outline">
+            <SearchIcon className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-[400px] border rounded-md">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                  <TableHead className="w-[80px]">Test ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="w-[100px]">Type</TableHead>
+                  <TableHead className="w-[100px]">Rate</TableHead>
+                  <TableHead className="w-[80px]">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : tests.length > 0 ? (
+                  tests.map((test) => (
+                    <TableRow 
+                      key={test.id} 
+                      className="cursor-pointer hover:bg-muted" 
+                      onClick={() => handleTestSelect(test)}
+                    >
+                      <TableCell>{testIds[test.id] || test.id}</TableCell>
+                      <TableCell className="font-medium">{test.name}</TableCell>
+                      <TableCell>{test.category?.name || 'N/A'}</TableCell>
+                      <TableCell>{test.test_type || 'single'}</TableCell>
+                      <TableCell>${test.price?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          getActiveStatus(test) 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {getActiveStatus(test) ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? 'No tests found matching your search' : 'No tests found'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>
