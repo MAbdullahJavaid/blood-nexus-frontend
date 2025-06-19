@@ -22,7 +22,7 @@ interface FormRef {
   handleAddItem?: () => void;
   handleDeleteItem?: () => void;
   handleSave: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
-  handleDelete?: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
 }
 
@@ -37,7 +37,8 @@ const Dashboard = () => {
   
   const activeFormRef = useRef<FormRef>({
     clearForm: () => {},
-    handleSave: async () => ({ success: false, error: "No save handler available" })
+    handleSave: async () => ({ success: false, error: "No save handler available" }),
+    handleDelete: async () => ({ success: false, error: "No delete handler available" })
   });
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
@@ -53,7 +54,8 @@ const Dashboard = () => {
     
     activeFormRef.current = {
       clearForm: () => {},
-      handleSave: async () => ({ success: false, error: "No save handler available" })
+      handleSave: async () => ({ success: false, error: "No save handler available" }),
+      handleDelete: async () => ({ success: false, error: "No delete handler available" })
     };
   };
 
