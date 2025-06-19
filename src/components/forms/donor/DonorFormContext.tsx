@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useFormValidation, FormValidationConfig } from "@/hooks/useFormValidation";
-import { FieldValidationRules } from "@/lib/validation";
+import { FieldValidationRules, validateField as validateFieldUtil } from "@/lib/validation";
 
 interface DonorData {
   regNo: string;
@@ -116,7 +116,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     const rule = validationConfig[field];
     if (!rule) return true;
     
-    const result = require("@/lib/validation").validateField(value, rule);
+    const result = validateFieldUtil(value, rule);
     return result.isValid;
   };
 
