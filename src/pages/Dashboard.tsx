@@ -1,3 +1,4 @@
+
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
@@ -19,8 +20,8 @@ import html2canvas from "html2canvas";
 type FormType = 'donor' | 'patient' | 'bleeding' | 'crossmatch' | 'patientInvoice' | 'category' | 'testInformation' | 'reportDataEntry' | 'thanksLetter' | null;
 
 interface FormRef {
-  handleAddItem?: () => void;
-  handleDeleteItem?: () => void;
+  handleAddItem: () => void;
+  handleDeleteItem: () => void;
   handleSave: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
   handleDelete: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
@@ -38,7 +39,9 @@ const Dashboard = () => {
   const activeFormRef = useRef<FormRef>({
     clearForm: () => {},
     handleSave: async () => ({ success: false, error: "No save handler available" }),
-    handleDelete: async () => ({ success: false, error: "No delete handler available" })
+    handleDelete: async () => ({ success: false, error: "No delete handler available" }),
+    handleAddItem: () => {},
+    handleDeleteItem: () => {}
   });
 
   // We'll store the ref to the ThanksLetter DOM node for PDF export
@@ -55,7 +58,9 @@ const Dashboard = () => {
     activeFormRef.current = {
       clearForm: () => {},
       handleSave: async () => ({ success: false, error: "No save handler available" }),
-      handleDelete: async () => ({ success: false, error: "No delete handler available" })
+      handleDelete: async () => ({ success: false, error: "No delete handler available" }),
+      handleAddItem: () => {},
+      handleDeleteItem: () => {}
     };
   };
 
