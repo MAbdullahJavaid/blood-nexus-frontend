@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Donor } from "@/types/donor";
 import { BagData, DonorPatientValues, TestResults, ProductInfo } from "./types";
@@ -8,6 +9,7 @@ import {
   getFormattedDate
 } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface BleedingFormContextType {
   selectedDonor: Donor | null;
@@ -71,7 +73,6 @@ export const BleedingFormProvider: React.FC<{
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
   const [bagNo, setBagNo] = useState("Auto-generated on save");
   const [bagType, setBagType] = useState("double");
-  // Change: set donorCategory default to "Self Donor"
   const [donorCategory, setDonorCategory] = useState("Self Donor");
   const [bleedingDate, setBleedingDate] = useState(getFormattedDate());
   const [preparationDate, setPreparationDate] = useState(() => {
@@ -94,7 +95,7 @@ export const BleedingFormProvider: React.FC<{
     setSelectedDonor(null);
     setBagNo("Auto-generated on save");
     setBagType("double");
-    setDonorCategory("Self Donor"); // match new default
+    setDonorCategory("Self Donor");
     setBleedingDate(getFormattedDate());
     const today = new Date();
     setPreparationDate(`${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`);
@@ -122,11 +123,6 @@ export const BleedingFormProvider: React.FC<{
       const formattedDonorDate = `${donorDate.getDate().toString().padStart(2, '0')}/${(donorDate.getMonth() + 1).toString().padStart(2, '0')}/${donorDate.getFullYear()}`;
       setBleedingDate(formattedDonorDate);
     }
-
-    // IMPORTANT:
-    // No need to manually update donor's status to inactive here.
-    // Supabase now handles this through an AFTER INSERT trigger on bleeding_records.
-    // See SQL: set_donor_inactive_on_bleeding_insert()
   };
 
   const loadBleedingRecord = async (bagId: string) => {
@@ -202,11 +198,19 @@ export const BleedingFormProvider: React.FC<{
       }
     } catch (error) {
       console.error('Error loading bleeding record:', error);
+      throw error;
     }
   };
 
   const handleSubmit = async () => {
+    console.log("BleedingFormContext: Starting handleSubmit", { selectedDonor, donorCategory, bagType });
+    
     if (!selectedDonor || !selectedDonor.name || !selectedDonor.donor_id) {
+      toast({
+        title: "Error",
+        description: "Please select a donor with both name and donor number",
+        variant: "destructive",
+      });
       throw new Error("Please select a donor with both name and donor number");
     }
 
@@ -217,11 +221,11 @@ export const BleedingFormProvider: React.FC<{
       const dateArr = bleedingDate.split('/');
       const formattedBleedingDate = `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}`;
       
-      console.log("Submitting bleeding record with data:", {
+      console.log("BleedingFormContext: Submitting bleeding record with data:", {
         donor_id: selectedDonor.id,
         bleeding_date: formattedBleedingDate,
         technician: "Current User",
-        donor_category: donorCategory, // Save the current UI value!
+        donor_category: donorCategory,
         bag_type: bagType,
         hbsag: parseFloat(donorPatientValues.hepB) || null,
         hcv: parseFloat(donorPatientValues.hepC) || null,
@@ -237,8 +241,8 @@ export const BleedingFormProvider: React.FC<{
         .insert({
           donor_id: selectedDonor.id,
           bleeding_date: formattedBleedingDate,
-          technician: "Current User", // You might want to get this from user context
-          donor_category: donorCategory, // Only use the value from context/UI
+          technician: "Current User",
+          donor_category: donorCategory,
           bag_type: bagType,
           hbsag: parseFloat(donorPatientValues.hepB) || null,
           hcv: parseFloat(donorPatientValues.hepC) || null,
@@ -251,11 +255,11 @@ export const BleedingFormProvider: React.FC<{
         .single();
       
       if (error) {
-        console.error("Database error:", error);
+        console.error("BleedingFormContext: Database error:", error);
         throw error;
       }
       
-      console.log("Successfully saved bleeding record:", data);
+      console.log("BleedingFormContext: Successfully saved bleeding record:", data);
       
       // Update the bag number in the form context
       if (data && data.bag_id) {
@@ -278,17 +282,22 @@ export const BleedingFormProvider: React.FC<{
             .insert(productInserts);
 
           if (productError) {
-            console.error("Error saving products:", productError);
+            console.error("BleedingFormContext: Error saving products:", productError);
             // Don't throw here, bleeding record was saved successfully
           }
         }
       }
 
+      toast({
+        title: "Success",
+        description: "Bleeding record saved successfully",
+      });
+
       // Clear form after successful submission
       clearForm();
       
     } catch (error) {
-      console.error("Error saving bleeding record:", error);
+      console.error("BleedingFormContext: Error saving bleeding record:", error);
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -296,8 +305,15 @@ export const BleedingFormProvider: React.FC<{
   };
 
   const handleDelete = async () => {
+    console.log("BleedingFormContext: Starting handleDelete", { bagNo });
+    
     if (!bagNo || bagNo === "Auto-generated on save") {
-      return;
+      toast({
+        title: "Error",
+        description: "Please select a bleeding record to delete",
+        variant: "destructive",
+      });
+      throw new Error("No bleeding record selected for deletion");
     }
 
     try {
@@ -316,12 +332,18 @@ export const BleedingFormProvider: React.FC<{
         .eq('bag_id', bagNo);
       
       if (error) throw error;
+
+      console.log("BleedingFormContext: Delete successful");
+      toast({
+        title: "Success",
+        description: "Bleeding record deleted successfully",
+      });
       
       // Clear form after successful deletion
       clearForm();
       
     } catch (error) {
-      console.error("Error deleting bleeding record:", error);
+      console.error("BleedingFormContext: Error deleting bleeding record:", error);
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -377,6 +399,7 @@ export const BleedingFormProvider: React.FC<{
     </BleedingFormContext.Provider>
   );
 };
+
 export const useBleedingForm = () => {
   const context = useContext(BleedingFormContext);
   if (context === undefined) {

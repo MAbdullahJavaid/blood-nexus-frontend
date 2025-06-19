@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -191,31 +192,37 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
     };
 
     const handleSaveCrossmatch = async () => {
-      console.log("Starting crossmatch save process...");
+      console.log("CrossmatchForm: Starting crossmatch save process...");
       
-      // Validation: Check if document number is provided
+      // VALIDATION: Check if document number is provided - this is required
       if (!crossmatchNo.trim()) {
+        console.log("CrossmatchForm: Validation failed - missing document number");
         toast.error("Document number is required and cannot be empty");
-        return;
+        throw new Error("Document number is required");
       }
 
+      // VALIDATION: For new records, require patient selection
       if (!selectedInvoice && !isEditing) {
+        console.log("CrossmatchForm: Validation failed - no patient selected");
         toast.error("Please select a patient first");
-        return;
+        throw new Error("Patient selection is required");
       }
 
-      // For new records, require at least one donor
+      // VALIDATION: For new records, require at least one donor
       if (donorItems.length === 0 && !isEditing) {
+        console.log("CrossmatchForm: Validation failed - no donors selected");
         toast.error("Please add at least one donor");
-        return;
+        throw new Error("At least one donor is required");
       }
 
       setIsSaving(true);
       
       try {
-        console.log("Selected invoice:", selectedInvoice);
-        console.log("Donor items:", donorItems);
-        console.log("Is editing:", isEditing);
+        console.log("CrossmatchForm: Validation passed, proceeding with save", {
+          selectedInvoice,
+          donorItems: donorItems.length,
+          isEditing
+        });
         
         // Prepare base crossmatch data
         const baseCrossmatchData = {
@@ -245,7 +252,7 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
             product_id: donorItems.length > 0 ? donorItems[0].bagNo : editingRecord.product_id
           };
 
-          console.log("Updating crossmatch data:", updateData);
+          console.log("CrossmatchForm: Updating crossmatch data:", updateData);
 
           const { error: updateError } = await supabase
             .from('crossmatch_records')
@@ -253,7 +260,7 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
             .eq('id', editingRecord.id);
 
           if (updateError) {
-            console.error("Update error:", updateError);
+            console.error("CrossmatchForm: Update error:", updateError);
             throw updateError;
           }
         } else {
@@ -267,14 +274,14 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
                 product_id: donor.bagNo
               };
 
-              console.log("Inserting crossmatch data for multiple donors:", crossmatchData);
+              console.log("CrossmatchForm: Inserting crossmatch data for multiple donors:", crossmatchData);
 
               const { error: crossmatchError } = await supabase
                 .from('crossmatch_records')
                 .insert(crossmatchData);
 
               if (crossmatchError) {
-                console.error("Error inserting crossmatch record:", crossmatchError);
+                console.error("CrossmatchForm: Error inserting crossmatch record:", crossmatchError);
                 throw crossmatchError;
               }
             }
@@ -285,35 +292,35 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
               product_id: donorItems[0].bagNo
             };
 
-            console.log("Inserting crossmatch data for single donor:", crossmatchData);
+            console.log("CrossmatchForm: Inserting crossmatch data for single donor:", crossmatchData);
 
             const { error: crossmatchError } = await supabase
               .from('crossmatch_records')
               .insert(crossmatchData);
 
             if (crossmatchError) {
-              console.error("Error inserting crossmatch record:", crossmatchError);
+              console.error("CrossmatchForm: Error inserting crossmatch record:", crossmatchError);
               throw crossmatchError;
             }
           }
 
           // Only delete pre_crossmatch and products if this is a new record (not editing)
           if (selectedInvoice) {
-            console.log("Deleting pre_crossmatch record with document_no:", selectedInvoice.document_no);
+            console.log("CrossmatchForm: Deleting pre_crossmatch record with document_no:", selectedInvoice.document_no);
             const { error: preCrossmatchDeleteError } = await supabase
               .from('pre_crossmatch')
               .delete()
               .eq('document_no', selectedInvoice.document_no);
 
             if (preCrossmatchDeleteError) {
-              console.error("Error deleting pre-crossmatch record:", preCrossmatchDeleteError);
+              console.error("CrossmatchForm: Error deleting pre-crossmatch record:", preCrossmatchDeleteError);
             }
           }
 
           // Delete selected products
           if (donorItems.length > 0) {
             const productIds = donorItems.map(item => item.id);
-            console.log("Deleting products with IDs:", productIds);
+            console.log("CrossmatchForm: Deleting products with IDs:", productIds);
             
             const { error: productDeleteError } = await supabase
               .from('products')
@@ -321,19 +328,20 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
               .in('id', productIds);
 
             if (productDeleteError) {
-              console.error("Error deleting product records:", productDeleteError);
+              console.error("CrossmatchForm: Error deleting product records:", productDeleteError);
             }
           }
         }
 
+        console.log("CrossmatchForm: Save successful");
         toast.success(isEditing ? "Crossmatch record updated successfully" : "Crossmatch record saved successfully");
       
         // Reset form after successful save
         resetForm();
       
       } catch (error) {
-        console.error("Error saving crossmatch record:", error);
-        toast.error(`Failed to save crossmatch record: ${error.message || 'Unknown error'}`);
+        console.error("CrossmatchForm: Error saving crossmatch record:", error);
+        throw error;
       } finally {
         setIsSaving(false);
       }
@@ -363,7 +371,7 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
           await handleSaveCrossmatch();
           return { success: true };
         } catch (error) {
-          console.error("Error saving crossmatch:", error);
+          console.error("CrossmatchForm: Error saving crossmatch:", error);
           return { success: false, error };
         }
       }
