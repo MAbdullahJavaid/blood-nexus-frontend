@@ -34,6 +34,8 @@ const Dashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingRecord, setIsDeletingRecord] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   
   const activeFormRef = useRef<FormRef>({
@@ -52,6 +54,8 @@ const Dashboard = () => {
     setIsEditing(false);
     setIsAdding(false);
     setIsDeleting(false);
+    setIsSaving(false);
+    setIsDeletingRecord(false);
     
     activeFormRef.current = {
       clearForm: () => {}
@@ -65,6 +69,15 @@ const Dashboard = () => {
     if (activeForm === "reportDataEntry" && reportFormRef.current && reportFormRef.current.clearForm) {
       reportFormRef.current.clearForm();
     }
+  };
+
+  const resetFormState = () => {
+    setIsEditing(false);
+    setIsAdding(false);
+    setIsDeleting(false);
+    setIsSearchEnabled(false);
+    setIsSaving(false);
+    setIsDeletingRecord(false);
   };
 
   const handleAddClick = () => {
@@ -92,53 +105,107 @@ const Dashboard = () => {
   };
 
   const handleSaveClick = async () => {
-    if (activeFormRef.current && activeFormRef.current.handleSave) {
-      const result = await activeFormRef.current.handleSave();
-      if (result.success) {
-        toast({
-          title: "Form Saved",
-          description: `${activeForm} data has been saved successfully.`
-        });
-        setIsEditing(false);
-        setIsAdding(false);
-        setIsDeleting(false);
-        setIsSearchEnabled(false);
-        clearActiveForm();
-      } else {
-        toast({
-          title: "Save Failed",
-          description: `Failed to save ${activeForm} data.`,
-          variant: "destructive"
-        });
-      }
-    } else {
+    if (!activeFormRef.current?.handleSave) {
       // For forms that don't have integrated save functionality yet
       toast({
         title: "Form Saved",
         description: `${activeForm} data has been saved successfully.`
       });
-      setIsEditing(false);
-      setIsAdding(false);
-      setIsDeleting(false);
-      setIsSearchEnabled(false);
+      resetFormState();
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      console.log("Starting save operation for form:", activeForm);
+      const result = await activeFormRef.current.handleSave();
+      
+      if (result.success) {
+        toast({
+          title: "Save Successful",
+          description: `${activeForm} data has been saved successfully.${result.invoiceId ? ` Invoice ID: ${result.invoiceId}` : ''}`
+        });
+        resetFormState();
+        clearActiveForm();
+      } else {
+        console.error("Save operation failed:", result.error);
+        toast({
+          title: "Save Failed",
+          description: result.error?.message || `Failed to save ${activeForm} data. Please check your input and try again.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error during save:", error);
+      toast({
+        title: "Save Error",
+        description: `An unexpected error occurred while saving ${activeForm} data.`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteRecord = async () => {
+    if (!activeFormRef.current?.handleDelete) {
+      toast({
+        title: "Delete Not Supported",
+        description: `Delete functionality is not implemented for ${activeForm}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(`Are you sure you want to delete this ${activeForm} record? This action cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeletingRecord(true);
+    
+    try {
+      console.log("Starting delete operation for form:", activeForm);
+      const result = await activeFormRef.current.handleDelete();
+      
+      if (result.success) {
+        toast({
+          title: "Delete Successful",
+          description: `${activeForm} record has been deleted successfully.`
+        });
+        resetFormState();
+        clearActiveForm();
+      } else {
+        console.error("Delete operation failed:", result.error);
+        toast({
+          title: "Delete Failed",
+          description: result.error?.message || `Failed to delete ${activeForm} record.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error during delete:", error);
+      toast({
+        title: "Delete Error",
+        description: `An unexpected error occurred while deleting ${activeForm} record.`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeletingRecord(false);
     }
   };
 
   const handleCancelClick = () => {
-    setIsEditing(false);
-    setIsAdding(false);
-    setIsDeleting(false);
-    setIsSearchEnabled(false);
+    resetFormState();
     clearActiveForm();
   };
 
   const handleCloseClick = () => {
     setShowCrudBar(false);
     setActiveForm(null);
-    setIsSearchEnabled(false);
-    setIsEditing(false);
-    setIsAdding(false);
-    setIsDeleting(false);
+    resetFormState();
     clearActiveForm(); // Clear form when closing
   };
 
@@ -272,7 +339,7 @@ const Dashboard = () => {
         {showCrudBar && (
           <CrudBar 
             onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
+            onDeleteClick={isDeleting ? handleDeleteRecord : handleDeleteClick}
             onCloseClick={handleCloseClick}
             onAddClick={handleAddClick}
             onCancelClick={handleCancelClick}
@@ -285,6 +352,8 @@ const Dashboard = () => {
             isAdding={isAdding}
             isDeleting={isDeleting}
             onlyPrintAndClose={onlyPrintAndClose}
+            isSaving={isSaving}
+            isDeletingRecord={isDeletingRecord}
           />
         )}
         <div className="flex-1 overflow-auto p-6">

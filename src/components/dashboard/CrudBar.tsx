@@ -16,19 +16,20 @@ type CrudButtonProps = {
   label: string;
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
 };
 
-const CrudButton = ({ icon: Icon, label, onClick, disabled = false }: CrudButtonProps) => (
+const CrudButton = ({ icon: Icon, label, onClick, disabled = false, loading = false }: CrudButtonProps) => (
   <button 
     className={cn(
-      "flex flex-col items-center p-2 rounded-md",
-      disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"
+      "flex flex-col items-center p-2 rounded-md transition-colors",
+      disabled || loading ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"
     )}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || loading}
   >
-    <Icon className="h-5 w-5 text-gray-700" />
-    <span className="text-xs mt-1">{label}</span>
+    <Icon className={cn("h-5 w-5 text-gray-700", loading && "animate-spin")} />
+    <span className="text-xs mt-1">{loading ? "..." : label}</span>
   </button>
 );
 
@@ -47,6 +48,8 @@ interface CrudBarProps {
   isAdding: boolean;
   isDeleting?: boolean;
   onlyPrintAndClose?: boolean;
+  isSaving?: boolean;
+  isDeleting?: boolean;
 }
 
 export function CrudBar({ 
@@ -63,7 +66,9 @@ export function CrudBar({
   isEditing,
   isAdding,
   isDeleting = false,
-  onlyPrintAndClose = false
+  onlyPrintAndClose = false,
+  isSaving = false,
+  isDeleting: isDeletingRecord = false
 }: CrudBarProps) {
   // Determine which buttons should be enabled
   const isFormActive = activeForm !== null;
@@ -84,42 +89,44 @@ export function CrudBar({
         icon={PlusIcon} 
         label="Add" 
         onClick={onAddClick} 
-        disabled={onlyPrintAndClose || isEditingOrAdding}
+        disabled={onlyPrintAndClose || isEditingOrAdding || isSaving || isDeletingRecord}
       />
       <CrudButton 
         icon={PenIcon} 
         label="Edit" 
         onClick={onEditClick} 
-        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive}
+        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive || isSaving || isDeletingRecord}
       />
       <CrudButton 
         icon={TrashIcon} 
         label="Delete" 
         onClick={onDeleteClick}
-        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive}
+        disabled={onlyPrintAndClose || isEditingOrAdding || !isFormActive || isSaving || isDeletingRecord}
+        loading={isDeletingRecord}
       />
       <CrudButton 
         icon={SearchIcon} 
         label="Retrieve" 
-        disabled={onlyPrintAndClose || isEditingOrAdding}
+        disabled={onlyPrintAndClose || isEditingOrAdding || isSaving || isDeletingRecord}
       />
       <CrudButton 
         icon={PlusIcon} 
         label="Add Item" 
         onClick={onAddItemClick}
-        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm}
+        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm || isSaving || isDeletingRecord}
       />
       <CrudButton 
         icon={TrashIcon} 
         label="Delete Item" 
         onClick={onDeleteItemClick}
-        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm}
+        disabled={onlyPrintAndClose || !isEditingOrAdding || !isPatientInvoiceForm || isSaving || isDeletingRecord}
       />
       <CrudButton 
         icon={SaveIcon} 
         label="Save" 
         onClick={onSaveClick}
-        disabled={onlyPrintAndClose || !isEditingOrAdding}
+        disabled={onlyPrintAndClose || !isEditingOrAdding || isDeletingRecord}
+        loading={isSaving}
       />
       <CrudButton 
         icon={CircleXIcon} 
@@ -132,16 +139,15 @@ export function CrudBar({
           icon={PrinterIcon} 
           label="Print" 
           onClick={onPrintClick}
-          disabled={onlyPrintAndClose ? false : isEditingOrAdding}
+          disabled={onlyPrintAndClose ? false : isEditingOrAdding || isSaving || isDeletingRecord}
         />
       )}
       <CrudButton 
         icon={XIcon} 
         label="Close" 
         onClick={onCloseClick}
-        disabled={false}
+        disabled={isSaving || isDeletingRecord}
       />
     </div>
   );
 }
-
