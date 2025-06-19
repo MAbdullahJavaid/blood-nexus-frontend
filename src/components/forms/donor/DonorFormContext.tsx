@@ -55,7 +55,6 @@ const defaultDonorData: DonorData = {
   status: true,
 };
 
-// Create a string-only version for validation
 const getStringFieldsForValidation = (data: DonorData): Record<string, string> => {
   return {
     regNo: data.regNo,
@@ -122,6 +121,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   };
 
   const clearForm = () => {
+    console.log("DonorFormContext: Clearing form");
     setDonorData(defaultDonorData);
     setIsSearchModalOpen(false);
     setIsEditing(false);
@@ -129,18 +129,19 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   };
 
   const handleInputChange = (field: keyof DonorData, value: string | boolean) => {
+    console.log("DonorFormContext: Input change", field, value);
     setDonorData(prev => ({
       ...prev,
       [field]: value
     }));
 
-    // Update validation for string fields only
     if (typeof value === "string" && validationConfig[field]) {
       updateField(field, value, validateField(field, value));
     }
   };
 
   const loadDonorData = (donor: any) => {
+    console.log("DonorFormContext: Loading donor data", donor);
     const group = donor.blood_group_separate || donor.blood_group?.replace(/[+-]/g, '') || 'B';
     const rh = donor.rh_factor || (donor.blood_group?.includes('+') ? '+ve' : donor.blood_group?.includes('-') ? '-ve' : '+ve');
     const age = donor.date_of_birth 
@@ -170,7 +171,6 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const handleSubmit = async () => {
     console.log("DonorFormContext: Starting handleSubmit", { donorData, isEditing });
     
-    // Validate form before submission
     if (!validateForm()) {
       console.log("DonorFormContext: Form validation failed");
       toast({

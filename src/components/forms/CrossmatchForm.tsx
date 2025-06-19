@@ -20,6 +20,7 @@ import {
 interface CrossmatchFormRef {
   clearForm: () => void;
   handleSave: () => Promise<{success: boolean, error?: any}>;
+  handleDelete: () => Promise<{success: boolean, error?: any}>;
 }
 
 const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
@@ -115,7 +116,7 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
     };
 
     const handleEditCrossmatch = async (record: CrossmatchRecord) => {
-      console.log("Loading crossmatch record for editing:", record);
+      console.log("CrossmatchForm: Loading crossmatch record for editing:", record);
       setEditingRecord(record);
       setIsEditing(true);
       setCrossmatchNo(record.crossmatch_no);
@@ -129,7 +130,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
       setExpiryDate(record.expiry_date || "");
       setRemarks(record.remarks || "");
       
-      // Set patient data
       setSelectedInvoice({
         document_no: record.crossmatch_no,
         patient_name: record.patient_name,
@@ -140,7 +140,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
         hospital: record.hospital
       });
 
-      // Load donor information if product_id exists
       if (record.product_id) {
         try {
           const { data: productData, error } = await supabase
@@ -194,21 +193,18 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
     const handleSaveCrossmatch = async () => {
       console.log("CrossmatchForm: Starting crossmatch save process...");
       
-      // VALIDATION: Check if document number is provided - this is required
       if (!crossmatchNo.trim()) {
         console.log("CrossmatchForm: Validation failed - missing document number");
         toast.error("Document number is required and cannot be empty");
         throw new Error("Document number is required");
       }
 
-      // VALIDATION: For new records, require patient selection
       if (!selectedInvoice && !isEditing) {
         console.log("CrossmatchForm: Validation failed - no patient selected");
         toast.error("Please select a patient first");
         throw new Error("Patient selection is required");
       }
 
-      // VALIDATION: For new records, require at least one donor
       if (donorItems.length === 0 && !isEditing) {
         console.log("CrossmatchForm: Validation failed - no donors selected");
         toast.error("Please add at least one donor");
@@ -224,7 +220,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
           isEditing
         });
         
-        // Prepare base crossmatch data
         const baseCrossmatchData = {
           crossmatch_no: crossmatchNo,
           quantity: quantity,
@@ -246,7 +241,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
         };
 
         if (isEditing && editingRecord) {
-          // Update existing record
           const updateData = {
             ...baseCrossmatchData,
             product_id: donorItems.length > 0 ? donorItems[0].bagNo : editingRecord.product_id
@@ -264,9 +258,7 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
             throw updateError;
           }
         } else {
-          // Create new record(s)
           if (donorItems.length > 1) {
-            // Handle multiple donors - create separate records for each
             for (const donor of donorItems) {
               const crossmatchData = {
                 ...baseCrossmatchData,
@@ -286,7 +278,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
               }
             }
           } else if (donorItems.length === 1) {
-            // Handle single donor
             const crossmatchData = {
               ...baseCrossmatchData,
               product_id: donorItems[0].bagNo
@@ -304,7 +295,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
             }
           }
 
-          // Only delete pre_crossmatch and products if this is a new record (not editing)
           if (selectedInvoice) {
             console.log("CrossmatchForm: Deleting pre_crossmatch record with document_no:", selectedInvoice.document_no);
             const { error: preCrossmatchDeleteError } = await supabase
@@ -317,7 +307,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
             }
           }
 
-          // Delete selected products
           if (donorItems.length > 0) {
             const productIds = donorItems.map(item => item.id);
             console.log("CrossmatchForm: Deleting products with IDs:", productIds);
@@ -336,7 +325,6 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
         console.log("CrossmatchForm: Save successful");
         toast.success(isEditing ? "Crossmatch record updated successfully" : "Crossmatch record saved successfully");
       
-        // Reset form after successful save
         resetForm();
       
       } catch (error) {
@@ -347,7 +335,33 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
       }
     };
 
+    const handleDeleteCurrentRecord = async () => {
+      console.log("CrossmatchForm: Starting delete current record");
+      
+      if (!editingRecord) {
+        toast.error("No record selected for deletion");
+        throw new Error("No record selected for deletion");
+      }
+
+      try {
+        const { error } = await supabase
+          .from('crossmatch_records')
+          .delete()
+          .eq('id', editingRecord.id);
+
+        if (error) throw error;
+
+        console.log("CrossmatchForm: Delete successful");
+        toast.success("Crossmatch record deleted successfully");
+        resetForm();
+      } catch (error) {
+        console.error("CrossmatchForm: Error deleting record:", error);
+        throw error;
+      }
+    };
+
     const resetForm = () => {
+      console.log("CrossmatchForm: Resetting form");
       setSelectedInvoice(null);
       setEditingRecord(null);
       setIsEditing(false);
@@ -368,10 +382,21 @@ const CrossmatchForm = forwardRef<CrossmatchFormRef, CrossmatchFormProps>(
       clearForm: resetForm,
       handleSave: async () => {
         try {
+          console.log("CrossmatchForm: Handle save called");
           await handleSaveCrossmatch();
           return { success: true };
         } catch (error) {
           console.error("CrossmatchForm: Error saving crossmatch:", error);
+          return { success: false, error };
+        }
+      },
+      handleDelete: async () => {
+        try {
+          console.log("CrossmatchForm: Handle delete called");
+          await handleDeleteCurrentRecord();
+          return { success: true };
+        } catch (error) {
+          console.error("CrossmatchForm: Error deleting crossmatch:", error);
           return { success: false, error };
         }
       }

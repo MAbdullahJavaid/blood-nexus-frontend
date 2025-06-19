@@ -30,6 +30,7 @@ export const ValidatedSelect: React.FC<ValidatedSelectProps> = ({
   const [error, setError] = React.useState<string>("");
 
   const handleValueChange = (newValue: string) => {
+    console.log("ValidatedSelect: Value changing from", value, "to", newValue);
     const isValid = !required || (newValue && newValue.trim() !== "");
     if (required && (!newValue || newValue.trim() === "")) {
       setError("This field is required");
@@ -42,7 +43,6 @@ export const ValidatedSelect: React.FC<ValidatedSelectProps> = ({
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setTouched(true);
-      // Validate on close
       if (required && (!value || value.trim() === "")) {
         setError("This field is required");
       }
