@@ -49,7 +49,7 @@ interface CrudBarProps {
   isDeleting?: boolean;
   onlyPrintAndClose?: boolean;
   isSaving?: boolean;
-  isDeleting?: boolean;
+  isDeletingRecord?: boolean;
 }
 
 export function CrudBar({ 
@@ -68,7 +68,7 @@ export function CrudBar({
   isDeleting = false,
   onlyPrintAndClose = false,
   isSaving = false,
-  isDeleting: isDeletingRecord = false
+  isDeletingRecord = false
 }: CrudBarProps) {
   // Determine which buttons should be enabled
   const isFormActive = activeForm !== null;
