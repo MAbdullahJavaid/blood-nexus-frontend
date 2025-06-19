@@ -55,22 +55,6 @@ const defaultDonorData: DonorData = {
   status: true,
 };
 
-const getStringFieldsForValidation = (data: DonorData): Record<string, string> => {
-  return {
-    regNo: data.regNo,
-    name: data.name,
-    date: data.date,
-    address: data.address,
-    age: data.age,
-    sex: data.sex,
-    group: data.group,
-    rh: data.rh,
-    phoneRes: data.phoneRes,
-    phoneOffice: data.phoneOffice,
-    remarks: data.remarks,
-  };
-};
-
 const validationConfig: FormValidationConfig = {
   regNo: FieldValidationRules.regNo,
   name: FieldValidationRules.name,
@@ -98,6 +82,22 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const getStringFieldsForValidation = (data: DonorData): Record<string, string> => {
+    return {
+      regNo: data.regNo,
+      name: data.name,
+      date: data.date,
+      address: data.address,
+      age: data.age,
+      sex: data.sex,
+      group: data.group,
+      rh: data.rh,
+      phoneRes: data.phoneRes,
+      phoneOffice: data.phoneOffice,
+      remarks: data.remarks,
+    };
+  };
+
   const {
     fields,
     updateField,
@@ -105,7 +105,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
     resetForm,
     isFormValid,
     setFieldError,
-  } = useFormValidation(getStringFieldsForValidation(defaultDonorData), validationConfig);
+  } = useFormValidation(getStringFieldsForValidation(donorData), validationConfig);
 
   const validationErrors = Object.keys(fields).reduce((acc, key) => {
     acc[key] = fields[key].error;
@@ -130,11 +130,13 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
 
   const handleInputChange = (field: keyof DonorData, value: string | boolean) => {
     console.log("DonorFormContext: Input change", field, value);
-    setDonorData(prev => ({
-      ...prev,
+    const newData = {
+      ...donorData,
       [field]: value
-    }));
+    };
+    setDonorData(newData);
 
+    // Update validation fields to match the new data
     if (typeof value === "string" && validationConfig[field]) {
       updateField(field, value, validateField(field, value));
     }
@@ -151,7 +153,7 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       ? new Date(donor.created_at).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0];
 
-    setDonorData({
+    const newData = {
       regNo: donor.donor_id || '',
       name: donor.name || '',
       date: registrationDate,
@@ -164,12 +166,33 @@ export const DonorFormProvider: React.FC<DonorFormProviderProps> = ({
       phoneOffice: '',
       remarks: '',
       status: donor.status !== undefined ? donor.status : true
-    });
+    };
+    
+    setDonorData(newData);
     setIsEditing(true);
+    
+    // Update validation fields to match the loaded data
+    const stringFields = getStringFieldsForValidation(newData);
+    Object.keys(stringFields).forEach(key => {
+      if (validationConfig[key]) {
+        updateField(key, stringFields[key], validateField(key as keyof DonorData, stringFields[key]));
+      }
+    });
   };
 
   const handleSubmit = async () => {
     console.log("DonorFormContext: Starting handleSubmit", { donorData, isEditing });
+    
+    // Update validation fields to current data before validating
+    const stringFields = getStringFieldsForValidation(donorData);
+    Object.keys(stringFields).forEach(key => {
+      if (validationConfig[key]) {
+        updateField(key, stringFields[key], validateField(key as keyof DonorData, stringFields[key]));
+      }
+    });
+    
+    // Wait a tick for validation to update
+    await new Promise(resolve => setTimeout(resolve, 0));
     
     if (!validateForm()) {
       console.log("DonorFormContext: Form validation failed");

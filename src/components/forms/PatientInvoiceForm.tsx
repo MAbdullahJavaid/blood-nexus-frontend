@@ -82,8 +82,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         handleDeleteItem();
       },
       handleSave: async () => {
-        // Only save, do NOT clear form after save!
-        // (let parent control when to clear)
         return await handleSave();
       },
       clearForm: clearForm
@@ -387,7 +385,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             const { data, error } = await supabase.rpc('generate_invoice_number');
             if (error) throw error;
             finalDocumentNo = data;
-            setDocumentNo(data); // Update the state with the generated number
+            setDocumentNo(data);
           } catch (error) {
             console.error('Error generating document number:', error);
             const date = new Date();
@@ -403,7 +401,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         let finalPatientId = patientID;
 
         if (patientType === "opd") {
-          // Create patient record for OPD
           const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
             "A": "A+",
             "B": "B+",
@@ -413,9 +410,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           };
 
           const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-
-          let patientInsertError: any = null;
-          let patientData: any = null;
 
           const { data: newPatient, error: insertError } = await supabase
             .from('patients')
@@ -433,9 +427,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             .maybeSingle();
 
           if (insertError) {
-            // If duplicate, search for the existing patient and use their UUID as finalPatientId
             if (insertError.code === '23505') {
-              // Constraint violation, look up the existing patient by patient_id!
               const { data: existingP, error: fetchExistingErr } = await supabase
                 .from('patients')
                 .select('id')
@@ -449,7 +441,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               }
               finalPatientId = existingP.id;
             } else {
-              // Some other error
               console.error("Error creating patient:", insertError);
               toast.error(`Failed to create patient: ${insertError.message}`);
               return { success: false, error: insertError };
@@ -457,13 +448,19 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           } else if (newPatient && newPatient.id) {
             finalPatientId = newPatient.id;
           } else {
-            // Defensive
             toast.error("Unknown error when creating patient.");
             return { success: false, error: "Unknown patient creation error" };
           }
         }
 
-        // Create invoice with the patient_id as a string (either UUID for regular or custom ID for OPD)
+        // Ensure numeric values are properly bounded for database
+        const safeTotalAmount = Math.min(Math.max(totalAmount || 0, 0), 2147483647);
+        const safeDiscount = Math.min(Math.max(discount || 0, 0), 2147483647);
+        const safeReceivedAmount = Math.min(Math.max(receivedAmount || 0, 0), 2147483647);
+        const safeBottleRequired = Math.min(Math.max(bottleRequired || 0, 0), 32767);
+        const safeAge = age ? Math.min(Math.max(age, 0), 32767) : null;
+
+        // Create invoice with safe numeric values
         let invoiceData, invoiceError;
         try {
           const resp = await supabase
@@ -475,20 +472,20 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
               patient_type: patientType,
               patient_name: patientName,
               phone_no: phoneNo,
-              age: age,
+              age: safeAge,
               dob: dob || null,
               gender: gender,
               hospital_name: hospital,
               blood_group_separate: bloodGroup,
               rh_factor: rhType,
               blood_category: bloodCategory,
-              bottle_quantity: bottleRequired,
+              bottle_quantity: safeBottleRequired,
               bottle_unit: bottleUnitType,
               ex_donor: exDonor,
               reference_notes: references,
-              total_amount: totalAmount,
-              discount_amount: discount,
-              amount_received: receivedAmount
+              total_amount: safeTotalAmount,
+              discount_amount: safeDiscount,
+              amount_received: safeReceivedAmount
             })
             .select('id')
             .maybeSingle();
@@ -508,17 +505,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           return { success: false, error: invoiceError };
         }
 
-        // Create invoice items with type and category
+        // Create invoice items with safe numeric values
         if (items.length > 0 && invoiceData?.id) {
           const invoiceItems = items.map(item => ({
             invoice_id: invoiceData.id,
             test_id: item.testId || null,
             test_name: item.testName,
-            quantity: item.qty,
-            unit_price: item.rate,
-            total_price: item.amount,
+            quantity: Math.min(Math.max(item.qty || 1, 1), 32767),
+            unit_price: Math.min(Math.max(item.rate || 0, 0), 999999.99),
+            total_price: Math.min(Math.max(item.amount || 0, 0), 999999.99),
             type: item.type ?? null,
-            category: item.category ?? null // Ensure `category` is added
+            category: item.category ?? null
           }));
 
           const { error: itemsError } = await supabase
