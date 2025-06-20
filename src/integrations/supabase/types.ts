@@ -691,20 +691,38 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          created_by: string | null
+          email: string | null
+          full_name: string | null
           id: string
+          last_login: string | null
+          phone: string | null
           role: string | null
+          status: string | null
           username: string | null
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          full_name?: string | null
           id: string
+          last_login?: string | null
+          phone?: string | null
           role?: string | null
+          status?: string | null
           username?: string | null
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          last_login?: string | null
+          phone?: string | null
           role?: string | null
+          status?: string | null
           username?: string | null
         }
         Relationships: []
@@ -835,6 +853,33 @@ export type Database = {
             referencedColumns: ["document_no"]
           },
         ]
+      }
+      user_management_logs: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -1032,6 +1077,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_manage_users: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
       generate_document_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1056,6 +1105,10 @@ export type Database = {
         Args: { test_id: number } | { test_uuid: string }
         Returns: number
       }
+      get_user_with_roles: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -1066,6 +1119,15 @@ export type Database = {
       is_test_active: {
         Args: { test_description: string }
         Returns: boolean
+      }
+      log_user_management_action: {
+        Args: {
+          admin_id: string
+          target_id: string
+          action_type: string
+          action_details?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
