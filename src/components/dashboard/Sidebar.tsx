@@ -17,7 +17,8 @@ import {
   ListTodoIcon,
   BarChartIcon,
   FileTextIcon,
-  ShieldIcon // Optionally use for Admin section icon
+  ShieldIcon,
+  UsersIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -165,6 +166,14 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   label="Thanks Letter"
                   onClick={() => handleFormClick('thanksLetter')}
                 />
+                {user?.role === 'admin' && (
+                  <SidebarItem 
+                    icon={UsersIcon} 
+                    label="User Management"
+                    onClick={() => handleNavigate('user-management')}
+                    active={activePage === 'user-management'}
+                  />
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

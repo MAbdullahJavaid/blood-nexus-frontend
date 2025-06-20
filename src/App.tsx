@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import UserManagement from "./pages/UserManagement";
 import PatientRequestReport from "./pages/PatientRequestReport";
 import PatientRequestSummaryReport from "./pages/PatientRequestSummaryReport";
 import PatientTransfusionHistory from "./pages/PatientTransfusionHistory";
@@ -45,6 +46,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/user-management" 
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
                 </ProtectedRoute>
               } 
             />
