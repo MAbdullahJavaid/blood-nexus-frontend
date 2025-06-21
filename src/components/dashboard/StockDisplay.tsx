@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { Package, TrendingUp, AlertTriangle } from "lucide-react";
 
@@ -49,8 +50,50 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
     return counts;
   };
 
+  const getGroupWiseStock = () => {
+    // Extract blood groups and categories from product names
+    const stockMatrix: { [bloodGroup: string]: { [category: string]: number } } = {};
+    const allCategories = new Set<string>();
+    const allBloodGroups = new Set<string>();
+
+    products.forEach(product => {
+      // Try to extract blood group and category from product name
+      // Assuming format like "A+ WB" or "O- RBC" etc.
+      const productName = product.product.trim();
+      
+      // Extract blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+      const bloodGroupMatch = productName.match(/^(A|B|AB|O)([+-])/);
+      let bloodGroup = 'Unknown';
+      let category = productName;
+      
+      if (bloodGroupMatch) {
+        bloodGroup = bloodGroupMatch[0];
+        // Extract category (everything after blood group)
+        category = productName.replace(bloodGroupMatch[0], '').trim();
+      } else {
+        // If no blood group pattern found, treat whole string as category
+        category = productName;
+      }
+
+      allBloodGroups.add(bloodGroup);
+      allCategories.add(category);
+
+      if (!stockMatrix[bloodGroup]) {
+        stockMatrix[bloodGroup] = {};
+      }
+      stockMatrix[bloodGroup][category] = (stockMatrix[bloodGroup][category] || 0) + 1;
+    });
+
+    return {
+      stockMatrix,
+      bloodGroups: Array.from(allBloodGroups).sort(),
+      categories: Array.from(allCategories).sort()
+    };
+  };
+
   const productCounts = getProductTypeCounts();
   const totalStock = products.length;
+  const { stockMatrix, bloodGroups, categories } = getGroupWiseStock();
 
   if (!isVisible) {
     return null;
@@ -72,7 +115,7 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
           {isLoading ? (
             <div className="text-center py-4">Loading stock information...</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -107,6 +150,63 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
                         <span className="font-medium">{count} units</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Group-wise Stock Table */}
+              {totalStock > 0 && (
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-700 mb-4">Stock by Blood Group and Category</h4>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="font-semibold">Blood Group</TableHead>
+                          {categories.map(category => (
+                            <TableHead key={category} className="text-center font-semibold">
+                              {category || 'Other'}
+                            </TableHead>
+                          ))}
+                          <TableHead className="text-center font-semibold bg-blue-50">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bloodGroups.map(bloodGroup => {
+                          const rowTotal = categories.reduce((sum, category) => {
+                            return sum + (stockMatrix[bloodGroup]?.[category] || 0);
+                          }, 0);
+                          
+                          return (
+                            <TableRow key={bloodGroup}>
+                              <TableCell className="font-medium bg-gray-50">{bloodGroup}</TableCell>
+                              {categories.map(category => (
+                                <TableCell key={category} className="text-center">
+                                  {stockMatrix[bloodGroup]?.[category] || 0}
+                                </TableCell>
+                              ))}
+                              <TableCell className="text-center font-semibold bg-blue-50">
+                                {rowTotal}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        <TableRow className="bg-blue-50 font-semibold">
+                          <TableCell>Total</TableCell>
+                          {categories.map(category => {
+                            const columnTotal = bloodGroups.reduce((sum, bloodGroup) => {
+                              return sum + (stockMatrix[bloodGroup]?.[category] || 0);
+                            }, 0);
+                            return (
+                              <TableCell key={category} className="text-center">
+                                {columnTotal}
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="text-center">{totalStock}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               )}
