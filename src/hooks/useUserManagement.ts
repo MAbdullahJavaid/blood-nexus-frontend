@@ -17,6 +17,8 @@ export interface UserWithRoles {
   roles: string[];
 }
 
+type AppRole = "admin" | "bds" | "lab" | "reception";
+
 export const useUserManagement = () => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
@@ -122,7 +124,7 @@ export const useUserManagement = () => {
       if (userData.roles.length > 0) {
         const roleInserts = userData.roles.map(role => ({
           user_id: authData.user.id,
-          role: role,
+          role: role as AppRole,
         }));
 
         const { error: rolesError } = await supabase
@@ -194,7 +196,7 @@ export const useUserManagement = () => {
         if (userData.roles.length > 0) {
           const roleInserts = userData.roles.map(role => ({
             user_id: userId,
-            role: role,
+            role: role as AppRole,
           }));
 
           const { error: rolesError } = await supabase

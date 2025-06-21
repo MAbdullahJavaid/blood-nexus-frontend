@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,8 @@ interface EditUserModalProps {
   onClose: () => void;
   onUserUpdated: () => void;
 }
+
+type AppRole = "admin" | "bds" | "lab" | "reception";
 
 export const EditUserModal: React.FC<EditUserModalProps> = ({
   user,
@@ -105,7 +106,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       if (formData.roles.length > 0) {
         const roleInserts = formData.roles.map(role => ({
           user_id: user.id,
-          role: role,
+          role: role as AppRole,
         }));
 
         const { error: rolesError } = await supabase

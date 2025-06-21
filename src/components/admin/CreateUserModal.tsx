@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,8 @@ interface CreateUserModalProps {
   onClose: () => void;
   onUserCreated: () => void;
 }
+
+type AppRole = "admin" | "bds" | "lab" | "reception";
 
 export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   isOpen,
@@ -87,7 +88,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       if (formData.roles.length > 0) {
         const roleInserts = formData.roles.map(role => ({
           user_id: authData.user.id,
-          role: role,
+          role: role as AppRole,
         }));
 
         const { error: rolesError } = await supabase
