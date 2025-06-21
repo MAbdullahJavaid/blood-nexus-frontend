@@ -61,6 +61,7 @@ export const useUserManagement = () => {
           return {
             ...profile,
             roles: roles?.map(r => r.role) || [],
+            last_login: profile.last_login || 'Never',
           };
         })
       );
@@ -121,7 +122,7 @@ export const useUserManagement = () => {
       if (userData.roles.length > 0) {
         const roleInserts = userData.roles.map(role => ({
           user_id: authData.user.id,
-          role: role as any,
+          role: role,
         }));
 
         const { error: rolesError } = await supabase
@@ -132,7 +133,7 @@ export const useUserManagement = () => {
       }
 
       // Log the action
-      await supabase.rpc('log_user_management_action', {
+      const { error: logError } = await supabase.rpc('log_user_management_action', {
         admin_id: currentUser?.id,
         target_id: authData.user.id,
         action_type: 'created',
@@ -142,6 +143,10 @@ export const useUserManagement = () => {
           roles: userData.roles,
         },
       });
+
+      if (logError) {
+        console.error('Failed to log action:', logError);
+      }
 
       return authData.user;
     } catch (error: any) {
@@ -189,7 +194,7 @@ export const useUserManagement = () => {
         if (userData.roles.length > 0) {
           const roleInserts = userData.roles.map(role => ({
             user_id: userId,
-            role: role as any,
+            role: role,
           }));
 
           const { error: rolesError } = await supabase
@@ -201,12 +206,16 @@ export const useUserManagement = () => {
       }
 
       // Log the action
-      await supabase.rpc('log_user_management_action', {
+      const { error: logError } = await supabase.rpc('log_user_management_action', {
         admin_id: currentUser?.id,
         target_id: userId,
         action_type: 'updated',
         action_details: userData,
       });
+
+      if (logError) {
+        console.error('Failed to log action:', logError);
+      }
 
       return true;
     } catch (error: any) {
@@ -233,7 +242,7 @@ export const useUserManagement = () => {
 
       // Log the action
       if (userInfo) {
-        await supabase.rpc('log_user_management_action', {
+        const { error: logError } = await supabase.rpc('log_user_management_action', {
           admin_id: currentUser?.id,
           target_id: userId,
           action_type: 'deleted',
@@ -242,6 +251,10 @@ export const useUserManagement = () => {
             email: userInfo.email,
           },
         });
+
+        if (logError) {
+          console.error('Failed to log action:', logError);
+        }
       }
 
       return true;
