@@ -1,20 +1,22 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { CreateUserModal } from "@/components/admin/CreateUserModal";
 import { UserManagementHeader } from "@/components/admin/UserManagementHeader";
 import { UserManagementStats } from "@/components/admin/UserManagementStats";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 
 const UserManagement = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Check if user is admin (you might want to add this check to the auth context)
+  // Check if user is admin
   if (!user || user.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -51,9 +53,23 @@ const UserManagement = () => {
     });
   };
 
+  const handleExitToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <div className="container mx-auto py-6 px-4">
-      <UserManagementHeader />
+      <div className="flex items-center justify-between mb-6">
+        <UserManagementHeader />
+        <Button 
+          onClick={handleExitToDashboard}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+      </div>
       
       <div className="mb-6">
         <UserManagementStats refreshTrigger={refreshTrigger} />

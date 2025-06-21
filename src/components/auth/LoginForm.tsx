@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DropletIcon } from "lucide-react";
@@ -97,14 +97,6 @@ export function LoginForm() {
           </div>
         </form>
       </CardContent>
-      <CardFooter className="flex flex-col">
-        <div className="text-sm text-muted-foreground text-center">
-          Don't have an account?{" "}
-          <Button variant="link" className="p-0" onClick={() => navigate("/signup")}>
-            Sign up
-          </Button>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
