@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,17 +94,25 @@ export const useUserManagement = () => {
     try {
       checkAdminAccess();
 
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Use signUp instead of admin.createUser
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
-        email_confirm: true,
+        options: {
+          data: {
+            username: userData.username,
+            full_name: userData.full_name,
+          }
+        }
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Failed to create user");
 
-      // Update profile
+      // Wait a moment for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update profile with additional information
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -118,7 +125,10 @@ export const useUserManagement = () => {
         })
         .eq('id', authData.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        // Don't throw here as the user was created successfully
+      }
 
       // Add roles
       if (userData.roles.length > 0) {
@@ -131,7 +141,10 @@ export const useUserManagement = () => {
           .from('user_roles')
           .insert(roleInserts);
 
-        if (rolesError) throw rolesError;
+        if (rolesError) {
+          console.error('Roles insert error:', rolesError);
+          // Don't throw here as the user was created successfully
+        }
       }
 
       // Log the action
@@ -237,8 +250,11 @@ export const useUserManagement = () => {
         .eq('id', userId)
         .single();
 
-      // Delete user from Supabase Auth (this will cascade delete profile and roles)
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+      // Delete user profile (this will cascade delete roles due to foreign key)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
       if (deleteError) throw deleteError;
 

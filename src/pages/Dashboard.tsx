@@ -1,7 +1,7 @@
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
+import { StockDisplay } from "@/components/dashboard/StockDisplay";
 import { useState, useRef } from "react";
 import DonorForm from "@/components/forms/DonorForm";
 import PatientForm from "@/components/forms/PatientForm";
@@ -43,6 +43,9 @@ const Dashboard = () => {
   
   const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
   const thanksLetterRef = useRef<HTMLDivElement | null>(null);
+
+  // Stock display is visible when no form is active or crud bar is hidden
+  const isStockVisible = !showCrudBar || activeForm === null;
 
   const handleFormButtonClick = (formType: FormType) => {
     console.log("Dashboard: Opening form:", formType);
@@ -358,6 +361,7 @@ const Dashboard = () => {
           />
         )}
         <div className="flex-1 overflow-auto p-6">
+          <StockDisplay isVisible={isStockVisible} />
           {activeForm && renderActiveForm()}
         </div>
       </div>
