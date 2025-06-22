@@ -72,30 +72,38 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
 
     products.forEach(product => {
       const productName = product.product.trim();
+      console.log('Processing product:', productName);
       
-      // Try to extract blood group from the beginning of product name
       let bloodGroup = 'Other';
       let category = productName;
       
-      // Check for blood group patterns at the start of the product name
-      for (const bg of standardBloodGroups) {
-        if (productName.startsWith(bg)) {
-          bloodGroup = bg;
-          // Extract category (everything after blood group)
-          category = productName.substring(bg.length).trim();
-          break;
+      // More robust blood group extraction
+      // Check for patterns like "A+ WB", "O- PRC", "AB+ FFP", etc.
+      const bloodGroupPattern = /(A\+|A-|B\+|B-|AB\+|AB-|O\+|O-)/i;
+      const match = productName.match(bloodGroupPattern);
+      
+      if (match) {
+        bloodGroup = match[1].toUpperCase();
+        // Extract everything after the blood group as category
+        const afterBloodGroup = productName.substring(match.index! + match[0].length).trim();
+        category = afterBloodGroup || 'Other';
+      } else {
+        // If no blood group found, check if it starts with blood group
+        for (const bg of standardBloodGroups) {
+          if (productName.toUpperCase().startsWith(bg.toUpperCase())) {
+            bloodGroup = bg;
+            category = productName.substring(bg.length).trim() || 'Other';
+            break;
+          }
         }
       }
       
-      // If no category extracted, use the full product name as category
-      if (!category) {
-        category = productName;
-      }
-      
-      // If category is empty, set it to 'Other'
-      if (!category) {
+      // Clean up category name
+      if (!category || category === '') {
         category = 'Other';
       }
+      
+      console.log(`Parsed: Product "${productName}" -> Blood Group: "${bloodGroup}", Category: "${category}"`);
 
       allCategories.add(category);
 
@@ -106,6 +114,9 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
       
       stockMatrix[bloodGroup][category] = (stockMatrix[bloodGroup][category] || 0) + 1;
     });
+
+    console.log('Final stock matrix:', stockMatrix);
+    console.log('All categories:', Array.from(allCategories));
 
     return {
       stockMatrix,
