@@ -1,12 +1,10 @@
 
-import PatientRequestReportFilter from "@/components/reports/PatientRequestReportFilter";
+import PatientRequestReceipt from "@/components/reports/PatientRequestReceipt";
 
-const PatientRequest = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <PatientRequestReportFilter />
-    </div>
-  );
-};
+const PatientRequest = () => (
+  <div className="min-h-screen bg-gray-100 flex justify-center pt-12">
+    <PatientRequestReceipt />
+  </div>
+);
 
 export default PatientRequest;
