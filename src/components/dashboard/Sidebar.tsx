@@ -227,7 +227,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   onValueChange={handleNestedAccordionChange}
                   collapsible
                 >
-                  {/* Existing Reception Section */}
                   <AccordionItem value="reception" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>Reception</span>
@@ -256,7 +255,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  {/* Existing BDS Section */}
                   <AccordionItem value="bds" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>BDS</span>
@@ -303,7 +301,6 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  {/* Existing Lab Section */}
                   <AccordionItem value="lab" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>LAB</span>
@@ -328,11 +325,16 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
                           active={activePage === '/reports/lab/product-wise-blood-issue'}
                         />
+                        <SidebarItem 
+                          icon={ActivityIcon} 
+                          label="Crossmatch Report" 
+                          onClick={() => handleReportNavigate('/reports/lab/crossmatch-report')}
+                          active={activePage === '/reports/lab/crossmatch-report'}
+                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* New Admin Section */}
                   <AccordionItem value="admin" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>Admin</span>
