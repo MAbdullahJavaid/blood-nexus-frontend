@@ -333,191 +333,191 @@ const CrossmatchReportFilter = ({ title }: CrossmatchReportFilterProps) => {
           </div>
 
           {reportData.map((record, index) => (
-            <Card key={record.id} className="p-8 print:shadow-none print:border-black">
-              <div className="space-y-6">
+            <Card key={record.id} className="p-6 print:shadow-none print:border-black">
+              <div className="space-y-4">
                 {/* Header */}
-                <div className="text-center border-b-2 border-black pb-4">
-                  <h1 className="text-2xl font-bold">BLOOD GROUPING SCREENING AND CROSS MATCH REPORT</h1>
+                <div className="text-center border-b-2 border-black pb-3">
+                  <h1 className="text-xl font-bold">BLOOD GROUPING SCREENING AND CROSS MATCH REPORT</h1>
                 </div>
 
                 {/* Patient Information */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-center">Patient Information</h2>
+                <div className="space-y-3">
+                  <h2 className="text-lg font-bold text-center">Patient Information</h2>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="flex gap-4">
-                        <span className="font-medium">Req. No.</span>
-                        <span className="border-b border-black flex-1">{record.crossmatch_no}</span>
+                      <div className="flex gap-3">
+                        <span className="font-medium text-sm">Req. No.</span>
+                        <span className="border-b border-black flex-1 text-sm">{record.crossmatch_no}</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="font-medium">Date: </span>
-                      <span>{new Date(record.date).toLocaleDateString('en-GB')}</span>
+                      <span className="font-medium text-sm">Date: </span>
+                      <span className="text-sm">{new Date(record.date).toLocaleDateString('en-GB')}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="col-span-2">
-                      <span className="font-medium">Patient Name: </span>
-                      <span className="border-b border-black">{record.patient_name}</span>
+                      <span className="font-medium text-sm">Patient Name: </span>
+                      <span className="border-b border-black text-sm">{record.patient_name}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Age: </span>
-                      <span className="border-b border-black">{record.age}</span>
+                      <span className="font-medium text-sm">Age: </span>
+                      <span className="border-b border-black text-sm">{record.age}</span>
                     </div>
                     <div>
-                      <span className="font-medium">B.Group: </span>
-                      <span className="border-b border-black">{record.blood_group}{record.rh}</span>
+                      <span className="font-medium text-sm">B.Group: </span>
+                      <span className="border-b border-black text-sm">{record.blood_group}{record.rh}</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="font-medium">Hospital/Clinic: </span>
-                    <span className="border-b border-black">{record.hospital}</span>
+                    <span className="font-medium text-sm">Hospital/Clinic: </span>
+                    <span className="border-b border-black text-sm">{record.hospital}</span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <span className="font-medium">Bag No: </span>
-                      <span className="border-b border-black">{record.donor_info.bag_id}</span>
+                      <span className="font-medium text-sm">Bag No: </span>
+                      <span className="border-b border-black text-sm">{record.donor_info.bag_id}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Collection Date: </span>
-                      <span className="border-b border-black">{new Date(record.donor_info.collection_date).toLocaleDateString('en-GB')}</span>
+                      <span className="font-medium text-sm">Collection Date: </span>
+                      <span className="border-b border-black text-sm">{new Date(record.donor_info.collection_date).toLocaleDateString('en-GB')}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Expiry Date: </span>
-                      <span className="border-b border-black">{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString('en-GB') : 'N/A'}</span>
+                      <span className="font-medium text-sm">Expiry Date: </span>
+                      <span className="border-b border-black text-sm">{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString('en-GB') : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Donor Information */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-center">Donor Information</h2>
+                <div className="space-y-3">
+                  <h2 className="text-lg font-bold text-center">Donor Information</h2>
                   
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-1">
                       <div>
-                        <span className="font-medium">REG NO: </span>
-                        <span className="border-b border-black">{record.donor_info.bag_id}</span>
+                        <span className="font-medium text-sm">REG NO: </span>
+                        <span className="border-b border-black text-sm">{record.donor_info.bag_id}</span>
                       </div>
                       <div>
-                        <span className="font-medium">Donor Name: </span>
-                        <span className="border-b border-black">{record.donor_info.donor_name}</span>
+                        <span className="font-medium text-sm">Donor Name: </span>
+                        <span className="border-b border-black text-sm">{record.donor_info.donor_name}</span>
                       </div>
                       <div>
-                        <span className="font-medium">Age: </span>
-                        <span className="border-b border-black">{record.donor_info.donor_age}</span>
+                        <span className="font-medium text-sm">Age: </span>
+                        <span className="border-b border-black text-sm">{record.donor_info.donor_age}</span>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div>
-                        <span className="font-medium">Document Date: </span>
-                        <span className="border-b border-black">{new Date(record.donor_info.collection_date).toLocaleDateString('en-GB')}</span>
+                        <span className="font-medium text-sm">Document Date: </span>
+                        <span className="border-b border-black text-sm">{new Date(record.donor_info.collection_date).toLocaleDateString('en-GB')}</span>
                       </div>
                       <div>
-                        <span className="font-medium">Blood Group: </span>
-                        <span className="border-b border-black">{record.donor_info.donor_blood_group}{record.donor_info.donor_rh}</span>
+                        <span className="font-medium text-sm">Blood Group: </span>
+                        <span className="border-b border-black text-sm">{record.donor_info.donor_blood_group}{record.donor_info.donor_rh}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Screening Report Table */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-center">SCREENING REPORT</h2>
+                <div className="space-y-2">
+                  <h2 className="text-lg font-bold text-center">SCREENING REPORT</h2>
                   
-                  <table className="w-full border-2 border-black">
+                  <table className="w-full border-2 border-black text-sm">
                     <thead>
                       <tr className="border-b-2 border-black">
-                        <th className="border-r border-black p-2 text-left">Test</th>
-                        <th className="border-r border-black p-2">Donor/Patient Value</th>
-                        <th className="border-r border-black p-2">Cut Off Value</th>
-                        <th className="p-2">RESULT</th>
+                        <th className="border-r border-black p-1 text-left">Test</th>
+                        <th className="border-r border-black p-1">Donor/Patient Value</th>
+                        <th className="border-r border-black p-1">Cut Off Value</th>
+                        <th className="p-1">RESULT</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b border-black">
-                        <td className="border-r border-black p-2">HBsAg (Hepatitis B)</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.hbsag || 'N/A'}</td>
-                        <td className="border-r border-black p-2 text-center">1.00</td>
-                        <td className="p-2 text-center">{getTestResult(record.donor_info.hbsag)}</td>
+                        <td className="border-r border-black p-1">HBsAg (Hepatitis B)</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.hbsag || 'N/A'}</td>
+                        <td className="border-r border-black p-1 text-center">1.00</td>
+                        <td className="p-1 text-center">{getTestResult(record.donor_info.hbsag)}</td>
                       </tr>
                       <tr className="border-b border-black">
-                        <td className="border-r border-black p-2">Anti - HCV (Hepatitis C)</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.hcv || 'N/A'}</td>
-                        <td className="border-r border-black p-2 text-center">1.00</td>
-                        <td className="p-2 text-center">{getTestResult(record.donor_info.hcv)}</td>
+                        <td className="border-r border-black p-1">Anti - HCV (Hepatitis C)</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.hcv || 'N/A'}</td>
+                        <td className="border-r border-black p-1 text-center">1.00</td>
+                        <td className="p-1 text-center">{getTestResult(record.donor_info.hcv)}</td>
                       </tr>
                       <tr className="border-b border-black">
-                        <td className="border-r border-black p-2">Anti - HIV</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.hiv || 'N/A'}</td>
-                        <td className="border-r border-black p-2 text-center">1.00</td>
-                        <td className="p-2 text-center">{getTestResult(record.donor_info.hiv)}</td>
+                        <td className="border-r border-black p-1">Anti - HIV</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.hiv || 'N/A'}</td>
+                        <td className="border-r border-black p-1 text-center">1.00</td>
+                        <td className="p-1 text-center">{getTestResult(record.donor_info.hiv)}</td>
                       </tr>
                       <tr className="border-b border-black">
-                        <td className="border-r border-black p-2">V.D.R.L (Syphilis)</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.vdrl || 'N/A'}</td>
-                        <td className="border-r border-black p-2 text-center">1.00</td>
-                        <td className="p-2 text-center">{getTestResult(record.donor_info.vdrl)}</td>
+                        <td className="border-r border-black p-1">V.D.R.L (Syphilis)</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.vdrl || 'N/A'}</td>
+                        <td className="border-r border-black p-1 text-center">1.00</td>
+                        <td className="p-1 text-center">{getTestResult(record.donor_info.vdrl)}</td>
                       </tr>
                       <tr>
-                        <td className="border-r border-black p-2">HB</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.hb || 'N/A'}</td>
-                        <td className="border-r border-black p-2 text-center">-</td>
-                        <td className="p-2 text-center">-</td>
+                        <td className="border-r border-black p-1">HB</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.hb || 'N/A'}</td>
+                        <td className="border-r border-black p-1 text-center">-</td>
+                        <td className="p-1 text-center">-</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
                 {/* Crossmatch Results Table */}
-                <div className="space-y-4">
-                  <table className="w-full border-2 border-black">
+                <div className="space-y-2">
+                  <table className="w-full border-2 border-black text-sm">
                     <thead>
                       <tr className="border-b-2 border-black">
-                        <th className="border-r border-black p-2">Reg No.</th>
-                        <th className="border-r border-black p-2">Blood Group</th>
-                        <th className="border-r border-black p-2">Saline</th>
-                        <th className="border-r border-black p-2">Albumin</th>
-                        <th className="border-r border-black p-2">Coomb's</th>
-                        <th className="p-2">Result</th>
+                        <th className="border-r border-black p-1">Reg No.</th>
+                        <th className="border-r border-black p-1">Blood Group</th>
+                        <th className="border-r border-black p-1">Saline</th>
+                        <th className="border-r border-black p-1">Albumin</th>
+                        <th className="border-r border-black p-1">Coomb's</th>
+                        <th className="p-1">Result</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.bag_id}</td>
-                        <td className="border-r border-black p-2 text-center">{record.donor_info.donor_blood_group}{record.donor_info.donor_rh}</td>
-                        <td className="border-r border-black p-2 text-center">{record.saline}</td>
-                        <td className="border-r border-black p-2 text-center">{record.albumin}</td>
-                        <td className="border-r border-black p-2 text-center">{record.coomb}</td>
-                        <td className="p-2 text-center">{record.result}</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.bag_id}</td>
+                        <td className="border-r border-black p-1 text-center">{record.donor_info.donor_blood_group}{record.donor_info.donor_rh}</td>
+                        <td className="border-r border-black p-1 text-center">{record.saline}</td>
+                        <td className="border-r border-black p-1 text-center">{record.albumin}</td>
+                        <td className="border-r border-black p-1 text-center">{record.coomb}</td>
+                        <td className="p-1 text-center">{record.result}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
                 {/* Remarks */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div>
-                    <span className="font-medium">Remarks:</span>
+                    <span className="font-medium text-sm">Remarks:</span>
                   </div>
-                  <div className="border-b border-black min-h-[60px] p-2">
+                  <div className="border-b border-black min-h-[40px] p-1 text-sm">
                     {record.remarks}
                   </div>
                 </div>
 
                 {/* Signatures */}
-                <div className="grid grid-cols-2 gap-8 pt-8">
+                <div className="grid grid-cols-2 gap-6 pt-4">
                   <div>
-                    <span className="font-medium">SIGNATURE: ( LAB-INCHARGE)</span>
-                    <div className="border-b border-black mt-8"></div>
+                    <span className="font-medium text-sm">SIGNATURE: ( LAB-INCHARGE)</span>
+                    <div className="border-b border-black mt-4"></div>
                   </div>
                   <div>
-                    <span className="font-medium">SIGNATURE: ( LAB-ASSISTANT)</span>
-                    <div className="border-b border-black mt-8"></div>
+                    <span className="font-medium text-sm">SIGNATURE: ( LAB-ASSISTANT)</span>
+                    <div className="border-b border-black mt-4"></div>
                   </div>
                 </div>
 
