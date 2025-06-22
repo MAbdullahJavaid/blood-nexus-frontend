@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Package, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 
-interface Product {
+interface ProductWithBloodGroup {
   id: string;
   bag_no: string;
   donor_name: string;
   product: string;
   created_at: string;
+  blood_group: string;
 }
 
 interface StockDisplayProps {
@@ -19,7 +20,7 @@ interface StockDisplayProps {
 }
 
 export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithBloodGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -30,13 +31,54 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
+      
+      // Fetch products with blood group information from linked tables
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          id,
+          bag_no,
+          donor_name,
+          product,
+          created_at,
+          bleeding_records!inner(
+            donor_id,
+            donors!inner(
+              blood_group_separate,
+              rh_factor
+            )
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
+
+      // Transform the data to include combined blood group
+      const productsWithBloodGroup: ProductWithBloodGroup[] = (data || []).map(product => {
+        const donor = product.bleeding_records?.donors;
+        let bloodGroup = 'Unknown';
+        
+        if (donor?.blood_group_separate && donor?.rh_factor) {
+          const rhSymbol = donor.rh_factor === '+ve' ? '+' : 
+                          donor.rh_factor === '-ve' ? '-' : '';
+          bloodGroup = `${donor.blood_group_separate}${rhSymbol}`;
+        }
+        
+        return {
+          id: product.id,
+          bag_no: product.bag_no,
+          donor_name: product.donor_name,
+          product: product.product,
+          created_at: product.created_at,
+          blood_group: bloodGroup
+        };
+      });
+
+      console.log('Fetched products with blood groups:', productsWithBloodGroup);
+      setProducts(productsWithBloodGroup);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -71,39 +113,10 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
     });
 
     products.forEach(product => {
-      const productName = product.product.trim();
-      console.log('Processing product:', productName);
+      const bloodGroup = product.blood_group || 'Unknown';
+      const category = product.product.trim() || 'Other';
       
-      let bloodGroup = 'Other';
-      let category = productName;
-      
-      // More robust blood group extraction
-      // Check for patterns like "A+ WB", "O- PRC", "AB+ FFP", etc.
-      const bloodGroupPattern = /(A\+|A-|B\+|B-|AB\+|AB-|O\+|O-)/i;
-      const match = productName.match(bloodGroupPattern);
-      
-      if (match) {
-        bloodGroup = match[1].toUpperCase();
-        // Extract everything after the blood group as category
-        const afterBloodGroup = productName.substring(match.index! + match[0].length).trim();
-        category = afterBloodGroup || 'Other';
-      } else {
-        // If no blood group found, check if it starts with blood group
-        for (const bg of standardBloodGroups) {
-          if (productName.toUpperCase().startsWith(bg.toUpperCase())) {
-            bloodGroup = bg;
-            category = productName.substring(bg.length).trim() || 'Other';
-            break;
-          }
-        }
-      }
-      
-      // Clean up category name
-      if (!category || category === '') {
-        category = 'Other';
-      }
-      
-      console.log(`Parsed: Product "${productName}" -> Blood Group: "${bloodGroup}", Category: "${category}"`);
+      console.log(`Processing: Product "${product.product}" -> Blood Group: "${bloodGroup}", Category: "${category}"`);
 
       allCategories.add(category);
 
@@ -120,7 +133,9 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
 
     return {
       stockMatrix,
-      bloodGroups: standardBloodGroups,
+      bloodGroups: [...standardBloodGroups, 'Unknown'].filter(bg => 
+        Object.keys(stockMatrix[bg] || {}).length > 0 || standardBloodGroups.includes(bg)
+      ),
       categories: Array.from(allCategories).sort()
     };
   };
@@ -219,9 +234,9 @@ export const StockDisplay: React.FC<StockDisplayProps> = ({ isVisible }) => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg">Stock by Blood Group and Record Wise</CardTitle>
+                <CardTitle className="text-lg">Stock by Blood Group and Product Type</CardTitle>
                 <CardDescription>
-                  Inventory breakdown by blood groups and categories
+                  Inventory breakdown by blood groups and product categories
                 </CardDescription>
               </div>
               <Button 
