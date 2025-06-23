@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -303,7 +304,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  {/* Existing Lab Section */}
+                  {/* LAB Section with Crossmatch Report */}
                   <AccordionItem value="lab" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>LAB</span>
@@ -327,6 +328,12 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           label="Product Wise Blood Issue" 
                           onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
                           active={activePage === '/reports/lab/product-wise-blood-issue'}
+                        />
+                        <SidebarItem 
+                          icon={ActivityIcon} 
+                          label="Crossmatch Report" 
+                          onClick={() => handleReportNavigate('/reports/lab/crossmatch')}
+                          active={activePage === '/reports/lab/crossmatch'}
                         />
                       </div>
                     </AccordionContent>

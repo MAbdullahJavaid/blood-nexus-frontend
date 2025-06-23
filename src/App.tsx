@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +28,7 @@ import BloodIssueRecord from "./pages/BloodIssueRecord";
 import DonationsReport from "./pages/DonationsReport";
 import BloodDriveReport from "./pages/BloodDriveReport";
 import VolunteerReport from "./pages/VolunteerReport";
+import CrossmatchReport from "./pages/CrossmatchReport";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +152,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BloodIssueRecord />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/lab/crossmatch" 
+              element={
+                <ProtectedRoute>
+                  <CrossmatchReport />
                 </ProtectedRoute>
               } 
             />
