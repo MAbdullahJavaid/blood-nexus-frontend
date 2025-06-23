@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 interface BloodDriveReportFilterProps {
   onOk?: (from: Date, to: Date) => void;
@@ -182,25 +183,13 @@ export default function BloodDriveReportFilter({
             </div>
           </div>
         </div>
-        {/* Action Buttons */}
-        <div className="flex justify-center gap-4 pt-8">
-          <Button onClick={handleOk} className="px-8 bg-red-600 hover:bg-red-700" type="button">
-            OK
-          </Button>
-          <Button variant="outline" onClick={handleCancel} className="px-8" type="button">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleExport}
-            className="px-8 bg-green-600 hover:bg-green-700 text-white"
-            type="button"
-          >
-            Export
-          </Button>
-          <Button variant="outline" onClick={handleExit} className="px-8" type="button">
-            Exit
-          </Button>
-        </div>
+        {/* Standardized Action Buttons */}
+        <ReportFilterActions
+          onOk={handleOk}
+          onCancel={handleCancel}
+          onExport={handleExport}
+          onExit={handleExit}
+        />
       </CardContent>
     </Card>
   );

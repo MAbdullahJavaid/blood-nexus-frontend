@@ -14,6 +14,7 @@ import BloodBleedRecordTable from "./BloodBleedRecordTable";
 import RecordGroupWiseTable from "./RecordGroupWiseTable";
 import DonorBleedSummaryTable from "./DonorBleedSummaryTable";
 import BagBleedSummaryTable from "./BagBleedSummaryTable";
+import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 interface BDSReportFilterProps {
   title: string;
@@ -199,21 +200,13 @@ const BDSReportFilter = ({ title, reportType }: BDSReportFilterProps) => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 pt-4">
-              <Button onClick={handleOK} className="px-8">
-                OK
-              </Button>
-              <Button variant="outline" onClick={handleCancel} className="px-8">
-                Cancel
-              </Button>
-              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
-                Export
-              </Button>
-              <Button variant="outline" onClick={handleExit} className="px-8">
-                Exit
-              </Button>
-            </div>
+            {/* Standardized Action Buttons */}
+            <ReportFilterActions
+              onOk={handleOK}
+              onCancel={handleCancel}
+              onExport={handleExport}
+              onExit={handleExit}
+            />
           </div>
         </CardContent>
       </Card>

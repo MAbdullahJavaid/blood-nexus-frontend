@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrossmatchSearchModal } from "@/components/forms/crossmatch/CrossmatchSearchModal";
 import PatientRequestReportActions from "@/components/reports/PatientRequestReportActions";
+import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 interface Props {
   onOk?: (from: string, to: string) => void;
@@ -44,6 +45,13 @@ export default function CrossmatchReportFilter({
 
   const handleModalOpenChange = (open: boolean) => {
     if (!open) setSearchModalOpenFor(null);
+  };
+
+  const handleExport = () => {
+    // Default to PDF export if available
+    if (onExportPDF) {
+      onExportPDF();
+    }
   };
 
   return (
@@ -139,24 +147,13 @@ export default function CrossmatchReportFilter({
             </div>
           </div>
 
-          {/* Action buttons matching the screenshot */}
-          <div className="flex justify-center gap-4">
-            <Button
-              type="button"
-              className="min-w-[80px] bg-red-600 text-white hover:bg-red-700 px-8 py-2"
-              onClick={() => onOk?.(from, to)}
-            >
-              OK
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-w-[80px] border-gray-400 text-gray-700 hover:bg-gray-50 px-8 py-2"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          </div>
+          {/* Standardized Action buttons */}
+          <ReportFilterActions
+            onOk={() => onOk?.(from, to)}
+            onCancel={onCancel || (() => {})}
+            onExport={handleExport}
+            onExit={onExit || (() => {})}
+          />
 
           {/* Crossmatch Search Modal */}
           <CrossmatchSearchModal

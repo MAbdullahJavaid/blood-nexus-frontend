@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 // UI date options
 const DATE_OPTIONS = [
@@ -88,6 +89,26 @@ export default function DonationsReportFilter({
   const handleToChange = (date?: Date) => {
     if (date) setTo(date);
     setOpenTo(false);
+  };
+
+  const handleOk = () => {
+    if (onOk) onOk(from, to);
+  };
+
+  const handleCancel = () => {
+    setDateOption("fiscal");
+    const dr = getDateRange("fiscal");
+    setFrom(dr.from);
+    setTo(dr.to);
+    if (onCancel) onCancel();
+  };
+
+  const handleExport = () => {
+    if (onExport) onExport(from, to);
+  };
+
+  const handleExit = () => {
+    if (onExit) onExit();
   };
 
   // Rendering
@@ -188,33 +209,13 @@ export default function DonationsReportFilter({
           </div>
         </div>
 
-        {/* Footer Buttons */}
-        <div className="flex justify-center space-x-4 mt-8 mb-2">
-          <Button
-            className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-2 rounded shadow"
-            onClick={() => onOk && onOk(from, to)}
-          >
-            OK
-          </Button>
-          <Button
-            className="bg-white border border-gray-300 text-gray-700 font-bold px-8 py-2 rounded shadow"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-2 rounded shadow"
-            onClick={() => onExport && onExport(from, to)}
-          >
-            Export
-          </Button>
-          <Button
-            className="bg-white border border-gray-300 text-gray-700 font-bold px-8 py-2 rounded shadow"
-            onClick={onExit}
-          >
-            Exit
-          </Button>
-        </div>
+        {/* Standardized Footer Buttons */}
+        <ReportFilterActions
+          onOk={handleOk}
+          onCancel={handleCancel}
+          onExport={handleExport}
+          onExit={handleExit}
+        />
       </div>
     </div>
   );
