@@ -26,7 +26,7 @@ export const useSaveInvoice = () => {
     try {
       setLoading(true);
       
-      let patientId: string;
+      let finalPatientId: string;
       
       const getCurrentPatientData = () => {
         if (patientType === "regular" && regularPatient) {
@@ -56,6 +56,9 @@ export const useSaveInvoice = () => {
       const currentData = getCurrentPatientData();
       
       if (patientType === "opd") {
+        // For OPD patients, use the manually entered patient ID
+        finalPatientId = currentData.patientId;
+        
         const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
           "A": "A+",
           "B": "B+", 
@@ -66,10 +69,11 @@ export const useSaveInvoice = () => {
         
         const mappedBloodGroup = bloodGroupMap[opdPatientData.bloodGroup] || "O+";
         
+        // Create patient record but don't use the generated UUID for patient_id
         const { data: patientData, error: patientError } = await supabase
           .from('patients')
           .insert({
-            patient_id: opdPatientData.patientId,
+            patient_id: opdPatientData.patientId, // Use the manually entered ID
             name: opdPatientData.name,
             phone: opdPatientData.phone,
             date_of_birth: opdPatientData.dob || null,
@@ -81,13 +85,18 @@ export const useSaveInvoice = () => {
           .select('id')
           .single();
           
-        if (patientError) throw patientError;
-        patientId = patientData.id;
+        if (patientError) {
+          // If there's a duplicate patient_id, that's fine, we'll use the manually entered ID
+          if (patientError.code !== '23505') {
+            throw patientError;
+          }
+        }
       } else {
+        // For regular patients, use the existing patient's ID
         if (!regularPatient?.id) {
           throw new Error("No patient selected");
         }
-        patientId = regularPatient.id;
+        finalPatientId = regularPatient.patient_id || regularPatient.id;
       }
       
       // Ensure numeric values are properly bounded for database
@@ -102,7 +111,7 @@ export const useSaveInvoice = () => {
         .insert({
           document_no: documentNo,
           document_date: documentDate,
-          patient_id: patientId,
+          patient_id: finalPatientId, // Use the correct patient ID (manually entered for OPD, existing for regular)
           total_amount: safeTotalAmount,
           patient_type: patientType,
           blood_group_separate: bloodGroup,
