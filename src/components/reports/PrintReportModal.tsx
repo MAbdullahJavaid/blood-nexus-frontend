@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ export default function PrintReportModal({
         return (
           <div id="print-report-content" className="p-6">
             <div className="text-center mb-6">
-              <h1 className="text-xl font-bold mb-2">SUNDAS FOUNDATION</h1>
+              <h1 className="text-xl font-bold mb-2">BLOOD CARE FOUNDATION</h1>
               <h2 className="text-lg font-bold underline">DONOR SCREENING REPORT</h2>
             </div>
             

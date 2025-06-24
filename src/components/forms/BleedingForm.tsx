@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useImperativeHandle } from "react";
 import { BleedingFormProvider, useBleedingForm } from "./bleeding/BleedingFormContext";
 import { BleedingFormProps } from "./bleeding/types";
@@ -19,11 +18,30 @@ interface BleedingFormRef {
   clearForm: () => void;
   handleSave: () => Promise<{success: boolean, error?: any}>;
   handleDelete: () => Promise<{success: boolean, error?: any}>;
+  getFormData: () => {
+    bleedingDate: string;
+    bagId: string;
+    technician: string;
+    remarks: string;
+    hbsag: string;
+    hcv: string;
+    hiv: string;
+    vdrl: string;
+    hb: string;
+    donor: {
+      donor_id: string;
+      name: string;
+      blood_group: string;
+      age: string;
+      phone: string;
+      address: string;
+    } | null;
+  };
 }
 
 const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
   ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
-    const { clearForm, handleSubmit, handleDelete } = useBleedingForm();
+    const { clearForm, handleSubmit, handleDelete, formData } = useBleedingForm();
 
     useImperativeHandle(ref, () => ({
       clearForm,
@@ -44,6 +62,27 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
           console.error("Error deleting bleeding record:", error);
           return { success: false, error };
         }
+      },
+      getFormData: () => {
+        return {
+          bleedingDate: formData.bleedingDate,
+          bagId: formData.bagId,
+          technician: formData.technician,
+          remarks: formData.remarks,
+          hbsag: formData.hbsag,
+          hcv: formData.hcv,
+          hiv: formData.hiv,
+          vdrl: formData.vdrl,
+          hb: formData.hb,
+          donor: formData.donor ? {
+            donor_id: formData.donor.donor_id,
+            name: formData.donor.name,
+            blood_group: formData.donor.blood_group,
+            age: formData.donor.age,
+            phone: formData.donor.phone,
+            address: formData.donor.address
+          } : null
+        };
       }
     }));
 
