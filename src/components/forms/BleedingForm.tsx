@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useImperativeHandle } from "react";
 import { BleedingFormProvider, useBleedingForm } from "./bleeding/BleedingFormContext";
 import { BleedingFormProps } from "./bleeding/types";
@@ -69,16 +70,16 @@ const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProp
           bagId: formData.bagId,
           technician: formData.technician,
           remarks: formData.remarks,
-          hbsag: formData.hbsag,
-          hcv: formData.hcv,
-          hiv: formData.hiv,
-          vdrl: formData.vdrl,
+          hbsag: formData.hbsag.toString(),
+          hcv: formData.hcv.toString(),
+          hiv: formData.hiv.toString(),
+          vdrl: formData.vdrl.toString(),
           hb: formData.hb,
           donor: formData.donor ? {
             donor_id: formData.donor.donor_id,
             name: formData.donor.name,
             blood_group: formData.donor.blood_group,
-            age: formData.donor.age,
+            age: formData.donor.age.toString(),
             phone: formData.donor.phone,
             address: formData.donor.address
           } : null

@@ -10,6 +10,8 @@ export interface DonorData {
   age: number;
   phone: string;
   address: string;
+  blood_group_separate?: string;
+  rh_factor?: string;
 }
 
 export interface BleedingFormData {
@@ -31,6 +33,16 @@ interface BleedingFormContextType {
   clearForm: () => void;
   handleSubmit: () => Promise<void>;
   handleDelete: () => Promise<void>;
+  // Additional properties needed by components
+  selectedDonor: DonorData | null;
+  handleDonorSelect: (donor: DonorData) => void;
+  donorCategory: string;
+  setDonorCategory: (category: string) => void;
+  bagNo: string;
+  setBagNo: (bagNo: string) => void;
+  bagType: string;
+  setBagType: (bagType: string) => void;
+  loadBleedingRecord: (bagId: string) => Promise<void>;
 }
 
 const BleedingFormContext = createContext<BleedingFormContextType | undefined>(undefined);
@@ -67,6 +79,10 @@ export const BleedingFormProvider: React.FC<BleedingFormProviderProps> = ({
     donor: null
   });
 
+  const [donorCategory, setDonorCategory] = useState<string>('Self Donor');
+  const [bagNo, setBagNo] = useState<string>('');
+  const [bagType, setBagType] = useState<string>('double');
+
   const clearForm = () => {
     setFormData({
       bleedingDate: new Date().toISOString().split('T')[0],
@@ -80,7 +96,80 @@ export const BleedingFormProvider: React.FC<BleedingFormProviderProps> = ({
       hb: '',
       donor: null
     });
+    setBagNo('');
+    setBagType('double');
+    setDonorCategory('Self Donor');
     console.log("BleedingForm: Form cleared");
+  };
+
+  const handleDonorSelect = (donor: DonorData) => {
+    setFormData(prev => ({ ...prev, donor }));
+    console.log("BleedingForm: Donor selected:", donor);
+  };
+
+  const loadBleedingRecord = async (bagId: string) => {
+    try {
+      console.log("BleedingForm: Loading bleeding record for bag ID:", bagId);
+      
+      const { data, error } = await supabase
+        .from('bleeding_records')
+        .select(`
+          *,
+          donors:donor_id (
+            donor_id,
+            name,
+            blood_group,
+            blood_group_separate,
+            rh_factor,
+            phone,
+            address,
+            date_of_birth
+          )
+        `)
+        .eq('bag_id', bagId)
+        .single();
+
+      if (error) {
+        console.error("BleedingForm: Error loading bleeding record:", error);
+        toast.error("Failed to load bleeding record");
+        return;
+      }
+
+      if (data) {
+        const donor = Array.isArray(data.donors) ? data.donors[0] : data.donors;
+        
+        setFormData({
+          bleedingDate: data.bleeding_date,
+          bagId: data.bag_id,
+          technician: data.technician || '',
+          remarks: data.remarks || '',
+          hbsag: data.hbsag || 0,
+          hcv: data.hcv || 0,
+          hiv: data.hiv || 0,
+          vdrl: data.vdrl || 0,
+          hb: data.hb?.toString() || '',
+          donor: donor ? {
+            donor_id: donor.donor_id,
+            name: donor.name,
+            blood_group: donor.blood_group,
+            blood_group_separate: donor.blood_group_separate,
+            rh_factor: donor.rh_factor,
+            age: donor.date_of_birth ? new Date().getFullYear() - new Date(donor.date_of_birth).getFullYear() : 0,
+            phone: donor.phone || '',
+            address: donor.address || ''
+          } : null
+        });
+
+        setBagNo(data.bag_id);
+        setBagType(data.bag_type || 'double');
+        setDonorCategory(data.donor_category || 'Self Donor');
+        
+        console.log("BleedingForm: Record loaded successfully");
+      }
+    } catch (error) {
+      console.error("BleedingForm: Error during load:", error);
+      toast.error("Failed to load bleeding record");
+    }
   };
 
   const handleSubmit = async () => {
@@ -158,7 +247,16 @@ export const BleedingFormProvider: React.FC<BleedingFormProviderProps> = ({
         setFormData, 
         clearForm, 
         handleSubmit, 
-        handleDelete 
+        handleDelete,
+        selectedDonor: formData.donor,
+        handleDonorSelect,
+        donorCategory,
+        setDonorCategory,
+        bagNo,
+        setBagNo,
+        bagType,
+        setBagType,
+        loadBleedingRecord
       }}
     >
       {children}
