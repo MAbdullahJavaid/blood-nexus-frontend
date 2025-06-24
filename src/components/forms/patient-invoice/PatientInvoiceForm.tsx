@@ -137,29 +137,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           setLoading
         );
       },
-      getFormData: () => {
-        const currentPatientData = getCurrentPatientData();
-        return {
-          documentNo,
-          documentDate,
-          patientId: currentPatientData.patientId,
-          patientName: currentPatientData.name,
-          totalAmount,
-          discount: discountCal,
-          items,
-          bloodGroup,
-          rhType,
-          bloodCategory,
-          bottleRequired,
-          bottleUnitType,
-          hospital: currentPatientData.hospital,
-          age: currentPatientData.age,
-          phone: currentPatientData.phone,
-          references,
-          exDonor
-        };
-      },
       clearForm: () => {
+        // Clear all form data
         setPatientType("regular");
         setDocumentNo("");
         setBloodGroup("N/A");
@@ -198,7 +177,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     }, [isEditable]);
 
     // Always calculate discount as (totalAmount - receivedAmount), never editable:
-    const discountCal = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
+    const discountCalc = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
@@ -391,7 +370,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <TotalSection
-          discount={discountCal}
+          discount={discountCalc}
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
           isEditable={isEditable}

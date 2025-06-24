@@ -1,105 +1,125 @@
 
 import React from "react";
 import { format } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface PatientRequestSummaryData {
+interface InvoiceData {
   document_no: string;
   document_date: string;
-  patient_id: number | null;
+  patient_id: string | null;
   patient_name: string;
   total_amount: number;
   discount_amount: number;
   net_amount: number;
 }
 
-interface Props {
-  data: PatientRequestSummaryData[];
+interface PatientRequestSummaryDisplayProps {
+  data: InvoiceData[];
   dateFrom: Date;
   dateTo: Date;
   currentPage: number;
   totalPages: number;
 }
 
-export default function PatientRequestSummaryDisplay({ 
-  data, 
-  dateFrom, 
-  dateTo, 
-  currentPage, 
-  totalPages 
-}: Props) {
+export default function PatientRequestSummaryDisplay({
+  data,
+  dateFrom,
+  dateTo,
+  currentPage,
+  totalPages,
+}: PatientRequestSummaryDisplayProps) {
+  const formatCurrency = (amount: number) => {
+    return amount.toFixed(2);
+  };
+
   const totalAmount = data.reduce((sum, item) => sum + item.total_amount, 0);
   const totalDiscount = data.reduce((sum, item) => sum + item.discount_amount, 0);
   const totalNet = data.reduce((sum, item) => sum + item.net_amount, 0);
 
+  const printDate = format(new Date(), "dd-MMM-yyyy HH:mm:ss");
+
   return (
-    <div className="bg-white p-8 max-w-6xl mx-auto">
+    <div className="bg-white p-6 min-h-screen">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold mb-2">BLOOD CARE FOUNDATION</h1>
-        <h2 className="text-xl font-semibold mb-1">Patient Request Summary Report</h2>
-        <p className="text-sm text-gray-600">
-          From: {format(dateFrom, "dd/MM/yyyy")} To: {format(dateTo, "dd/MM/yyyy")}
-        </p>
-        <p className="text-sm text-gray-600">
-          Page {currentPage} of {totalPages}
-        </p>
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold mb-2">SUNDAS FOUNDATION</h1>
+        <h2 className="text-lg font-bold underline">PATIENT INVOICE SUMMARY</h2>
+      </div>
+
+      {/* Print info */}
+      <div className="flex justify-between items-center mb-4 text-sm">
+        <div>Print Date: {printDate}</div>
+        <div>Page {currentPage} of {totalPages}</div>
       </div>
 
       {/* Table */}
       <div className="border border-black">
-        {/* Table Header */}
-        <div className="grid grid-cols-6 bg-gray-100 border-b border-black">
-          <div className="p-2 border-r border-black font-bold text-center">Sr#</div>
-          <div className="p-2 border-r border-black font-bold text-center">Document No</div>
-          <div className="p-2 border-r border-black font-bold text-center">Date</div>
-          <div className="p-2 border-r border-black font-bold text-center">Patient Name</div>
-          <div className="p-2 border-r border-black font-bold text-center">Total Amount</div>
-          <div className="p-2 font-bold text-center">Net Amount</div>
-        </div>
-        
-        {/* Table Body */}
-        {data.map((item, index) => (
-          <div key={index} className="grid grid-cols-6 border-b border-black last:border-b-0">
-            <div className="p-2 border-r border-black text-center">{index + 1}</div>
-            <div className="p-2 border-r border-black text-center">{item.document_no}</div>
-            <div className="p-2 border-r border-black text-center">
-              {format(new Date(item.document_date), "dd/MM/yyyy")}
-            </div>
-            <div className="p-2 border-r border-black">{item.patient_name}</div>
-            <div className="p-2 border-r border-black text-right">
-              {item.total_amount.toLocaleString()}
-            </div>
-            <div className="p-2 text-right">
-              {item.net_amount.toLocaleString()}
-            </div>
-          </div>
-        ))}
-        
-        {/* Totals Row */}
-        <div className="grid grid-cols-6 bg-gray-100 font-bold">
-          <div className="p-2 border-r border-black text-center" colSpan={4}>Total:</div>
-          <div className="p-2 border-r border-black"></div>
-          <div className="p-2 border-r border-black"></div>
-          <div className="p-2 border-r border-black text-right">
-            {totalAmount.toLocaleString()}
-          </div>
-          <div className="p-2 text-right">
-            {totalNet.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      {/* Summary */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <p className="font-semibold">Total Records: {data.length}</p>
-        </div>
-        <div className="text-center">
-          <p className="font-semibold">Total Amount: {totalAmount.toLocaleString()}</p>
-        </div>
-        <div className="text-center">
-          <p className="font-semibold">Net Amount: {totalNet.toLocaleString()}</p>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-black">
+              <TableHead className="border-r border-black bg-gray-100 text-black font-bold text-center p-2">
+                Document No
+              </TableHead>
+              <TableHead className="border-r border-black bg-gray-100 text-black font-bold text-center p-2">
+                Document Date
+              </TableHead>
+              <TableHead className="border-r border-black bg-gray-100 text-black font-bold text-center p-2">
+                Patient Info
+              </TableHead>
+              <TableHead className="border-r border-black bg-gray-100 text-black font-bold text-center p-2">
+                Amount
+              </TableHead>
+              <TableHead className="border-r border-black bg-gray-100 text-black font-bold text-center p-2">
+                Discount
+              </TableHead>
+              <TableHead className="border-black bg-gray-100 text-black font-bold text-center p-2">
+                Net Amount
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={index} className="border-black">
+                <TableCell className="border-r border-black p-2 text-center">
+                  {item.document_no}
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-center">
+                  {format(new Date(item.document_date), "dd/MM/yyyy")}
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-center">
+                  {item.patient_id ? `${item.patient_id} ${item.patient_name}` : item.patient_name}
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-right">
+                  {formatCurrency(item.total_amount)}
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-right">
+                  {formatCurrency(item.discount_amount)}
+                </TableCell>
+                <TableCell className="border-black p-2 text-right">
+                  {formatCurrency(item.net_amount)}
+                </TableCell>
+              </TableRow>
+            ))}
+            
+            {/* Total row - only show on last page */}
+            {currentPage === totalPages && (
+              <TableRow className="border-black bg-gray-50 font-bold">
+                <TableCell className="border-r border-black p-2 text-center" colSpan={3}>
+                  TOTAL
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-right text-blue-600">
+                  {formatCurrency(totalAmount)}
+                </TableCell>
+                <TableCell className="border-r border-black p-2 text-right text-red-600">
+                  {formatCurrency(totalDiscount)}
+                </TableCell>
+                <TableCell className="border-black p-2 text-right text-green-600">
+                  {formatCurrency(totalNet)}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

@@ -13,8 +13,6 @@ import TestInformationForm from "@/components/forms/TestInformationForm";
 import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
 import ThanksLetter from "@/components/thanks-letter/ThanksLetter";
-import PrintReportModal from "@/components/reports/PrintReportModal";
-import { usePrintHandlers } from "@/hooks/usePrintHandlers";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -26,7 +24,6 @@ interface FormRef {
   handleSave?: () => Promise<{success: boolean, invoiceId?: string, error?: any}>;
   handleDelete?: () => Promise<{success: boolean, error?: any}>;
   clearForm: () => void;
-  getFormData?: () => any;
 }
 
 const Dashboard = () => {
@@ -46,16 +43,6 @@ const Dashboard = () => {
   
   const reportFormRef = useRef<{ clearForm: () => void } | null>(null);
   const thanksLetterRef = useRef<HTMLDivElement | null>(null);
-
-  // Add print handlers
-  const {
-    isPrintModalOpen,
-    setIsPrintModalOpen,
-    reportType,
-    reportData,
-    handlePrintForm,
-    handlePrintComplete,
-  } = usePrintHandlers();
 
   // Stock display is visible when no form is active or crud bar is hidden
   const isStockVisible = !showCrudBar || activeForm === null;
@@ -243,32 +230,6 @@ const Dashboard = () => {
     }
   };
 
-  // Add new print handler
-  const handlePrintClick = () => {
-    console.log("Dashboard: Print clicked for form:", activeForm);
-    
-    if (!activeForm) {
-      toast({
-        title: "No Form Selected",
-        description: "Please select a form to print.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Get form data from the active form
-    if (activeFormRef.current?.getFormData) {
-      const formData = activeFormRef.current.getFormData();
-      handlePrintForm(activeForm, formData);
-    } else {
-      toast({
-        title: "Print Not Available",
-        description: `Print functionality is not available for ${activeForm} form.`,
-        variant: "destructive"
-      });
-    }
-  };
-
   const handlePrintThanksLetter = async () => {
     console.log("Dashboard: Print thanks letter clicked");
     if (thanksLetterRef.current) {
@@ -389,7 +350,7 @@ const Dashboard = () => {
             onSaveClick={handleSaveClick}
             onAddItemClick={handleAddItemClick}
             onDeleteItemClick={handleDeleteItemClick}
-            onPrintClick={onlyPrintAndClose ? handlePrintThanksLetter : handlePrintClick}
+            onPrintClick={onlyPrintAndClose ? handlePrintThanksLetter : undefined}
             activeForm={activeForm}
             isEditing={isEditing}
             isAdding={isAdding}
@@ -403,15 +364,6 @@ const Dashboard = () => {
           <StockDisplay isVisible={isStockVisible} />
           {activeForm && renderActiveForm()}
         </div>
-
-        {/* Print Report Modal */}
-        <PrintReportModal
-          isOpen={isPrintModalOpen}
-          onOpenChange={setIsPrintModalOpen}
-          reportType={reportType}
-          reportData={reportData}
-          onPrint={handlePrintComplete}
-        />
       </div>
     </div>
   );

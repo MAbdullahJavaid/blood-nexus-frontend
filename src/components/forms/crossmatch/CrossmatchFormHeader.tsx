@@ -6,6 +6,10 @@ import { SearchIcon } from "lucide-react";
 interface CrossmatchFormHeaderProps {
   crossmatchNo: string;
   setCrossmatchNo: (value: string) => void;
+  quantity: number;
+  setQuantity: (value: number) => void;
+  date: string;
+  setDate: (value: string) => void;
   isEditable: boolean;
   onSearchClick: () => void;
 }
@@ -13,6 +17,10 @@ interface CrossmatchFormHeaderProps {
 export const CrossmatchFormHeader = ({
   crossmatchNo,
   setCrossmatchNo,
+  quantity,
+  setQuantity,
+  date,
+  setDate,
   isEditable,
   onSearchClick
 }: CrossmatchFormHeaderProps) => {
@@ -46,7 +54,8 @@ export const CrossmatchFormHeader = ({
           id="quantity" 
           className="h-9" 
           type="number" 
-          value={1}
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
           disabled={!isEditable} 
         />
       </div>
@@ -56,7 +65,8 @@ export const CrossmatchFormHeader = ({
           id="date" 
           className="h-9" 
           type="date" 
-          value={new Date().toISOString().split('T')[0]}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           disabled={!isEditable} 
         />
       </div>
