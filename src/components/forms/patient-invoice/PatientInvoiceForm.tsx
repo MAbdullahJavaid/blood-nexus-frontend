@@ -117,6 +117,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         invoiceHandlers.handleDeleteItem();
       },
       handleSave: async () => {
+        // Calculate the actual discount before saving
+        const calculatedDiscount = Math.max(totalAmount - receivedAmount, 0);
+        
         return await saveInvoice(
           patientType,
           regularPatient,
@@ -131,7 +134,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bottleUnitType,
           exDonor,
           references,
-          discount,
+          calculatedDiscount, // Pass the calculated discount
           receivedAmount,
           items,
           setLoading
@@ -143,7 +146,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         setDocumentNo("");
         setBloodGroup("N/A");
         setRhType("N/A");
-        setBloodCategory("FWB");
+        setBloodCategory("N/A");
         setBottleRequired(1);
         setBottleUnitType("bag");
         setItems([]);
@@ -176,8 +179,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
-    // Always calculate discount as (totalAmount - receivedAmount), never editable:
-    const discountCalc = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
+    // Always calculate discount as (totalAmount - receivedAmount)
+    const discountCalc = Math.max(totalAmount - receivedAmount, 0);
+    
+    // Update the discount state when the calculation changes
+    useEffect(() => {
+      setDiscount(discountCalc);
+    }, [totalAmount, receivedAmount, setDiscount]);
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
@@ -207,17 +215,12 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       };
     };
 
-    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      return;
-    };
-
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
-      
-      const itemsSum = items.reduce((acc, item) => acc + item.amount, 0);
-      const calculatedDiscount = itemsSum - value;
-      setDiscount(calculatedDiscount >= 0 ? calculatedDiscount : 0);
+      console.log("Received amount changed to:", value);
+      console.log("Total amount:", totalAmount);
+      console.log("Calculated discount:", Math.max(totalAmount - value, 0));
     };
 
     const handleSelectRow = (index: number) => {

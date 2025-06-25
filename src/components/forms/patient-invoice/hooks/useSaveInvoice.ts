@@ -66,19 +66,29 @@ export const useSaveInvoice = () => {
         finalPatientId = regularPatient.patient_id || regularPatient.id;
       }
       
+      // Calculate the actual discount amount (total - received)
+      const actualDiscountAmount = Math.max(totalAmount - receivedAmount, 0);
+      
       // Ensure numeric values are properly bounded for database
       const safeTotalAmount = Math.min(Math.max(totalAmount || 0, 0), 2147483647);
-      const safeDiscount = Math.min(Math.max(discount || 0, 0), 2147483647);
+      const safeDiscount = Math.min(Math.max(actualDiscountAmount || 0, 0), 2147483647);
       const safeReceivedAmount = Math.min(Math.max(receivedAmount || 0, 0), 2147483647);
       const safeBottleRequired = Math.min(Math.max(bottleRequired || 0, 0), 32767);
       const safeAge = currentData.age ? Math.min(Math.max(currentData.age, 0), 32767) : null;
+      
+      console.log("Saving invoice with values:", {
+        total_amount: safeTotalAmount,
+        discount_amount: safeDiscount,
+        amount_received: safeReceivedAmount,
+        calculated_discount: actualDiscountAmount
+      });
       
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('patient_invoices')
         .insert({
           document_no: documentNo,
           document_date: documentDate,
-          patient_id: finalPatientId, // Simply use the patient ID directly
+          patient_id: finalPatientId,
           total_amount: safeTotalAmount,
           patient_type: patientType,
           blood_group_separate: bloodGroup,
