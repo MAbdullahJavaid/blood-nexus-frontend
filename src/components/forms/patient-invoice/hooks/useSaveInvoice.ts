@@ -66,8 +66,8 @@ export const useSaveInvoice = () => {
         finalPatientId = regularPatient.patient_id || regularPatient.id;
       }
       
-      // Calculate the actual discount amount (total - received)
-      const actualDiscountAmount = Math.max(totalAmount - receivedAmount, 0);
+      // Use the discount parameter directly - it's already calculated correctly
+      const actualDiscountAmount = discount;
       
       // Ensure numeric values are properly bounded for database
       const safeTotalAmount = Math.min(Math.max(totalAmount || 0, 0), 2147483647);
@@ -80,7 +80,7 @@ export const useSaveInvoice = () => {
         total_amount: safeTotalAmount,
         discount_amount: safeDiscount,
         amount_received: safeReceivedAmount,
-        calculated_discount: actualDiscountAmount
+        passed_discount: discount
       });
       
       const { data: invoiceData, error: invoiceError } = await supabase

@@ -39,18 +39,26 @@ export function usePatientRequestSummaryData({
       let query = supabase
         .from('patient_invoices')
         .select('document_no, document_date, patient_id, patient_name, total_amount, discount_amount')
-        .gte('document_date', dateFrom.toISOString().split('T')[0])
-        .lte('document_date', dateTo.toISOString().split('T')[0])
         .order('document_date', { ascending: true })
         .order('document_no', { ascending: true });
 
-      // Add document number filters if specified
-      if (invoiceFrom && invoiceTo) {
-        query = query.gte('document_no', invoiceFrom).lte('document_no', invoiceTo);
-      } else if (invoiceFrom) {
-        query = query.gte('document_no', invoiceFrom);
-      } else if (invoiceTo) {
-        query = query.lte('document_no', invoiceTo);
+      // Apply filters based on what's provided
+      const hasInvoiceFilter = invoiceFrom || invoiceTo;
+      const hasDateFilter = dateFrom && dateTo;
+
+      if (hasInvoiceFilter) {
+        // If invoice filters are provided, prioritize invoice number range
+        if (invoiceFrom && invoiceTo) {
+          query = query.gte('document_no', invoiceFrom).lte('document_no', invoiceTo);
+        } else if (invoiceFrom) {
+          query = query.gte('document_no', invoiceFrom);
+        } else if (invoiceTo) {
+          query = query.lte('document_no', invoiceTo);
+        }
+      } else if (hasDateFilter) {
+        // Only apply date filters if no invoice filters are provided
+        query = query.gte('document_date', dateFrom.toISOString().split('T')[0])
+                     .lte('document_date', dateTo.toISOString().split('T')[0]);
       }
 
       const { data: invoices, error } = await query;

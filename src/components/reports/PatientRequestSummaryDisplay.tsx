@@ -42,7 +42,7 @@ export default function PatientRequestSummaryDisplay({
     <div className="bg-white p-6 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6">
-        <h1 className="text-xl font-bold mb-2">SUNDAS FOUNDATION</h1>
+        <h1 className="text-xl font-bold mb-2">BLOOD CARE FOUNDATION</h1>
         <h2 className="text-lg font-bold underline">PATIENT INVOICE SUMMARY</h2>
       </div>
 
