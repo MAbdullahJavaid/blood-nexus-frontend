@@ -69,8 +69,8 @@ export const useSaveInvoice = () => {
         
         const mappedBloodGroup = bloodGroupMap[opdPatientData.bloodGroup] || "O+";
         
-        // Create patient record but don't use the generated UUID for patient_id
-        const { data: patientData, error: patientError } = await supabase
+        // Create patient record with the manually entered patient_id
+        const { error: patientError } = await supabase
           .from('patients')
           .insert({
             patient_id: opdPatientData.patientId, // Use the manually entered ID
@@ -81,9 +81,7 @@ export const useSaveInvoice = () => {
             blood_group: mappedBloodGroup,
             hospital: opdPatientData.hospital,
             age: opdPatientData.age
-          })
-          .select('id')
-          .single();
+          });
           
         if (patientError) {
           // If there's a duplicate patient_id, that's fine, we'll use the manually entered ID
@@ -92,8 +90,8 @@ export const useSaveInvoice = () => {
           }
         }
       } else {
-        // For regular patients, use the existing patient's ID
-        if (!regularPatient?.id) {
+        // For regular patients, use the patient_id from the selected patient
+        if (!regularPatient) {
           throw new Error("No patient selected");
         }
         finalPatientId = regularPatient.patient_id || regularPatient.id;
@@ -111,7 +109,7 @@ export const useSaveInvoice = () => {
         .insert({
           document_no: documentNo,
           document_date: documentDate,
-          patient_id: finalPatientId, // Use the correct patient ID (manually entered for OPD, existing for regular)
+          patient_id: finalPatientId, // This will now always be the patient_id (manually entered), not the auto-generated UUID
           total_amount: safeTotalAmount,
           patient_type: patientType,
           blood_group_separate: bloodGroup,
