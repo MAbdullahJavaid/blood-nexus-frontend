@@ -21,7 +21,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [documentNo, setDocumentNo] = useState<string>("");
     const [bloodGroup, setBloodGroup] = useState<string>("N/A");
     const [rhType, setRhType] = useState<string>("N/A");
-    const [bloodCategory, setBloodCategory] = useState<string>("FWB");
+    const [bloodCategory, setBloodCategory] = useState<string>("N/A");
     const [bottleRequired, setBottleRequired] = useState<number>(0);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -52,7 +52,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setDocumentNo("");
       setBloodGroup("N/A");
       setRhType("N/A");
-      setBloodCategory("FWB");
+      setBloodCategory("N/A");
       setBottleRequired(0);
       setBottleUnitType("bag");
       setItems([]);
@@ -271,7 +271,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           // Set blood details
           setBloodGroup(invoiceData.blood_group_separate || "N/A");
           setRhType(invoiceData.rh_factor || "N/A");
-          setBloodCategory(invoiceData.blood_category || "FWB");
+          setBloodCategory(invoiceData.blood_category || "N/A");
           setBottleRequired(invoiceData.bottle_quantity || 0);
           setBottleUnitType(invoiceData.bottle_unit || "bag");
 
@@ -397,61 +397,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           }
         }
 
-        // For OPD patients, create a new patient record first if needed
-        let finalPatientId = patientID;
-
-        if (patientType === "opd") {
-          const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
-            "A": "A+",
-            "B": "B+",
-            "AB": "AB+",
-            "O": "O+",
-            "N/A": "O+"
-          };
-
-          const mappedBloodGroup = bloodGroupMap[bloodGroup] || "O+";
-
-          const { data: newPatient, error: insertError } = await supabase
-            .from('patients')
-            .insert({
-              patient_id: patientID,
-              name: patientName,
-              phone: phoneNo,
-              date_of_birth: dob || null,
-              gender: gender,
-              blood_group: mappedBloodGroup,
-              hospital: hospital,
-              age: age,
-            })
-            .select('id')
-            .maybeSingle();
-
-          if (insertError) {
-            if (insertError.code === '23505') {
-              const { data: existingP, error: fetchExistingErr } = await supabase
-                .from('patients')
-                .select('id')
-                .eq('patient_id', patientID)
-                .maybeSingle();
-
-              if (fetchExistingErr || !existingP?.id) {
-                console.error(`Duplicate patient ID, but could not find patient:`, fetchExistingErr);
-                toast.error("Duplicate patient ID and could not find patient record.");
-                return { success: false, error: fetchExistingErr || "Patient fetch failed" };
-              }
-              finalPatientId = existingP.id;
-            } else {
-              console.error("Error creating patient:", insertError);
-              toast.error(`Failed to create patient: ${insertError.message}`);
-              return { success: false, error: insertError };
-            }
-          } else if (newPatient && newPatient.id) {
-            finalPatientId = newPatient.id;
-          } else {
-            toast.error("Unknown error when creating patient.");
-            return { success: false, error: "Unknown patient creation error" };
-          }
-        }
+        // Simplified patient ID logic
+        let finalPatientId = patientID; // Simply use the entered patient ID for both OPD and regular
 
         // Ensure numeric values are properly bounded for database
         const safeTotalAmount = Math.min(Math.max(totalAmount || 0, 0), 2147483647);
@@ -468,7 +415,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
             .insert({
               document_no: finalDocumentNo,
               document_date: documentDate,
-              patient_id: finalPatientId,
+              patient_id: finalPatientId, // Simply use the patient ID directly
               patient_type: patientType,
               patient_name: patientName,
               phone_no: phoneNo,

@@ -56,39 +56,8 @@ export const useSaveInvoice = () => {
       const currentData = getCurrentPatientData();
       
       if (patientType === "opd") {
-        // For OPD patients, use the manually entered patient ID directly
+        // For OPD patients, simply use the manually entered patient ID
         finalPatientId = currentData.patientId;
-        
-        const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
-          "A": "A+",
-          "B": "B+", 
-          "AB": "AB+",
-          "O": "O+",
-          "N/A": "O+"
-        };
-        
-        const mappedBloodGroup = bloodGroupMap[opdPatientData.bloodGroup] || "O+";
-        
-        // Create patient record with the manually entered patient_id
-        const { error: patientError } = await supabase
-          .from('patients')
-          .insert({
-            patient_id: opdPatientData.patientId, // Use the manually entered ID
-            name: opdPatientData.name,
-            phone: opdPatientData.phone,
-            date_of_birth: opdPatientData.dob || null,
-            gender: opdPatientData.gender,
-            blood_group: mappedBloodGroup,
-            hospital: opdPatientData.hospital,
-            age: opdPatientData.age
-          });
-          
-        if (patientError) {
-          // If there's a duplicate patient_id, that's fine, we'll use the manually entered ID
-          if (patientError.code !== '23505') {
-            throw patientError;
-          }
-        }
       } else {
         // For regular patients, use the patient_id from the selected patient
         if (!regularPatient) {
@@ -109,7 +78,7 @@ export const useSaveInvoice = () => {
         .insert({
           document_no: documentNo,
           document_date: documentDate,
-          patient_id: finalPatientId, // Use the patient_id (manually entered for OPD, patient_id for regular)
+          patient_id: finalPatientId, // Simply use the patient ID directly
           total_amount: safeTotalAmount,
           patient_type: patientType,
           blood_group_separate: bloodGroup,
