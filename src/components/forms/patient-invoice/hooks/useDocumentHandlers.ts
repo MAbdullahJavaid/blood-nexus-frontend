@@ -67,11 +67,12 @@ export const useDocumentHandlers = (
 
         // Load patient data based on type
         if (invoiceData.patient_type === "regular" && invoiceData.patient_id) {
+          // For regular patients, try to find the patient by patient_id first
           const { data: patientData, error: patientError } = await supabase
             .from('patients')
             .select('*')
-            .eq('id', invoiceData.patient_id)
-            .single();
+            .eq('patient_id', invoiceData.patient_id)
+            .maybeSingle();
 
           if (!patientError && patientData) {
             const patient: Patient = {

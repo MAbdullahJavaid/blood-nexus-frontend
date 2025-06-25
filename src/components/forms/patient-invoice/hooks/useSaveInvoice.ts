@@ -56,7 +56,7 @@ export const useSaveInvoice = () => {
       const currentData = getCurrentPatientData();
       
       if (patientType === "opd") {
-        // For OPD patients, use the manually entered patient ID
+        // For OPD patients, use the manually entered patient ID directly
         finalPatientId = currentData.patientId;
         
         const bloodGroupMap: { [key: string]: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" } = {
@@ -109,7 +109,7 @@ export const useSaveInvoice = () => {
         .insert({
           document_no: documentNo,
           document_date: documentDate,
-          patient_id: finalPatientId, // This will now always be the patient_id (manually entered), not the auto-generated UUID
+          patient_id: finalPatientId, // Use the patient_id (manually entered for OPD, patient_id for regular)
           total_amount: safeTotalAmount,
           patient_type: patientType,
           blood_group_separate: bloodGroup,
