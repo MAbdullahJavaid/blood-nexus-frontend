@@ -1,12 +1,16 @@
 
 import React, { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import { format, startOfToday, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, set, addYears, isSameDay } from "date-fns";
+import { format, startOfToday, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, set, addYears } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import StandardizedFilterCard from "@/components/reports/StandardizedFilterCard";
+import StandardizedResultsCard from "@/components/reports/StandardizedResultsCard";
 import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 // UI date options
@@ -73,6 +77,7 @@ export default function DonationsReportFilter({
   const [to, setTo] = useState<Date>(() => getDateRange("fiscal").to);
   const [openFrom, setOpenFrom] = useState(false);
   const [openTo, setOpenTo] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   // Auto-update dates when dropdown changes
   useEffect(() => {
@@ -92,6 +97,7 @@ export default function DonationsReportFilter({
   };
 
   const handleOk = () => {
+    setShowResults(true);
     if (onOk) onOk(from, to);
   };
 
@@ -100,6 +106,7 @@ export default function DonationsReportFilter({
     const dr = getDateRange("fiscal");
     setFrom(dr.from);
     setTo(dr.to);
+    setShowResults(false);
     if (onCancel) onCancel();
   };
 
@@ -111,42 +118,27 @@ export default function DonationsReportFilter({
     if (onExit) onExit();
   };
 
-  // Rendering
   return (
-    <div className="bg-white rounded shadow border overflow-hidden max-w-2xl mx-auto mt-8">
-      {/* Yellow Header */}
-      <div className="bg-yellow-100 border-b border-yellow-200 px-5 py-2 flex items-center gap-2">
-        <span>
-          <img src="https://img.icons8.com/ios-filled/32/000000/combo-chart.png" alt="icon" className="inline-block mr-1" />
-        </span>
-        <h2 className="text-lg font-bold">Report Filter</h2>
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <FileText className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold">Donations Report</h1>
       </div>
 
-      {/* Main Filter UI */}
-      <div className="p-6 pb-3">
-        {/* Filter Title */}
-        <div className="flex items-center gap-2 mb-4">
-          <span>
-            <svg width={20} height={20} fill="none" stroke="currentColor">
-              <circle cx={9} cy={9} r={7} strokeWidth={2}/>
-              <line x1="15" y1="15" x2="19" y2="19" strokeWidth={2}/>
-            </svg>
-          </span>
-          <h3 className="font-semibold text-lg">Filter</h3>
-        </div>
+      <StandardizedFilterCard>
         {/* Filter Table */}
-        <div className="rounded border overflow-hidden">
-          <div className="grid grid-cols-4 bg-gray-100 text-gray-700 font-semibold text-center py-2">
-            <div className="col-span-1 border-r py-2">Column</div>
-            <div className="col-span-1 border-r py-2">From</div>
-            <div className="col-span-2 py-2">To</div>
+        <div className="border border-gray-300 rounded-md overflow-hidden mb-8">
+          <div className="grid grid-cols-3 bg-gray-100 border-b border-gray-300">
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">Column</div>
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">From</div>
+            <div className="p-4 text-center font-semibold text-gray-700">To</div>
           </div>
-          <div className="grid grid-cols-4">
+          <div className="grid grid-cols-3 bg-white">
             {/* Column Label */}
-            <div className="col-span-1 flex items-center border-r px-4 py-4 font-medium gap-2">
-              <span>Dates:</span>
+            <div className="p-4 border-r border-gray-300 bg-gray-50 flex items-center justify-start font-medium text-gray-700">
+              <Label className="font-medium">Dates:</Label>
               <Select value={dateOption} onValueChange={v => setDateOption(v as DateOption)}>
-                <SelectTrigger className="w-36 h-10 bg-white shadow-none border border-gray-300 focus:ring-0 text-base">
+                <SelectTrigger className="ml-2 w-36 h-10 bg-white shadow-none border border-gray-300 focus:ring-0 text-base">
                   <SelectValue>
                     {DATE_OPTIONS.find(opt => opt.value === dateOption)?.label}
                   </SelectValue>
@@ -161,12 +153,12 @@ export default function DonationsReportFilter({
               </Select>
             </div>
             {/* From Date */}
-            <div className="col-span-1 border-r px-4 py-2 flex items-center">
+            <div className="p-4 border-r border-gray-300 flex items-center">
               <Popover open={openFrom} onOpenChange={setOpenFrom}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-10 w-full justify-start pl-3 pr-2 text-base flex items-center gap-2 rounded border shadow-none bg-white"
+                    className="h-10 w-full justify-start pl-3 pr-2 text-base flex items-center gap-2 rounded border shadow-none bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <CalendarIcon className="h-5 w-5 text-gray-600" />
                     <span>{formatDMY(from)}</span>
@@ -184,12 +176,12 @@ export default function DonationsReportFilter({
               </Popover>
             </div>
             {/* To Date */}
-            <div className="col-span-2 px-4 py-2 flex items-center">
+            <div className="p-4 flex items-center">
               <Popover open={openTo} onOpenChange={setOpenTo}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-10 w-full justify-start pl-3 pr-2 text-base flex items-center gap-2 rounded border shadow-none bg-white"
+                    className="h-10 w-full justify-start pl-3 pr-2 text-base flex items-center gap-2 rounded border shadow-none bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <CalendarIcon className="h-5 w-5 text-gray-600" />
                     <span>{formatDMY(to)}</span>
@@ -209,14 +201,15 @@ export default function DonationsReportFilter({
           </div>
         </div>
 
-        {/* Standardized Footer Buttons */}
         <ReportFilterActions
           onOk={handleOk}
           onCancel={handleCancel}
           onExport={handleExport}
           onExit={handleExit}
         />
-      </div>
+      </StandardizedFilterCard>
+
+      <StandardizedResultsCard showResults={showResults} />
     </div>
   );
 }

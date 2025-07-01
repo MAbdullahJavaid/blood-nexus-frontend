@@ -7,6 +7,8 @@ interface ReportFilterActionsProps {
   onCancel: () => void;
   onExport: () => void;
   onExit: () => void;
+  isLoading?: boolean;
+  isExportDisabled?: boolean;
 }
 
 export default function ReportFilterActions({
@@ -14,6 +16,8 @@ export default function ReportFilterActions({
   onCancel,
   onExport,
   onExit,
+  isLoading = false,
+  isExportDisabled = false,
 }: ReportFilterActionsProps) {
   return (
     <div className="flex justify-center gap-4 pt-8">
@@ -21,8 +25,9 @@ export default function ReportFilterActions({
         onClick={onOk}
         className="px-8 bg-red-600 hover:bg-red-700 text-white"
         type="button"
+        disabled={isLoading}
       >
-        OK
+        {isLoading ? "Loading..." : "OK"}
       </Button>
       <Button
         variant="outline"
@@ -36,6 +41,7 @@ export default function ReportFilterActions({
         onClick={onExport}
         className="px-8 bg-green-600 hover:bg-green-700 text-white"
         type="button"
+        disabled={isExportDisabled}
       >
         Export
       </Button>

@@ -3,12 +3,13 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import StandardizedFilterCard from "@/components/reports/StandardizedFilterCard";
+import StandardizedResultsCard from "@/components/reports/StandardizedResultsCard";
 import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 interface BloodDriveReportFilterProps {
@@ -61,6 +62,7 @@ export default function BloodDriveReportFilter({
   const [datePreset, setDatePreset] = useState("thisFiscalYear");
   const [fromDate, setFromDate] = useState<Date>(fiscalYearStart);
   const [toDate, setToDate] = useState<Date>(fiscalYearEnd);
+  const [showResults, setShowResults] = useState(false);
 
   // Handle preset select
   const handlePresetChange = (preset: string) => {
@@ -72,12 +74,14 @@ export default function BloodDriveReportFilter({
 
   // Button handlers
   const handleOk = () => {
+    setShowResults(true);
     if (onOk) onOk(fromDate, toDate);
   };
   const handleCancel = () => {
     setDatePreset("thisFiscalYear");
     setFromDate(fiscalYearStart);
     setToDate(fiscalYearEnd);
+    setShowResults(false);
     if (onCancel) onCancel();
   };
   const handleExport = () => {
@@ -88,31 +92,25 @@ export default function BloodDriveReportFilter({
   };
 
   return (
-    <Card className="max-w-4xl mx-auto mt-8">
-      <CardHeader className="bg-yellow-100 border-b">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileText className="text-primary w-5 h-5" />
-          Report Filter
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        {/* Filter header */}
-        <div className="flex items-center gap-2 pb-2">
-          <span className="text-green-600">🔍</span>
-          <span className="font-medium">Filter</span>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <FileText className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold">Blood Drive Report</h1>
+      </div>
+
+      <StandardizedFilterCard>
         {/* Filter Table */}
-        <div className="border border-gray-300">
+        <div className="border border-gray-300 rounded-md overflow-hidden mb-8">
           {/* Table Header */}
-          <div className="grid grid-cols-3 bg-gray-200 border-b">
-            <div className="p-3 border-r text-center font-medium">Column</div>
-            <div className="p-3 border-r text-center font-medium">From</div>
-            <div className="p-3 text-center font-medium">To</div>
+          <div className="grid grid-cols-3 bg-gray-100 border-b border-gray-300">
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">Column</div>
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">From</div>
+            <div className="p-4 text-center font-semibold text-gray-700">To</div>
           </div>
           {/* Dates Row */}
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-3 bg-white">
             {/* Column name and Quick Picker */}
-            <div className="p-3 border-r bg-gray-50 flex items-center">
+            <div className="p-4 border-r border-gray-300 bg-gray-50 flex items-center justify-start font-medium text-gray-700">
               <Label className="font-medium">Dates:</Label>
               <Select value={datePreset} onValueChange={handlePresetChange}>
                 <SelectTrigger className="ml-2 w-32">
@@ -130,13 +128,13 @@ export default function BloodDriveReportFilter({
               </Select>
             </div>
             {/* From date */}
-            <div className="p-3 border-r">
+            <div className="p-4 border-r border-gray-300">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal border border-gray-300 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
                       !fromDate && "text-muted-foreground"
                     )}
                   >
@@ -156,13 +154,13 @@ export default function BloodDriveReportFilter({
               </Popover>
             </div>
             {/* To date */}
-            <div className="p-3">
+            <div className="p-4">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal border border-gray-300 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
                       !toDate && "text-muted-foreground"
                     )}
                   >
@@ -183,14 +181,16 @@ export default function BloodDriveReportFilter({
             </div>
           </div>
         </div>
-        {/* Standardized Action Buttons */}
+
         <ReportFilterActions
           onOk={handleOk}
           onCancel={handleCancel}
           onExport={handleExport}
           onExit={handleExit}
         />
-      </CardContent>
-    </Card>
+      </StandardizedFilterCard>
+
+      <StandardizedResultsCard showResults={showResults} />
+    </div>
   );
 }

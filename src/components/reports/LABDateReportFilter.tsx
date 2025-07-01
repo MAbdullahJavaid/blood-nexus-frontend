@@ -1,15 +1,17 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { FileText, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import StandardizedFilterCard from "@/components/reports/StandardizedFilterCard";
+import StandardizedResultsCard from "@/components/reports/StandardizedResultsCard";
+import ReportFilterActions from "@/components/reports/ReportFilterActions";
 
 interface LABDateReportFilterProps {
   title: string;
@@ -22,6 +24,7 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
   const [toDate, setToDate] = useState<Date>();
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const getDateForOption = (option: string) => {
     const today = new Date();
@@ -61,18 +64,18 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
       fromDate,
       toDate
     });
-    // This will be connected to actual data fetching later
+    setShowResults(true);
   };
 
   const handleCancel = () => {
     setDateRange("This Fiscal Year");
     setFromDate(undefined);
     setToDate(undefined);
+    setShowResults(false);
   };
 
   const handleExport = () => {
     console.log("Exporting report...");
-    // Export functionality will be implemented later
   };
 
   const handleExit = () => {
@@ -80,144 +83,107 @@ const LABDateReportFilter = ({ title }: LABDateReportFilterProps) => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <FileText className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">{title}</h1>
       </div>
 
-      {/* Filter Card */}
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader className="bg-yellow-100 border-b">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <span>📊</span>
-            Report Filter
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-6">
-            {/* Filter Header */}
-            <div className="flex items-center gap-2 pb-2">
-              <span className="text-green-600">🔍</span>
-              <span className="font-medium">Filter</span>
+      <StandardizedFilterCard>
+        {/* Filter Table */}
+        <div className="border border-gray-300 rounded-md overflow-hidden mb-8">
+          {/* Table Header */}
+          <div className="grid grid-cols-3 bg-gray-100 border-b border-gray-300">
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">Column</div>
+            <div className="p-4 border-r border-gray-300 text-center font-semibold text-gray-700">From</div>
+            <div className="p-4 text-center font-semibold text-gray-700">To</div>
+          </div>
+
+          {/* Dates Row */}
+          <div className="grid grid-cols-3 bg-white">
+            <div className="p-4 border-r border-gray-300 bg-gray-50 flex items-center justify-start font-medium text-gray-700">
+              <Label className="font-medium">Dates:</Label>
+              <Select value={dateRange} onValueChange={handleDateRangeChange}>
+                <SelectTrigger className="ml-2 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="this week">This Week</SelectItem>
+                  <SelectItem value="this month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            {/* Filter Table */}
-            <div className="border border-gray-300">
-              {/* Table Header */}
-              <div className="grid grid-cols-3 bg-gray-200 border-b">
-                <div className="p-3 border-r text-center font-medium">Column</div>
-                <div className="p-3 border-r text-center font-medium">From</div>
-                <div className="p-3 text-center font-medium">To</div>
-              </div>
-
-              {/* Dates Row */}
-              <div className="grid grid-cols-3">
-                <div className="p-3 border-r bg-gray-50 flex items-center">
-                  <Label className="font-medium">Dates:</Label>
-                  <Select value={dateRange} onValueChange={handleDateRangeChange}>
-                    <SelectTrigger className="ml-2 w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="This Fiscal Year">This Fiscal Year</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="yesterday">Yesterday</SelectItem>
-                      <SelectItem value="this week">This Week</SelectItem>
-                      <SelectItem value="this month">This Month</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="p-3 border-r">
-                  <Popover open={fromOpen} onOpenChange={setFromOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !fromDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {fromDate ? format(fromDate, "dd/MM/yyyy") : "01/07/2024"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={fromDate}
-                        onSelect={(date) => {
-                          setFromDate(date);
-                          setFromOpen(false);
-                        }}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="p-3">
-                  <Popover open={toOpen} onOpenChange={setToOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !toDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {toDate ? format(toDate, "dd/MM/yyyy") : "30/06/2025"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={toDate}
-                        onSelect={(date) => {
-                          setToDate(date);
-                          setToOpen(false);
-                        }}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
+            <div className="p-4 border-r border-gray-300">
+              <Popover open={fromOpen} onOpenChange={setFromOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal border border-gray-300 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "dd/MM/yyyy") : "01/07/2024"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => {
+                      setFromDate(date);
+                      setFromOpen(false);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 pt-4">
-              <Button onClick={handleOK} className="px-8">
-                OK
-              </Button>
-              <Button variant="outline" onClick={handleCancel} className="px-8">
-                Cancel
-              </Button>
-              <Button onClick={handleExport} className="px-8 bg-green-600 hover:bg-green-700">
-                Export
-              </Button>
-              <Button variant="outline" onClick={handleExit} className="px-8">
-                Exit
-              </Button>
+            <div className="p-4">
+              <Popover open={toOpen} onOpenChange={setToOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal border border-gray-300 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "dd/MM/yyyy") : "30/06/2025"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => {
+                      setToDate(date);
+                      setToOpen(false);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Results Table Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No results found. Use the filters above to generate the report.</p>
-          </div>
-        </CardContent>
-      </Card>
+        <ReportFilterActions
+          onOk={handleOK}
+          onCancel={handleCancel}
+          onExport={handleExport}
+          onExit={handleExit}
+        />
+      </StandardizedFilterCard>
+
+      <StandardizedResultsCard showResults={showResults} />
     </div>
   );
 };
