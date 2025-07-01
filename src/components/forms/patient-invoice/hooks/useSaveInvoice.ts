@@ -27,6 +27,7 @@ export const useSaveInvoice = () => {
       setLoading(true);
       
       let finalPatientId: string;
+      let finalDocumentNo = documentNo;
       
       const getCurrentPatientData = () => {
         if (patientType === "regular" && regularPatient) {
@@ -66,12 +67,25 @@ export const useSaveInvoice = () => {
         finalPatientId = regularPatient.patient_id || regularPatient.id;
       }
       
-      // Use the discount parameter directly - it's already calculated correctly
-      const actualDiscountAmount = discount;
+      // Generate document number if not exists
+      if (!documentNo) {
+        try {
+          const { data, error } = await supabase.rpc('generate_invoice_number');
+          if (error) throw error;
+          finalDocumentNo = data;
+        } catch (error) {
+          console.error('Error generating document number:', error);
+          const date = new Date();
+          const year = date.getFullYear().toString().slice(-2);
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const sequence = "0001";
+          finalDocumentNo = `${year}${month}${sequence}`;
+        }
+      }
       
       // Ensure numeric values are properly bounded for database
       const safeTotalAmount = Math.min(Math.max(totalAmount || 0, 0), 2147483647);
-      const safeDiscount = Math.min(Math.max(actualDiscountAmount || 0, 0), 2147483647);
+      const safeDiscount = Math.min(Math.max(discount || 0, 0), 2147483647);
       const safeReceivedAmount = Math.min(Math.max(receivedAmount || 0, 0), 2147483647);
       const safeBottleRequired = Math.min(Math.max(bottleRequired || 0, 0), 32767);
       const safeAge = currentData.age ? Math.min(Math.max(currentData.age, 0), 32767) : null;
@@ -80,13 +94,13 @@ export const useSaveInvoice = () => {
         total_amount: safeTotalAmount,
         discount_amount: safeDiscount,
         amount_received: safeReceivedAmount,
-        passed_discount: discount
+        document_no: finalDocumentNo
       });
       
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('patient_invoices')
         .insert({
-          document_no: documentNo,
+          document_no: finalDocumentNo,
           document_date: documentDate,
           patient_id: finalPatientId,
           total_amount: safeTotalAmount,
@@ -107,7 +121,7 @@ export const useSaveInvoice = () => {
           amount_received: safeReceivedAmount,
           patient_name: currentData.name
         })
-        .select('id')
+        .select('id, document_no')
         .single();
         
       if (invoiceError) throw invoiceError;
@@ -132,8 +146,8 @@ export const useSaveInvoice = () => {
         if (itemsError) throw itemsError;
       }
       
-      toast.success("Invoice saved successfully");
-      return { success: true, invoiceId: invoiceData.id };
+      toast.success(`Invoice ${invoiceData.document_no} saved successfully`);
+      return { success: true, invoiceId: invoiceData.id, documentNo: invoiceData.document_no };
     } catch (error) {
       console.error("Error saving invoice:", error);
       toast.error("Failed to save invoice");
