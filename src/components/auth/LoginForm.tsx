@@ -22,7 +22,7 @@ export function LoginForm() {
     if (!username || !password) {
       toast({
         title: "Missing fields",
-        description: "Please enter both your username and password",
+        description: "Please enter both your email and password",
         variant: "destructive",
       });
       return;
@@ -52,6 +52,10 @@ export function LoginForm() {
     }
   };
 
+  const handleCancel = () => {
+    navigate("/");
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
@@ -60,17 +64,17 @@ export function LoginForm() {
         </div>
         <CardTitle className="text-2xl text-center">Blood Transfusion Management</CardTitle>
         <CardDescription className="text-center">
-          Enter your username and password to sign in to your account
+          Enter your email and password to sign in to your account
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                placeholder="Enter your username"
+                id="email"
+                placeholder="Enter your email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -87,13 +91,23 @@ export function LoginForm() {
                 required
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-blood hover:bg-blood-dark" 
-              disabled={isLoading || authLoading}
-            >
-              {isLoading || authLoading ? "Signing in..." : "Sign In"}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                type="submit" 
+                className="flex-1 bg-blood hover:bg-blood-dark" 
+                disabled={isLoading || authLoading}
+              >
+                {isLoading || authLoading ? "Signing in..." : "Sign In"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isLoading || authLoading}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </form>
       </CardContent>
