@@ -117,9 +117,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         invoiceHandlers.handleDeleteItem();
       },
       handleSave: async () => {
-        // Calculate the actual discount before saving
-        const calculatedDiscount = Math.max(totalAmount - receivedAmount, 0);
-        
         return await saveInvoice(
           patientType,
           regularPatient,
@@ -134,7 +131,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bottleUnitType,
           exDonor,
           references,
-          calculatedDiscount, // Pass the calculated discount
+          discount, // Use the current discount state
           receivedAmount,
           items,
           setLoading
@@ -178,18 +175,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         documentHandlers.generateDocumentNo();
       }
     }, [isEditable]);
-
-    // Always calculate discount as (totalAmount - receivedAmount)
-    const discountCalc = Math.max(totalAmount - receivedAmount, 0);
-    
-    // Update the discount state when the calculation changes
-    useEffect(() => {
-      setDiscount(discountCalc);
-    }, [totalAmount, receivedAmount, setDiscount]);
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
-    // Get current patient data based on type
     const getCurrentPatientData = () => {
       if (patientType === "regular" && regularPatient) {
         return {
@@ -218,9 +206,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseFloat(e.target.value) || 0;
       setReceivedAmount(value);
-      console.log("Received amount changed to:", value);
-      console.log("Total amount:", totalAmount);
-      console.log("Calculated discount:", Math.max(totalAmount - value, 0));
+    };
+
+    const handleDiscountChange = (newDiscount: number) => {
+      setDiscount(newDiscount);
     };
 
     const handleSelectRow = (index: number) => {
@@ -373,11 +362,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <TotalSection
-          discount={discountCalc}
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
           isEditable={isEditable}
           onReceivedAmountChange={handleReceivedAmountChange}
+          onDiscountChange={handleDiscountChange}
         />
 
         {patientType === "regular" && (

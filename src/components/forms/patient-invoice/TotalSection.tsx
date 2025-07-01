@@ -1,23 +1,31 @@
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
 
 interface TotalSectionProps {
-  discount: number;
   totalAmount: number;
   receivedAmount: number;
   isEditable: boolean;
-  onDiscountChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onReceivedAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDiscountChange: (discount: number) => void;
 }
 
 export function TotalSection({ 
-  discount, 
   totalAmount, 
   receivedAmount, 
   isEditable,
-  onReceivedAmountChange
+  onReceivedAmountChange,
+  onDiscountChange
 }: TotalSectionProps) {
+  // Calculate discount automatically as totalAmount - receivedAmount
+  const calculatedDiscount = Math.max(totalAmount - receivedAmount, 0);
+
+  // Notify parent component when discount changes
+  useEffect(() => {
+    onDiscountChange(calculatedDiscount);
+  }, [calculatedDiscount, onDiscountChange]);
+
   return (
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div></div>
@@ -28,7 +36,7 @@ export function TotalSection({
             id="discount" 
             className="h-9 w-32 text-right bg-gray-100" 
             type="number" 
-            value={discount} 
+            value={calculatedDiscount} 
             readOnly
             disabled
           />
@@ -60,4 +68,3 @@ export function TotalSection({
     </div>
   );
 }
-

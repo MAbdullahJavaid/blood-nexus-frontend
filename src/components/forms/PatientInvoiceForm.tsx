@@ -138,8 +138,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     };
 
     // Replace handleDiscountChange to always set discount to (totalAmount - receivedAmount)
-    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      return; // Discount is now calculated automatically, no-op on manual change
+    const handleDiscountChange = (newDiscount: number) => {
+      setDiscount(newDiscount);
     };
 
     // Discount amount to be automatically calculated as net amount - received amount
@@ -559,12 +559,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         />
 
         <TotalSection
-          discount={discountCalc}
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
           isEditable={isEditable}
-          onDiscountChange={handleDiscountChange}
           onReceivedAmountChange={handleReceivedAmountChange}
+          onDiscountChange={handleDiscountChange}
         />
 
         {patientType === "regular" && (
