@@ -138,7 +138,6 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         );
       },
       clearForm: () => {
-        // Clear all form data
         setPatientType("regular");
         setDocumentNo("");
         setBloodGroup("N/A");
@@ -180,11 +179,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     // Auto-open document search modal ONLY when in edit mode (not add mode)
     useEffect(() => {
       if (isEditable && !isAddMode && !documentNo) {
-        // Use a small timeout to ensure the component is fully rendered
-        const timer = setTimeout(() => {
-          setIsDocumentSearchModalOpen(true);
-        }, 100);
-        return () => clearTimeout(timer);
+        setIsDocumentSearchModalOpen(true);
       }
     }, [isEditable, isAddMode, documentNo, setIsDocumentSearchModalOpen]);
     
