@@ -180,7 +180,11 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     // Auto-open document search modal ONLY when in edit mode (not add mode)
     useEffect(() => {
       if (isEditable && !isAddMode && !documentNo) {
-        setIsDocumentSearchModalOpen(true);
+        // Use a small timeout to ensure the component is fully rendered
+        const timer = setTimeout(() => {
+          setIsDocumentSearchModalOpen(true);
+        }, 100);
+        return () => clearTimeout(timer);
       }
     }, [isEditable, isAddMode, documentNo, setIsDocumentSearchModalOpen]);
     

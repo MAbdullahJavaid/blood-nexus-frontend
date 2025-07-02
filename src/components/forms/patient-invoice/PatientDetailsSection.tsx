@@ -68,7 +68,8 @@ export function PatientDetailsSection({
               className="h-8"
               placeholder="Enter Patient ID"
             />
-            {(isEditable || isAdding) && (
+            {/* Only show patient search button in add mode, not in edit mode */}
+            {isAdding && (
               <button 
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
@@ -104,6 +105,7 @@ export function PatientDetailsSection({
               className="h-8 bg-green-100"
               placeholder="(Auto)"
             />
+            {/* Only show document search button in edit mode, not in add mode */}
             {isEditable && !isAdding && (
               <button
                 onClick={onSearchDocumentClick}
