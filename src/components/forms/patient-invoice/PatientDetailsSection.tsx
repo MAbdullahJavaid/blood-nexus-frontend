@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, FileTextIcon } from "lucide-react";
 
 interface PatientDetailsSectionProps {
   patientType: string;
@@ -104,14 +104,14 @@ export function PatientDetailsSection({
               className="h-8 bg-green-100"
               placeholder="(Auto)"
             />
-            {isEditable && !isAdding && (
+            {isEditable && (
               <button
                 onClick={onSearchDocumentClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
                 title="Search Document"
                 type="button"
               >
-                <SearchIcon className="h-4 w-4" />
+                <FileTextIcon className="h-4 w-4" />
               </button>
             )}
           </div>

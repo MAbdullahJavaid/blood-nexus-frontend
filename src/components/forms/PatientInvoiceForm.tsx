@@ -87,6 +87,22 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       clearForm: clearForm
     }));
 
+    // Add empty row when entering edit mode
+    useEffect(() => {
+      if (isEditable && items.length === 0) {
+        const tempId = `temp-${Date.now()}`;
+        const newItem: InvoiceItem = {
+          id: tempId,
+          testId: 0,
+          testName: "",
+          qty: 1,
+          rate: 0,
+          amount: 0
+        };
+        setItems([newItem]);
+      }
+    }, [isEditable]);
+
     const isAdding = !documentNo && isEditable;
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
 
@@ -132,17 +148,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     };
 
+    const handleDeleteRow = (index: number) => {
+      const newItems = [...items];
+      newItems.splice(index, 1);
+      setItems(newItems);
+      if (selectedItemIndex === index) {
+        setSelectedItemIndex(null);
+      }
+      calculateTotal(newItems);
+    };
+
     const calculateTotal = (itemsArray: InvoiceItem[]) => {
       const sum = itemsArray.reduce((acc, item) => acc + item.amount, 0);
       setTotalAmount(sum - discount);
     };
 
-    // Replace handleDiscountChange to always set discount to (totalAmount - receivedAmount)
     const handleDiscountChange = (newDiscount: number) => {
       setDiscount(newDiscount);
     };
 
-    // Discount amount to be automatically calculated as net amount - received amount
     const discountCalc = totalAmount - receivedAmount >= 0 ? totalAmount - receivedAmount : 0;
 
     const handleReceivedAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -556,6 +580,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           onSearchTest={handleSearchTest}
           onQuantityChange={handleQuantityChange}
           onRateChange={handleRateChange}
+          onDeleteRow={isEditable ? handleDeleteRow : undefined}
         />
 
         <TotalSection

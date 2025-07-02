@@ -1,5 +1,5 @@
 
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, TrashIcon } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -19,6 +19,7 @@ interface TestsSectionProps {
   onSearchTest: (index: number) => void;
   onQuantityChange: (index: number, value: number) => void;
   onRateChange: (index: number, value: number) => void;
+  onDeleteRow?: (index: number) => void;
 }
 
 export function TestsSection({ 
@@ -28,7 +29,8 @@ export function TestsSection({
   onSelectRow, 
   onSearchTest,
   onQuantityChange,
-  onRateChange 
+  onRateChange,
+  onDeleteRow 
 }: TestsSectionProps) {
   return (
     <div className="border rounded-md p-4 mb-4">
@@ -43,6 +45,7 @@ export function TestsSection({
               <TableHead className="w-[100px]">Test Rate</TableHead>
               <TableHead className="w-[100px]">Amount</TableHead>
               <TableHead className="w-[50px]"></TableHead>
+              {isEditable && onDeleteRow && <TableHead className="w-[50px]">Delete</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -98,11 +101,25 @@ export function TestsSection({
                       </button>
                     )}
                   </TableCell>
+                  {isEditable && onDeleteRow && (
+                    <TableCell>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteRow(index);
+                        }}
+                        className="bg-red-200 p-1 rounded hover:bg-red-300"
+                        title="Delete Row"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 h-24">
+                <TableCell colSpan={isEditable && onDeleteRow ? 7 : 6} className="text-center text-gray-500 h-24">
                   No items added yet
                 </TableCell>
               </TableRow>
