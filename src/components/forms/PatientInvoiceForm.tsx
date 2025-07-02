@@ -1,3 +1,4 @@
+
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -111,6 +112,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     }, [isEditable, documentNo]);
 
     const isAdding = !documentNo && isEditable;
+    const isEditing = isEditable && !!documentNo;
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
 
     const handlePatientTypeChange = (value: string) => {
@@ -526,6 +528,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           selectedPatient={selectedPatient}
           isEditable={isEditable}
           isAdding={isAdding}
+          isEditing={isEditing}
           onPatientTypeChange={handlePatientTypeChange}
           onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
