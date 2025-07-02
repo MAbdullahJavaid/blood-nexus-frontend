@@ -12,6 +12,7 @@ import CategoryForm from "@/components/forms/CategoryForm";
 import TestInformationForm from "@/components/forms/TestInformationForm";
 import ReportDataEntryForm from "@/components/forms/ReportDataEntryForm";
 import { toast } from "@/hooks/use-toast";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import ThanksLetter from "@/components/thanks-letter/ThanksLetter";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -27,6 +28,7 @@ interface FormRef {
 }
 
 const Dashboard = () => {
+  const { canAccessForm } = useRoleAccess();
   const [showCrudBar, setShowCrudBar] = useState(false);
   const [activeForm, setActiveForm] = useState<FormType>(null);
   const [isSearchEnabled, setIsSearchEnabled] = useState(false);
@@ -48,6 +50,16 @@ const Dashboard = () => {
   const isStockVisible = !showCrudBar || activeForm === null;
 
   const handleFormButtonClick = (formType: FormType) => {
+    // Check if user has access to this form
+    if (!canAccessForm(formType || '')) {
+      toast({
+        title: "Access Denied",
+        description: `You don't have permission to access ${formType}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     console.log("Dashboard: Opening form:", formType);
     setShowCrudBar(true);
     setActiveForm(formType);

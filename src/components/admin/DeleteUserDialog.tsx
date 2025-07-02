@@ -32,10 +32,13 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
     setIsLoading(true);
 
     try {
-      // Delete user from Supabase Auth (this will cascade delete profile and roles)
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+      // First delete from profiles table (this will cascade delete roles due to foreign key)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
 
-      if (deleteError) throw deleteError;
+      if (profileError) throw profileError;
 
       // Log the action
       await supabase.rpc('log_user_management_action', {

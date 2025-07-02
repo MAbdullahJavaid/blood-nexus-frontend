@@ -19,9 +19,11 @@ import {
   BarChartIcon,
   FileTextIcon,
   ShieldIcon,
-  UsersIcon
+  UsersIcon,
+  ListIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -36,15 +38,17 @@ type SidebarItemProps = {
   label: string;
   onClick?: () => void;
   active?: boolean;
+  disabled?: boolean;
 };
 
-const SidebarItem = ({ icon: Icon, label, onClick, active }: SidebarItemProps) => (
+const SidebarItem = ({ icon: Icon, label, onClick, active, disabled = false }: SidebarItemProps) => (
   <div
     className={cn(
       "flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer",
-      active ? "bg-blood text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+      active ? "bg-blood text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800",
+      disabled ? "opacity-50 cursor-not-allowed" : ""
     )}
-    onClick={onClick}
+    onClick={disabled ? undefined : onClick}
   >
     <Icon className="h-5 w-5" />
     <span>{label}</span>
@@ -57,6 +61,7 @@ interface SidebarProps {
 
 export function Sidebar({ onFormOpen }: SidebarProps) {
   const { user, logout } = useAuth();
+  const { canAccessForm, canAccessReport, canAccessUserManagement } = useRoleAccess();
   const navigate = useNavigate();
   const [activePage, setActivePage] = useState("dashboard");
   
@@ -77,6 +82,9 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
   };
 
   const handleReportNavigate = (path: string) => {
+    if (!canAccessReport(path)) {
+      return; // Silently prevent navigation if no access
+    }
     setActivePage(path);
     navigate(path);
   };
@@ -106,6 +114,9 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
   };
 
   const handleFormClick = (formType: string) => {
+    if (!canAccessForm(formType)) {
+      return; // Silently prevent form opening if no access
+    }
     if (onFormOpen) {
       onFormOpen(formType);
     }
@@ -156,18 +167,21 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   icon={FileIcon} 
                   label="Category" 
                   onClick={() => handleFormClick('category')}
+                  disabled={!canAccessForm('category')}
                 />
                 <SidebarItem 
                   icon={TestTubeIcon} 
                   label="Test Information" 
                   onClick={() => handleFormClick('testInformation')}
+                  disabled={!canAccessForm('testInformation')}
                 />
                 <SidebarItem 
                   icon={MailIcon} 
                   label="Thanks Letter"
                   onClick={() => handleFormClick('thanksLetter')}
+                  disabled={!canAccessForm('thanksLetter')}
                 />
-                {user?.role === 'admin' && (
+                {canAccessUserManagement() && (
                   <SidebarItem 
                     icon={UsersIcon} 
                     label="User Management"
@@ -192,16 +206,19 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   icon={FileTextIcon} 
                   label="Report Data Entry" 
                   onClick={() => handleFormClick('reportDataEntry')}
+                  disabled={!canAccessForm('reportDataEntry')}
                 />
                 <SidebarItem 
                   icon={ReceiptIcon} 
                   label="Patient Invoice"
                   onClick={() => handleFormClick('patientInvoice')}
+                  disabled={!canAccessForm('patientInvoice')}
                 />
                 <SidebarItem 
                   icon={DropletIcon} 
                   label="Bleeding"
                   onClick={() => handleFormClick('bleeding')}
+                  disabled={!canAccessForm('bleeding')}
                 />
               </div>
             </AccordionContent>
@@ -228,7 +245,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                   onValueChange={handleNestedAccordionChange}
                   collapsible
                 >
-                  {/* Existing Reception Section */}
+                  {/* Reception Section */}
                   <AccordionItem value="reception" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>Reception</span>
@@ -240,24 +257,34 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           label="Patient Request" 
                           onClick={() => handleReportNavigate('/reports/reception/patient-request')}
                           active={activePage === '/reports/reception/patient-request'}
+                          disabled={!canAccessReport('/reports/reception/patient-request')}
                         />
                         <SidebarItem 
                           icon={ReceiptIcon} 
                           label="Patient Request Summary" 
                           onClick={() => handleReportNavigate('/reports/reception/patient-request-summary')}
                           active={activePage === '/reports/reception/patient-request-summary'}
+                          disabled={!canAccessReport('/reports/reception/patient-request-summary')}
                         />
                         <SidebarItem 
                           icon={HistoryIcon} 
                           label="Patient Transfusion History" 
                           onClick={() => handleReportNavigate('/reports/reception/patient-transfusion-history')}
                           active={activePage === '/reports/reception/patient-transfusion-history'}
+                          disabled={!canAccessReport('/reports/reception/patient-transfusion-history')}
+                        />
+                        <SidebarItem 
+                          icon={ListIcon} 
+                          label="Patient List" 
+                          onClick={() => handleReportNavigate('/reports/reception/patient-list')}
+                          active={activePage === '/reports/reception/patient-list'}
+                          disabled={!canAccessReport('/reports/reception/patient-list')}
                         />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
                   
-                  {/* Existing BDS Section */}
+                  {/* BDS Section */}
                   <AccordionItem value="bds" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>BDS</span>
@@ -269,42 +296,55 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           label="Blood Bleeded Record" 
                           onClick={() => handleReportNavigate('/reports/bds/blood-bleed-record')}
                           active={activePage === '/reports/bds/blood-bleed-record'}
+                          disabled={!canAccessReport('/reports/bds/blood-bleed-record')}
                         />
                         <SidebarItem 
                           icon={GroupIcon} 
                           label="Record Group Wise" 
                           onClick={() => handleReportNavigate('/reports/bds/record-group-wise')}
                           active={activePage === '/reports/bds/record-group-wise'}
+                          disabled={!canAccessReport('/reports/bds/record-group-wise')}
                         />
                         <SidebarItem 
                           icon={TestTubeIcon} 
                           label="Test Positive Report" 
                           onClick={() => handleReportNavigate('/reports/bds/test-positive')}
                           active={activePage === '/reports/bds/test-positive'}
+                          disabled={!canAccessReport('/reports/bds/test-positive')}
                         />
                         <SidebarItem 
                           icon={CheckIcon} 
                           label="Donor Screening" 
                           onClick={() => handleReportNavigate('/reports/bds/donor-screening')}
                           active={activePage === '/reports/bds/donor-screening'}
+                          disabled={!canAccessReport('/reports/bds/donor-screening')}
                         />
                         <SidebarItem 
                           icon={ReceiptIcon} 
                           label="Donor Bleeded Summary" 
                           onClick={() => handleReportNavigate('/reports/bds/donor-bleed-summary')}
                           active={activePage === '/reports/bds/donor-bleed-summary'}
+                          disabled={!canAccessReport('/reports/bds/donor-bleed-summary')}
                         />
                         <SidebarItem 
                           icon={FileTextIcon} 
                           label="Bag Bleeded Summary" 
                           onClick={() => handleReportNavigate('/reports/bds/bag-bleed-summary')}
                           active={activePage === '/reports/bds/bag-bleed-summary'}
+                          disabled={!canAccessReport('/reports/bds/bag-bleed-summary')}
+                        />
+                        <SidebarItem 
+                          icon={ListIcon} 
+                          label="Donor List" 
+                          onClick={() => handleReportNavigate('/reports/bds/donor-list')}
+                          active={activePage === '/reports/bds/donor-list'}
+                          disabled={!canAccessReport('/reports/bds/donor-list')}
                         />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
                   
-                  {/* LAB Section with Crossmatch Report */}
+                  {/* LAB Section */}
                   <AccordionItem value="lab" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>LAB</span>
@@ -316,30 +356,34 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           label="Blood Issue Record" 
                           onClick={() => handleReportNavigate('/reports/lab/blood-issue-record')}
                           active={activePage === '/reports/lab/blood-issue-record'}
+                          disabled={!canAccessReport('/reports/lab/blood-issue-record')}
                         />
                         <SidebarItem 
                           icon={TestTubeIcon} 
                           label="Test Report Detail" 
                           onClick={() => handleReportNavigate('/reports/lab/test-report-detail')}
                           active={activePage === '/reports/lab/test-report-detail'}
+                          disabled={!canAccessReport('/reports/lab/test-report-detail')}
                         />
                         <SidebarItem 
                           icon={FileTextIcon} 
                           label="Product Wise Blood Issue" 
                           onClick={() => handleReportNavigate('/reports/lab/product-wise-blood-issue')}
                           active={activePage === '/reports/lab/product-wise-blood-issue'}
+                          disabled={!canAccessReport('/reports/lab/product-wise-blood-issue')}
                         />
                         <SidebarItem 
                           icon={ActivityIcon} 
                           label="Crossmatch Report" 
                           onClick={() => handleReportNavigate('/reports/lab/crossmatch')}
                           active={activePage === '/reports/lab/crossmatch'}
+                          disabled={!canAccessReport('/reports/lab/crossmatch')}
                         />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* New Admin Section */}
+                  {/* Admin Section */}
                   <AccordionItem value="admin" className="border-b-0">
                     <AccordionTrigger className="py-1">
                       <span>Admin</span>
@@ -351,18 +395,21 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
                           label="Donations"
                           onClick={() => handleReportNavigate('/reports/admin/donations')}
                           active={activePage === '/reports/admin/donations'}
+                          disabled={!canAccessReport('/reports/admin/donations')}
                         />
                         <SidebarItem
                           icon={DropletIcon}
                           label="Blood Drive"
                           onClick={() => handleReportNavigate('/reports/admin/blood-drive')}
                           active={activePage === '/reports/admin/blood-drive'}
+                          disabled={!canAccessReport('/reports/admin/blood-drive')}
                         />
                         <SidebarItem
                           icon={GroupIcon}
                           label="Volunteer"
                           onClick={() => handleReportNavigate('/reports/admin/volunteer')}
                           active={activePage === '/reports/admin/volunteer'}
+                          disabled={!canAccessReport('/reports/admin/volunteer')}
                         />
                       </div>
                     </AccordionContent>
@@ -383,7 +430,9 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
             <p className="font-medium">
               {displayUsername}
             </p>
-            <p className="text-xs text-muted-foreground">Staff</p>
+            <p className="text-xs text-muted-foreground">
+              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Staff'}
+            </p>
           </div>
         </div>
         <Button 

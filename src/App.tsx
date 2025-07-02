@@ -29,6 +29,8 @@ import DonationsReport from "./pages/DonationsReport";
 import BloodDriveReport from "./pages/BloodDriveReport";
 import VolunteerReport from "./pages/VolunteerReport";
 import CrossmatchReport from "./pages/CrossmatchReport";
+import PatientList from "./pages/PatientList";
+import DonorList from "./pages/DonorList";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +86,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/reports/reception/patient-list" 
+              element={
+                <ProtectedRoute>
+                  <PatientList />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/reports/bds/blood-bleed-record" 
               element={
                 <ProtectedRoute>
@@ -128,6 +138,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BagBleedSummary />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/bds/donor-list" 
+              element={
+                <ProtectedRoute>
+                  <DonorList />
                 </ProtectedRoute>
               } 
             />
