@@ -28,7 +28,8 @@ interface FormRef {
 }
 
 const Dashboard = () => {
-  const { canAccessForm } = useRoleAccess();
+  const { canAccessForm, isLoading: rolesLoading } = useRoleAccess();
+  
   const [showCrudBar, setShowCrudBar] = useState(false);
   const [activeForm, setActiveForm] = useState<FormType>(null);
   const [isSearchEnabled, setIsSearchEnabled] = useState(false);
@@ -49,7 +50,30 @@ const Dashboard = () => {
   // Stock display is visible when no form is active or crud bar is hidden
   const isStockVisible = !showCrudBar || activeForm === null;
 
+  // Show loading state while roles are being fetched
+  if (rolesLoading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleFormButtonClick = (formType: FormType) => {
+    // Show loading state while roles are being fetched
+    if (rolesLoading) {
+      toast({
+        title: "Loading",
+        description: "Please wait while we verify your permissions...",
+      });
+      return;
+    }
+
     // Check if user has access to this form
     if (!canAccessForm(formType || '')) {
       toast({

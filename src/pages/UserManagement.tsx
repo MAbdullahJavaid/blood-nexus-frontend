@@ -9,15 +9,29 @@ import { UserManagementStats } from "@/components/admin/UserManagementStats";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft } from "lucide-react";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 const UserManagement = () => {
   const { user } = useAuth();
+  const { canAccessUserManagement, isLoading: rolesLoading } = useRoleAccess();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Check if user is admin
-  if (!user || user.role !== 'admin') {
+  // Show loading state while roles are being fetched
+  if (rolesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verifying permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has access to user management
+  if (!canAccessUserManagement()) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

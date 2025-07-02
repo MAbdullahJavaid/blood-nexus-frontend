@@ -1,17 +1,51 @@
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useRoleAccess = () => {
   const { user } = useAuth();
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserRoles = async () => {
+      if (!user?.id) {
+        setUserRoles([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch user roles from user_roles table
+        const { data: rolesData, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        const roles = rolesData?.map(r => r.role) || [];
+        setUserRoles(roles);
+      } catch (error) {
+        console.error('Error fetching user roles:', error);
+        setUserRoles([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserRoles();
+  }, [user?.id]);
 
   const hasRole = (requiredRoles: string[] | string): boolean => {
-    if (!user) return false;
+    if (!user || isLoading) return false;
     
     // Admin has access to everything
-    if (user.role === 'admin') return true;
+    if (userRoles.includes('admin')) return true;
     
     const rolesArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-    return rolesArray.includes(user.role || '');
+    return rolesArray.some(role => userRoles.includes(role));
   };
 
   const canAccessForm = (formType: string): boolean => {
@@ -72,6 +106,8 @@ export const useRoleAccess = () => {
     canAccessReport,
     canAccessUserManagement,
     canDeleteUser,
-    isAdmin: user?.role === 'admin'
+    userRoles,
+    isLoading,
+    isAdmin: userRoles.includes('admin')
   };
 };
