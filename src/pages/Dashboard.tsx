@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/dashboard/Sidebar";
+import Sidebar from "@/components/dashboard/Sidebar";
 import { FormToolbar } from "@/components/dashboard/FormToolbar";
 import { CrudBar } from "@/components/dashboard/CrudBar";
 import { StockDisplay } from "@/components/dashboard/StockDisplay";
