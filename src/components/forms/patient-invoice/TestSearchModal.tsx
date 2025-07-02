@@ -24,6 +24,13 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
     }
   }, [isOpen]);
 
+  // Fetch tests whenever search term changes
+  useEffect(() => {
+    if (isOpen) {
+      fetchTests(searchTerm);
+    }
+  }, [searchTerm, isOpen]);
+
   const fetchTests = async (search?: string) => {
     setLoading(true);
     
@@ -37,8 +44,14 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
           description
         `);
       
-      if (search) {
-        query = query.ilike('name', `%${search}%`);
+      if (search && search.trim()) {
+        // Search by name or ID
+        const isNumeric = !isNaN(Number(search.trim()));
+        if (isNumeric) {
+          query = query.or(`name.ilike.%${search.trim()}%,id.eq.${parseInt(search.trim())}`);
+        } else {
+          query = query.ilike('name', `%${search.trim()}%`);
+        }
       }
       
       const { data, error } = await query;
@@ -99,7 +112,7 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
         <div className="py-4">
           <div className="flex gap-2 mb-4">
             <Input 
-              placeholder="Search tests by name" 
+              placeholder="Search tests by name or ID" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -120,12 +133,14 @@ export function TestSearchModal({ isOpen, onOpenChange, onTestSelect }: TestSear
                 >
                   <div className="font-medium">{test.name}</div>
                   <div className="text-sm text-gray-600">
-                    Rate: ${test.rate.toFixed(2)}
+                    ID: {test.id} | Rate: ${test.rate.toFixed(2)}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-4 text-center text-gray-500">No tests found</div>
+              <div className="p-4 text-center text-gray-500">
+                {searchTerm ? 'No tests found matching your search' : 'Start typing to search tests'}
+              </div>
             )}
           </div>
         </div>
