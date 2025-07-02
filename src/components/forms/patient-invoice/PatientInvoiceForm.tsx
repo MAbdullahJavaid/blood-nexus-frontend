@@ -1,6 +1,4 @@
-
-
-import { forwardRef, useEffect, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
 import { TestSearchModal } from "./TestSearchModal";
@@ -19,6 +17,9 @@ import { useSaveInvoice } from "./hooks/useSaveInvoice";
 
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
+    // Track if this is the initial render to distinguish add vs edit mode
+    const [hasOpenedEditModal, setHasOpenedEditModal] = useState(false);
+    
     const state = usePatientInvoiceState();
     const {
       isSearchModalOpen,
@@ -169,6 +170,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         setDocumentDate(new Date().toISOString().split('T')[0]);
         setReferences("");
         setExDonor("");
+        setHasOpenedEditModal(false);
       }
     }));
 
@@ -178,13 +180,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
-    // Auto-open document search modal when in edit mode (but not when adding new)
-    const isAdding = !documentNo && isEditable;
+    // Auto-open document search modal when in edit mode
+    // We use a timer to ensure this runs after the component is fully mounted
+    // and distinguish from add mode by checking if we haven't opened the modal yet
     useEffect(() => {
-      if (isEditable && !documentNo && !isAdding) {
-        setIsDocumentSearchModalOpen(true);
+      if (isEditable && !documentNo && !hasOpenedEditModal) {
+        // Small delay to ensure component is fully rendered and we can distinguish 
+        // between add and edit intents based on user interaction
+        const timer = setTimeout(() => {
+          // Only open if still in editable mode and no document selected
+          // This will be the edit case where user wants to load existing document
+          if (isEditable && !documentNo) {
+            setIsDocumentSearchModalOpen(true);
+            setHasOpenedEditModal(true);
+          }
+        }, 100);
+        
+        return () => clearTimeout(timer);
       }
-    }, [isEditable, documentNo, isAdding]);
+    }, [isEditable, documentNo, hasOpenedEditModal, setIsDocumentSearchModalOpen]);
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
