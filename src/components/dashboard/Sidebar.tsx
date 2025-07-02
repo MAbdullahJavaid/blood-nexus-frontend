@@ -26,7 +26,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
-const Sidebar = () => {
+interface SidebarProps {
+  onFormOpen?: (formType: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onFormOpen }) => {
   const { user, logout } = useAuth();
   const { hasRole, hasAnyRole, isAdmin } = useRoleAccess();
   const navigate = useNavigate();
