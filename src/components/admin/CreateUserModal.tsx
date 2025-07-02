@@ -87,12 +87,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           // Sign out the test login to restore admin session
           await supabase.auth.signOut();
           
-          // Re-authenticate as admin
-          if (currentUser?.email) {
-            // We need to get the admin back to their session
-            // This is a bit tricky, but we'll let the auth context handle it
-            window.location.reload();
-          }
+          // Reload to restore admin session
+          window.location.reload();
         }
       } catch (loginTestError) {
         console.error('Login test error:', loginTestError);

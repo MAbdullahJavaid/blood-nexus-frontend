@@ -133,10 +133,8 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                 // Sign out the test login to restore admin session
                 await supabase.auth.signOut();
                 
-                // Re-authenticate as admin
-                if (currentUser?.email) {
-                  window.location.reload();
-                }
+                // Reload to restore admin session
+                window.location.reload();
               }
             } catch (loginTestError) {
               console.error('Login test error:', loginTestError);
