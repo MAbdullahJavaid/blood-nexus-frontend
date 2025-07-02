@@ -8,6 +8,7 @@ import { EditUserModal } from "./EditUserModal";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { Edit, Trash2, Shield, User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 interface UserProfile {
   id: string;
@@ -33,6 +34,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   onUserUpdated,
   onUserDeleted,
 }) => {
+  const { canDeleteUser } = useRoleAccess();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
@@ -177,6 +179,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setDeletingUser(user)}
+                      disabled={!canDeleteUser(user.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

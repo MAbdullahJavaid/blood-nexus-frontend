@@ -22,7 +22,7 @@ export const useRoleAccess = () => {
       'crossmatch': ['admin', 'lab'],
       'patientInvoice': ['admin', 'reception'],
       'category': ['admin'],
-      'testInformation': ['admin', 'lab'],
+      'testInformation': ['admin'],
       'reportDataEntry': ['admin', 'lab'],
       'thanksLetter': ['admin']
     };
@@ -59,11 +59,19 @@ export const useRoleAccess = () => {
     return hasRole(['admin']);
   };
 
+  const canDeleteUser = (targetUserId: string): boolean => {
+    // Users cannot delete themselves
+    if (user?.id === targetUserId) return false;
+    // Only admins can delete users
+    return hasRole(['admin']);
+  };
+
   return {
     hasRole,
     canAccessForm,
     canAccessReport,
     canAccessUserManagement,
+    canDeleteUser,
     isAdmin: user?.role === 'admin'
   };
 };
