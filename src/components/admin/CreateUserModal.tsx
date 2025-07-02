@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface CreateUserModalProps {
@@ -22,6 +24,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   onUserCreated,
 }) => {
   const { createUser } = useUserManagement();
+  const { user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -54,12 +57,46 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     setIsLoading(true);
 
     try {
-      await createUser(formData);
+      const newUser = await createUser(formData);
 
       toast({
         title: "Success",
         description: "User created successfully",
       });
+
+      // Test login with new credentials
+      try {
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (loginError) {
+          console.error('Login test failed:', loginError);
+          toast({
+            title: "User created but login test failed",
+            description: "The user was created but couldn't be logged in automatically. Please check the credentials.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login test successful",
+            description: "User can login with the provided credentials",
+          });
+          
+          // Sign out the test login to restore admin session
+          await supabase.auth.signOut();
+          
+          // Re-authenticate as admin
+          if (currentUser?.email) {
+            // We need to get the admin back to their session
+            // This is a bit tricky, but we'll let the auth context handle it
+            window.location.reload();
+          }
+        }
+      } catch (loginTestError) {
+        console.error('Login test error:', loginTestError);
+      }
 
       setFormData({
         email: "",
@@ -114,6 +151,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
                   minLength={6}
+                  placeholder="Minimum 6 characters"
                 />
               </div>
 

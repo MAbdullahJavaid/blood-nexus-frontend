@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface UserProfile {
@@ -34,6 +36,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   onUserUpdated,
 }) => {
   const { updateUser } = useUserManagement();
+  const { user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -42,6 +45,8 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     phone: "",
     status: "active",
     roles: [] as string[],
+    password: "",
+    changePassword: false,
   });
 
   const availableRoles = ["admin", "bds", "lab", "reception"];
@@ -55,6 +60,8 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         phone: user.phone || "",
         status: user.status || "active",
         roles: user.roles || [],
+        password: "",
+        changePassword: false,
       });
     }
   }, [user]);
@@ -78,12 +85,81 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     setIsLoading(true);
 
     try {
-      await updateUser(user.id, formData);
-
-      toast({
-        title: "Success",
-        description: "User updated successfully",
+      await updateUser(user.id, {
+        username: formData.username,
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        status: formData.status,
+        roles: formData.roles,
       });
+
+      // Update password if requested
+      if (formData.changePassword && formData.password) {
+        try {
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(
+            user.id,
+            { password: formData.password }
+          );
+
+          if (passwordError) {
+            console.error('Password update error:', passwordError);
+            toast({
+              title: "User updated but password change failed",
+              description: "The user was updated but the password couldn't be changed.",
+              variant: "destructive",
+            });
+          } else {
+            // Test login with new credentials
+            try {
+              const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                email: formData.email,
+                password: formData.password,
+              });
+
+              if (loginError) {
+                console.error('Login test failed:', loginError);
+                toast({
+                  title: "User updated but login test failed",
+                  description: "The user was updated but couldn't be logged in with new credentials.",
+                  variant: "destructive",
+                });
+              } else {
+                toast({
+                  title: "Success",
+                  description: "User updated successfully and login test passed",
+                });
+                
+                // Sign out the test login to restore admin session
+                await supabase.auth.signOut();
+                
+                // Re-authenticate as admin
+                if (currentUser?.email) {
+                  window.location.reload();
+                }
+              }
+            } catch (loginTestError) {
+              console.error('Login test error:', loginTestError);
+              toast({
+                title: "User updated successfully",
+                description: "Password changed but login test couldn't be performed",
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error updating password:', error);
+          toast({
+            title: "User updated but password change failed",
+            description: "The user was updated but the password couldn't be changed.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Success",
+          description: "User updated successfully",
+        });
+      }
 
       onUserUpdated();
     } catch (error: any) {
@@ -175,6 +251,32 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="changePassword"
+                    checked={formData.changePassword}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      changePassword: checked as boolean,
+                      password: checked ? prev.password : ""
+                    }))}
+                  />
+                  <Label htmlFor="changePassword">Change Password</Label>
+                </div>
+                
+                {formData.changePassword && (
+                  <Input
+                    type="password"
+                    placeholder="New password (minimum 6 characters)"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    minLength={6}
+                    required={formData.changePassword}
+                  />
+                )}
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">

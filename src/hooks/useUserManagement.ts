@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -94,7 +95,7 @@ export const useUserManagement = () => {
     try {
       checkAdminAccess();
 
-      // Use signUp instead of admin.createUser
+      // Use signUp to create the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -127,7 +128,6 @@ export const useUserManagement = () => {
 
       if (profileError) {
         console.error('Profile update error:', profileError);
-        // Don't throw here as the user was created successfully
       }
 
       // Add roles
@@ -143,7 +143,6 @@ export const useUserManagement = () => {
 
         if (rolesError) {
           console.error('Roles insert error:', rolesError);
-          // Don't throw here as the user was created successfully
         }
       }
 
