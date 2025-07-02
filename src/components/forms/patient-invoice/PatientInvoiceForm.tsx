@@ -1,4 +1,5 @@
 
+
 import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
@@ -177,12 +178,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
-    // Auto-open document search modal when in edit mode
+    // Auto-open document search modal when in edit mode (but not when adding new)
+    const isAdding = !documentNo && isEditable;
     useEffect(() => {
-      if (isEditable && !documentNo) {
+      if (isEditable && !documentNo && !isAdding) {
         setIsDocumentSearchModalOpen(true);
       }
-    }, [isEditable, documentNo]);
+    }, [isEditable, documentNo, isAdding]);
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
