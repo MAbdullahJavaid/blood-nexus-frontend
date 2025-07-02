@@ -13,6 +13,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import UserManagement from "./pages/UserManagement";
+import PatientList from "./pages/PatientList";
+import DonorList from "./pages/DonorList";
 import PatientRequestReport from "./pages/PatientRequestReport";
 import PatientRequestSummaryReport from "./pages/PatientRequestSummaryReport";
 import PatientTransfusionHistory from "./pages/PatientTransfusionHistory";
@@ -56,6 +58,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <UserManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/patient-list" 
+              element={
+                <ProtectedRoute>
+                  <PatientList />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/donor-list" 
+              element={
+                <ProtectedRoute>
+                  <DonorList />
                 </ProtectedRoute>
               } 
             />
