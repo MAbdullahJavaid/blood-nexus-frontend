@@ -10,6 +10,7 @@ interface PatientDetailsSectionProps {
   selectedPatient: any;
   isEditable: boolean;
   isAdding: boolean;
+  isEditing: boolean;
   onPatientTypeChange: (val: string) => void;
   onSearchPatientClick: () => void;
   onSearchDocumentClick: () => void;
@@ -29,6 +30,7 @@ export function PatientDetailsSection({
   selectedPatient,
   isEditable,
   isAdding,
+  isEditing,
   onPatientTypeChange,
   onSearchPatientClick,
   onSearchDocumentClick,
@@ -64,11 +66,11 @@ export function PatientDetailsSection({
               id="patientId"
               value={patientID}
               onChange={(e) => setPatientId(e.target.value)}
-              disabled={!isEditable || !!selectedPatient}
+              disabled={!isEditable || !!selectedPatient || isEditing}
               className="h-8"
               placeholder="Enter Patient ID"
             />
-            {isEditable && (
+            {isEditable && !isEditing && (
               <button 
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
@@ -104,7 +106,7 @@ export function PatientDetailsSection({
               className="h-8 bg-green-100"
               placeholder="(Auto)"
             />
-            {isEditable && !isAdding && (
+            {isEditable && isEditing && (
               <button
                 onClick={onSearchDocumentClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"

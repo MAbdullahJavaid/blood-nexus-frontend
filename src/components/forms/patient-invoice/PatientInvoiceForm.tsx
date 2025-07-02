@@ -110,6 +110,10 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
     const { handleSave: saveInvoice } = useSaveInvoice();
 
+    // Determine the states for adding vs editing
+    const isAdding = isEditable && !documentNo;
+    const isEditing = isEditable && !!documentNo;
+
     useImperativeHandle(ref, () => ({
       handleAddItem: () => {
         invoiceHandlers.handleAddItem();
@@ -132,7 +136,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bottleUnitType,
           exDonor,
           references,
-          discount, // Use the current discount state
+          discount,
           receivedAmount,
           items,
           setLoading
@@ -172,17 +176,17 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     }));
 
     useEffect(() => {
-      if (isEditable && !documentNo) {
+      if (isAdding) {
         documentHandlers.generateDocumentNo();
       }
-    }, [isEditable]);
+    }, [isAdding]);
 
-    // Auto-open document search modal when in edit mode
+    // Auto-open document search modal when in editing mode
     useEffect(() => {
-      if (isEditable && !documentNo) {
+      if (isEditing) {
         setIsDocumentSearchModalOpen(true);
       }
-    }, [isEditable, documentNo]);
+    }, [isEditing]);
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
@@ -275,7 +279,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           documentNo={documentNo}
           selectedPatient={regularPatient}
           isEditable={isEditable}
-          isAdding={!documentNo}
+          isAdding={isAdding}
+          isEditing={isEditing}
           onPatientTypeChange={patientHandlers.handlePatientTypeChange}
           onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
