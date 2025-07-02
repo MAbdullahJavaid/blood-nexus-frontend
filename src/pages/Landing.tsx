@@ -40,6 +40,32 @@ const Landing = () => {
   const [donationAmount, setDonationAmount] = useState(5000); // cents; default $50
   const [isLoadingDonation, setIsLoadingDonation] = useState(false);
 
+  // Scroll animation observer
+  useEffect(() => {
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in');
+          entry.target.classList.remove('opacity-0', 'translate-y-8');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    // Observe all sections with scroll animation
+    const animatedElements = document.querySelectorAll('.scroll-animate');
+    animatedElements.forEach((el) => {
+      el.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-700');
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   // Watch for donation result in URL and show toast
   useEffect(() => {
     // Parse the search params
@@ -254,10 +280,31 @@ const Landing = () => {
     aboutSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleGetHelp = () => {
+    // Navigate to contact page or show contact information
+    toast({
+      title: "Get Help",
+      description: "For immediate assistance, call us at +92 3464688765 or email mabdullahjaved764@gmail.com",
+    });
+  };
+
   // WhatsApp floating action handler
   const handleWhatsAppClick = () => {
     // Open WhatsApp chat to the number in a new tab
     window.open("https://wa.me/923464688765", "_blank");
+  };
+
+  // Social media click handlers
+  const handleFacebookClick = () => {
+    window.open("https://www.facebook.com/share/16uBpj3jpj/", "_blank");
+  };
+
+  const handleInstagramClick = () => {
+    window.open("https://www.instagram.com/abdullahjaved271?igsh=MWN1bXV3cHg5OTJzeg==", "_blank");
+  };
+
+  const handleTwitterClick = () => {
+    window.open("https://x.com/MAbdullahJave13?t=ji8uo1ilmaE7J5AA1WVEvg&s=09", "_blank");
   };
 
   return (
@@ -280,7 +327,7 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+      <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white scroll-animate">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
@@ -299,7 +346,7 @@ const Landing = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="bg-blood hover:bg-blood-dark text-white px-8 py-4 text-lg rounded-full"
+              className="bg-blood hover:bg-blood-dark text-white px-8 py-4 text-lg rounded-full hover-scale"
               onClick={handleDonate}
             >
               Donate Now
@@ -307,7 +354,7 @@ const Landing = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-blood text-blood hover:bg-blood hover:text-white px-8 py-4 text-lg rounded-full"
+              className="border-blood text-blood hover:bg-blood hover:text-white px-8 py-4 text-lg rounded-full hover-scale"
               onClick={handleLearnMore}
             >
               Learn More
@@ -362,7 +409,7 @@ const Landing = () => {
       </Dialog>
 
       {/* About Us */}
-      <section id="about-section" className="py-20 bg-gray-50">
+      <section id="about-section" className="py-20 bg-gray-50 scroll-animate">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-6">About Our Mission</h2>
@@ -373,17 +420,17 @@ const Landing = () => {
               financial situation.
             </p>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
+              <div className="text-center hover-scale">
                 <Users className="h-12 w-12 text-blood mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">500+ Children Helped</h3>
                 <p className="text-gray-600">Lives transformed through our care</p>
               </div>
-              <div className="text-center">
+              <div className="text-center hover-scale">
                 <Shield className="h-12 w-12 text-blood mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">100% Free Care</h3>
                 <p className="text-gray-600">No family pays for treatment</p>
               </div>
-              <div className="text-center">
+              <div className="text-center hover-scale">
                 <Heart className="h-12 w-12 text-blood mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">24/7 Support</h3>
                 <p className="text-gray-600">Always here when you need us</p>
@@ -394,12 +441,12 @@ const Landing = () => {
       </section>
 
       {/* Services */}
-      <section className="py-20">
+      <section className="py-20 scroll-animate">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Services</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {services.map((service, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+              <Card key={index} className="text-center hover:shadow-lg transition-all duration-300 hover-scale">
                 <CardContent className="p-6">
                   <service.icon className="h-12 w-12 text-blood mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
@@ -412,12 +459,12 @@ const Landing = () => {
       </section>
 
       {/* Patient Stories */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 scroll-animate">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Patient Stories</h2>
           <div className="max-w-4xl mx-auto">
             <div className="relative">
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <CardContent className="p-0">
                   <div className="md:flex">
                     <div className="md:w-1/2">
@@ -440,13 +487,13 @@ const Landing = () => {
               </Card>
               <button 
                 onClick={prevStory}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale"
               >
                 <ChevronLeft className="h-6 w-6 text-gray-600" />
               </button>
               <button 
                 onClick={nextStory}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale"
               >
                 <ChevronRight className="h-6 w-6 text-gray-600" />
               </button>
@@ -456,12 +503,12 @@ const Landing = () => {
       </section>
 
       {/* Our Donors Are Our Heroes */}
-      <section className="py-20">
+      <section className="py-20 scroll-animate">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Donors Are Our Heroes</h2>
           <div className="max-w-4xl mx-auto">
             <div className="relative">
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <CardContent className="p-0">
                   <div className="md:flex">
                     <div className="md:w-1/2">
@@ -487,13 +534,13 @@ const Landing = () => {
               </Card>
               <button 
                 onClick={prevDonor}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale"
               >
                 <ChevronLeft className="h-6 w-6 text-gray-600" />
               </button>
               <button 
                 onClick={nextDonor}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300 hover-scale"
               >
                 <ChevronRight className="h-6 w-6 text-gray-600" />
               </button>
@@ -508,11 +555,11 @@ const Landing = () => {
       </section>
 
       {/* How to Help */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 scroll-animate">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">How You Can Help</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="text-center hover:shadow-lg transition-shadow">
+            <Card className="text-center hover:shadow-lg transition-all duration-300 hover-scale">
               <CardContent className="p-8">
                 <Heart className="h-16 w-16 text-blood mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold mb-4">Donate</h3>
@@ -527,7 +574,7 @@ const Landing = () => {
                 </Button>
               </CardContent>
             </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
+            <Card className="text-center hover:shadow-lg transition-all duration-300 hover-scale">
               <CardContent className="p-8">
                 <Users className="h-16 w-16 text-blood mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold mb-4">Volunteer</h3>
@@ -543,7 +590,7 @@ const Landing = () => {
                 </Button>
               </CardContent>
             </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
+            <Card className="text-center hover:shadow-lg transition-all duration-300 hover-scale">
               <CardContent className="p-8">
                 <Droplets className="h-16 w-16 text-blood mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold mb-4">Blood Drive</h3>
@@ -564,7 +611,7 @@ const Landing = () => {
       </section>
 
       {/* Newsletter */}
-      <section className="py-20">
+      <section className="py-20 scroll-animate">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-800 mb-6">Stay Connected</h2>
@@ -582,7 +629,7 @@ const Landing = () => {
               />
               <Button 
                 type="submit"
-                className="bg-blood hover:bg-blood-dark text-white px-8 py-3 rounded-full"
+                className="bg-blood hover:bg-blood-dark text-white px-8 py-3 rounded-full hover-scale"
               >
                 Subscribe
               </Button>
@@ -592,7 +639,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-16">
+      <footer className="bg-gray-800 text-white py-16 scroll-animate">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
@@ -604,9 +651,18 @@ const Landing = () => {
                 Dedicated to providing free medical care to children with genetic blood disorders.
               </p>
               <div className="flex gap-4">
-                <Facebook className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Twitter className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-                <Instagram className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                <Facebook 
+                  className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors hover-scale" 
+                  onClick={handleFacebookClick}
+                />
+                <Twitter 
+                  className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors hover-scale" 
+                  onClick={handleTwitterClick}
+                />
+                <Instagram 
+                  className="h-6 w-6 text-gray-400 hover:text-white cursor-pointer transition-colors hover-scale" 
+                  onClick={handleInstagramClick}
+                />
               </div>
             </div>
             <div>
@@ -643,7 +699,7 @@ const Landing = () => {
                 </div>
                 <div 
                   className="hover:text-blood cursor-pointer transition-colors"
-                  onClick={() => navigate('/contact')}
+                  onClick={handleGetHelp}
                 >
                   Get Help
                 </div>
@@ -655,7 +711,7 @@ const Landing = () => {
                 </div>
                 <div 
                   className="hover:text-blood cursor-pointer transition-colors"
-                  onClick={() => navigate('/contact')}
+                  onClick={handleGetHelp}
                 >
                   Contact
                 </div>
@@ -673,7 +729,7 @@ const Landing = () => {
         {/* WhatsApp floating button (appears above Donate, slides in similar location) */}
         <Button
           size="lg"
-          className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5 py-4 shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5 py-4 shadow-lg hover:shadow-xl transition-all hover-scale flex items-center justify-center"
           style={{
             boxShadow: "0 2px 8px 0 rgba(0,150,0,0.18)",
           }}
@@ -685,7 +741,7 @@ const Landing = () => {
         </Button>
         <Button 
           size="lg"
-          className="bg-blood hover:bg-blood-dark text-white rounded-full px-6 py-4 shadow-lg hover:shadow-xl transition-all"
+          className="bg-blood hover:bg-blood-dark text-white rounded-full px-6 py-4 shadow-lg hover:shadow-xl transition-all hover-scale"
           onClick={handleDonate}
         >
           <Heart className="h-5 w-5 mr-2" />
