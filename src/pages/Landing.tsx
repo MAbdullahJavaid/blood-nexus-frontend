@@ -121,43 +121,43 @@ const Landing = () => {
       name: "AbuBakar Kamal",
       story: "I believe every person can make a difference. By donating blood, I want to bring hope and life to children who are bravely fighting their battles.",
       image: "/lovable-uploads/e51ddfef-e651-41e9-a437-0457ac0338c2.png",
-      donations: "10+ donations"
+      donations: "5+ donations"
     },
     {
       name: "Ali Hussnain",
       story: "I'm proud to be a regular donor. Each donation is my way of supporting children with blood disorders and giving them hope.",
       image: "/lovable-uploads/92a7b197-5179-4c60-b1b3-7998ebc97d44.png",
-      donations: "20+ donations"
+      donations: "8+ donations"
     },
     {
       name: "Ahmed Hassan", 
       story: "Seeing the impact of blood donation motivates me to keep giving. Together, we can change lives and create brighter futures.",
       image: "/lovable-uploads/598a61c9-0766-4378-81a0-7b46ee766a04.png",
-      donations: "15+ donations"
+      donations: "7+ donations"
     },
     {
       name: "Junaid",
       story: "I've been donating blood for over 10 years. Knowing that my donations help children with blood disorders fills my heart with joy. Every drop makes a difference.",
       image: "/lovable-uploads/4d14b0f7-5ff9-4a60-b530-403bb8afb485.png",
-      donations: "50+ donations"
+      donations: "9+ donations"
     },
     {
       name: "Usman", 
       story: "As a regular donor, I've seen firsthand how blood donations save lives. It's a small act that creates a huge impact for families in need.",
       image: "/lovable-uploads/da418146-fd5b-47bc-8447-d67059e38eee.png",
-      donations: "75+ donations"
+      donations: "6+ donations"
     },
     {
       name: "Usama",
       story: "I believe everyone deserves a chance at life. Through blood donation, I can be part of these children's success stories and their bright futures.",
       image: "/lovable-uploads/3fb86a0d-0fc2-4cff-a267-7455c70dd4e6.png",
-      donations: "35+ donations"
+      donations: "4+ donations"
     },
     {
       name: "Nayyer",
       story: "Donating blood is a gift of life. By giving, we create hope and healthier futures for children in need.",
       image: "/lovable-uploads/51ca8b54-9d1b-4f95-ab33-e606a913781d.png",
-      donations: "5+ donations"
+      donations: "3+ donations"
     }
   ];
 
@@ -515,7 +515,8 @@ const Landing = () => {
                       <img 
                         src={donorStories[currentDonor].image}
                         alt={donorStories[currentDonor].name}
-                        className="w-full h-64 md:h-full object-cover"
+                        className="w-full h-64 md:h-full object-cover object-center"
+                        style={{ aspectRatio: '1/1' }}
                       />
                     </div>
                     <div className="md:w-1/2 p-8 flex flex-col justify-center">
