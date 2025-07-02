@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
@@ -32,6 +33,9 @@ const DonorList = () => {
   const [donors, setDonors] = useState<Donor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState("all");
+
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
   useEffect(() => {
     fetchDonors();
@@ -59,12 +63,16 @@ const DonorList = () => {
     }
   };
 
-  const filteredDonors = donors.filter(donor =>
-    donor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    donor.donor_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    donor.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    donor.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDonors = donors.filter(donor => {
+    const matchesSearch = donor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      donor.donor_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      donor.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      donor.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesBloodGroup = selectedBloodGroup === "all" || donor.blood_group === selectedBloodGroup;
+    
+    return matchesSearch && matchesBloodGroup;
+  });
 
   const handleBackToDashboard = () => {
     navigate("/dashboard");
@@ -119,14 +127,32 @@ const DonorList = () => {
       <Card>
         <CardHeader>
           <CardTitle>All Donors</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Search className="w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search by name, ID, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2 flex-1">
+              <Search className="w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search by name, ID, phone, or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <Select value={selectedBloodGroup} onValueChange={setSelectedBloodGroup}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by blood group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Blood Groups</SelectItem>
+                  {bloodGroups.map((bloodGroup) => (
+                    <SelectItem key={bloodGroup} value={bloodGroup}>
+                      {bloodGroup}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
