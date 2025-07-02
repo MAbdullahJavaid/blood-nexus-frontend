@@ -249,8 +249,11 @@ export const useUserManagement = () => {
         .eq('id', userId)
         .single();
 
-      // Delete user from Supabase Auth (this will cascade delete profile and roles)
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+      // Delete user profile (this will cascade delete roles due to foreign key)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
       if (deleteError) throw deleteError;
 

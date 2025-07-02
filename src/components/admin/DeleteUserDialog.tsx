@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useUserManagement } from "@/hooks/useUserManagement";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfile {
   id: string;
@@ -24,14 +25,28 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
   onClose,
   onUserDeleted,
 }) => {
-  const { deleteUser } = useUserManagement();
+  const { user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
 
     try {
-      await deleteUser(user.id);
+      // Delete user from Supabase Auth (this will cascade delete profile and roles)
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+
+      if (deleteError) throw deleteError;
+
+      // Log the action
+      await supabase.rpc('log_user_management_action', {
+        admin_id: currentUser?.id,
+        target_id: user.id,
+        action_type: 'deleted',
+        action_details: {
+          username: user.username,
+          email: user.email,
+        },
+      });
 
       toast({
         title: "Success",
