@@ -103,9 +103,9 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
-    // Auto-open document search modal when in edit mode (but not when adding new)
+    // Auto-open document search modal when in edit mode
     useEffect(() => {
-      if (isEditable && !documentNo && !isAdding) {
+      if (isEditable && !documentNo) {
         setIsDocumentSearchModalOpen(true);
       }
     }, [isEditable, documentNo]);

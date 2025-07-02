@@ -1,4 +1,5 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+
+import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
 import { TestSearchModal } from "./TestSearchModal";
@@ -16,7 +17,7 @@ import { useDocumentHandlers } from "./hooks/useDocumentHandlers";
 import { useSaveInvoice } from "./hooks/useSaveInvoice";
 
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
-  ({ isSearchEnabled = false, isEditable = false, isAddMode = false }, ref) => {
+  ({ isSearchEnabled = false, isEditable = false }, ref) => {
     const state = usePatientInvoiceState();
     const {
       isSearchModalOpen,
@@ -131,13 +132,14 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bottleUnitType,
           exDonor,
           references,
-          discount,
+          discount, // Use the current discount state
           receivedAmount,
           items,
           setLoading
         );
       },
       clearForm: () => {
+        // Clear all form data
         setPatientType("regular");
         setDocumentNo("");
         setBloodGroup("N/A");
@@ -169,22 +171,20 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }));
 
-    // Generate document number for add mode
     useEffect(() => {
-      if (isAddMode && !documentNo) {
+      if (isEditable && !documentNo) {
         documentHandlers.generateDocumentNo();
       }
-    }, [isAddMode]);
+    }, [isEditable]);
 
-    // Auto-open document search modal ONLY when in edit mode (not add mode)
+    // Auto-open document search modal when in edit mode
     useEffect(() => {
-      if (isEditable && !isAddMode && !documentNo) {
+      if (isEditable && !documentNo) {
         setIsDocumentSearchModalOpen(true);
       }
-    }, [isEditable, isAddMode, documentNo, setIsDocumentSearchModalOpen]);
+    }, [isEditable, documentNo]);
     
-    const shouldEnableEditing = (isEditable || isAddMode) && (patientType === "opd" || patientType === "regular");
-    const isAdding = isAddMode;
+    const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
     const getCurrentPatientData = () => {
       if (patientType === "regular" && regularPatient) {
@@ -274,8 +274,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           patientType={patientType}
           documentNo={documentNo}
           selectedPatient={regularPatient}
-          isEditable={isEditable || isAddMode}
-          isAdding={isAdding}
+          isEditable={isEditable}
+          isAdding={!documentNo}
           onPatientTypeChange={patientHandlers.handlePatientTypeChange}
           onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
@@ -299,7 +299,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
         <HospitalDetailsSection
           selectedPatient={regularPatient}
-          isEditable={isEditable || isAddMode}
+          isEditable={isEditable}
           hospital={currentPatientData.hospital}
           setHospital={(value) => {
             if (patientType === "opd") {
@@ -319,7 +319,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
         <PatientInfoSection
           selectedPatient={regularPatient}
-          isEditable={isEditable || isAddMode}
+          isEditable={isEditable}
           phoneNo={currentPatientData.phone}
           setPhoneNo={(value) => {
             if (patientType === "opd") {
@@ -341,7 +341,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bloodCategory={bloodCategory}
           bottleRequired={bottleRequired}
           bottleUnitType={bottleUnitType}
-          isEditable={isEditable || isAddMode}
+          isEditable={isEditable}
           onBloodGroupChange={(value) => {
             setBloodGroup(value);
             if (patientType === "opd") {
@@ -362,7 +362,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <TestsSection
           items={items}
           selectedItemIndex={selectedItemIndex}
-          isEditable={isEditable || isAddMode}
+          isEditable={isEditable}
           onSelectRow={handleSelectRow}
           onSearchTest={handleSearchTest}
           onQuantityChange={invoiceHandlers.handleQuantityChange}
@@ -372,7 +372,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <TotalSection
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
-          isEditable={isEditable || isAddMode}
+          isEditable={isEditable}
           onReceivedAmountChange={handleReceivedAmountChange}
           onDiscountChange={handleDiscountChange}
         />

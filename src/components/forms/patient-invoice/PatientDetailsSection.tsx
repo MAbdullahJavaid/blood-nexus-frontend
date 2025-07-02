@@ -47,7 +47,7 @@ export function PatientDetailsSection({
       <div className="grid grid-cols-3 gap-4 items-center mb-2">
         <div>
           <Label htmlFor="patientType" className="mb-1 block">Type:</Label>
-          <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable && !isAdding}>
+          <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable}>
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
@@ -64,12 +64,11 @@ export function PatientDetailsSection({
               id="patientId"
               value={patientID}
               onChange={(e) => setPatientId(e.target.value)}
-              disabled={(!isEditable && !isAdding) || !!selectedPatient}
+              disabled={!isEditable || !!selectedPatient}
               className="h-8"
               placeholder="Enter Patient ID"
             />
-            {/* Only show patient search button in add mode, not in edit mode */}
-            {isAdding && (
+            {isEditable && (
               <button 
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
@@ -105,7 +104,6 @@ export function PatientDetailsSection({
               className="h-8 bg-green-100"
               placeholder="(Auto)"
             />
-            {/* Only show document search button in edit mode, not in add mode */}
             {isEditable && !isAdding && (
               <button
                 onClick={onSearchDocumentClick}
