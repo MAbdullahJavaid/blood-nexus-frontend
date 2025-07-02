@@ -491,6 +491,7 @@ const TestInformationForm = forwardRef<FormRef, TestInformationFormProps>(({
             </div>
           </div>
 
+          {/* Only show Clear button when editable, Save is handled by CrudBar */}
           {isEditable && (
             <div className="col-span-2 mt-4 flex justify-end gap-2">
               <Button 
@@ -499,12 +500,6 @@ const TestInformationForm = forwardRef<FormRef, TestInformationFormProps>(({
                 disabled={loading}
               >
                 Clear
-              </Button>
-              <Button 
-                onClick={handleSaveTest}
-                disabled={loading || !formValues.testName || !formValues.categoryId}
-              >
-                {currentTestId ? 'Update' : 'Save'}
               </Button>
             </div>
           )}
