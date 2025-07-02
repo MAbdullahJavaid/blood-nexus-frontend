@@ -16,10 +16,7 @@ import { useDocumentHandlers } from "./hooks/useDocumentHandlers";
 import { useSaveInvoice } from "./hooks/useSaveInvoice";
 
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
-  ({ isSearchEnabled = false, isEditable = false }, ref) => {
-    // Track if this is the initial render to distinguish add vs edit mode
-    const [hasOpenedEditModal, setHasOpenedEditModal] = useState(false);
-    
+  ({ isSearchEnabled = false, isEditable = false, isAddMode = false }, ref) => {
     const state = usePatientInvoiceState();
     const {
       isSearchModalOpen,
@@ -134,7 +131,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bottleUnitType,
           exDonor,
           references,
-          discount, // Use the current discount state
+          discount,
           receivedAmount,
           items,
           setLoading
@@ -170,37 +167,25 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         setDocumentDate(new Date().toISOString().split('T')[0]);
         setReferences("");
         setExDonor("");
-        setHasOpenedEditModal(false);
       }
     }));
 
+    // Generate document number for add mode
     useEffect(() => {
-      if (isEditable && !documentNo) {
+      if (isAddMode && !documentNo) {
         documentHandlers.generateDocumentNo();
       }
-    }, [isEditable]);
+    }, [isAddMode]);
 
-    // Auto-open document search modal when in edit mode
-    // We use a timer to ensure this runs after the component is fully mounted
-    // and distinguish from add mode by checking if we haven't opened the modal yet
+    // Auto-open document search modal ONLY when in edit mode (not add mode)
     useEffect(() => {
-      if (isEditable && !documentNo && !hasOpenedEditModal) {
-        // Small delay to ensure component is fully rendered and we can distinguish 
-        // between add and edit intents based on user interaction
-        const timer = setTimeout(() => {
-          // Only open if still in editable mode and no document selected
-          // This will be the edit case where user wants to load existing document
-          if (isEditable && !documentNo) {
-            setIsDocumentSearchModalOpen(true);
-            setHasOpenedEditModal(true);
-          }
-        }, 100);
-        
-        return () => clearTimeout(timer);
+      if (isEditable && !isAddMode && !documentNo) {
+        setIsDocumentSearchModalOpen(true);
       }
-    }, [isEditable, documentNo, hasOpenedEditModal, setIsDocumentSearchModalOpen]);
+    }, [isEditable, isAddMode, documentNo, setIsDocumentSearchModalOpen]);
     
-    const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
+    const shouldEnableEditing = (isEditable || isAddMode) && (patientType === "opd" || patientType === "regular");
+    const isAdding = isAddMode;
     
     const getCurrentPatientData = () => {
       if (patientType === "regular" && regularPatient) {
@@ -290,8 +275,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           patientType={patientType}
           documentNo={documentNo}
           selectedPatient={regularPatient}
-          isEditable={isEditable}
-          isAdding={!documentNo}
+          isEditable={isEditable || isAddMode}
+          isAdding={isAdding}
           onPatientTypeChange={patientHandlers.handlePatientTypeChange}
           onSearchPatientClick={handleSearchPatient}
           onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
@@ -315,7 +300,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
         <HospitalDetailsSection
           selectedPatient={regularPatient}
-          isEditable={isEditable}
+          isEditable={isEditable || isAddMode}
           hospital={currentPatientData.hospital}
           setHospital={(value) => {
             if (patientType === "opd") {
@@ -335,7 +320,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
 
         <PatientInfoSection
           selectedPatient={regularPatient}
-          isEditable={isEditable}
+          isEditable={isEditable || isAddMode}
           phoneNo={currentPatientData.phone}
           setPhoneNo={(value) => {
             if (patientType === "opd") {
@@ -357,7 +342,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           bloodCategory={bloodCategory}
           bottleRequired={bottleRequired}
           bottleUnitType={bottleUnitType}
-          isEditable={isEditable}
+          isEditable={isEditable || isAddMode}
           onBloodGroupChange={(value) => {
             setBloodGroup(value);
             if (patientType === "opd") {
@@ -378,7 +363,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <TestsSection
           items={items}
           selectedItemIndex={selectedItemIndex}
-          isEditable={isEditable}
+          isEditable={isEditable || isAddMode}
           onSelectRow={handleSelectRow}
           onSearchTest={handleSearchTest}
           onQuantityChange={invoiceHandlers.handleQuantityChange}
@@ -388,7 +373,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
         <TotalSection
           totalAmount={totalAmount}
           receivedAmount={receivedAmount}
-          isEditable={isEditable}
+          isEditable={isEditable || isAddMode}
           onReceivedAmountChange={handleReceivedAmountChange}
           onDiscountChange={handleDiscountChange}
         />

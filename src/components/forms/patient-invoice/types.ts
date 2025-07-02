@@ -1,9 +1,9 @@
-
 import { ForwardedRef } from "react";
 
 export interface PatientInvoiceFormProps {
   isSearchEnabled?: boolean;
   isEditable?: boolean;
+  isAddMode?: boolean; // New prop to distinguish add mode
 }
 
 export interface FormRefObject {

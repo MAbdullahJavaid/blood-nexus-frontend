@@ -47,7 +47,7 @@ export function PatientDetailsSection({
       <div className="grid grid-cols-3 gap-4 items-center mb-2">
         <div>
           <Label htmlFor="patientType" className="mb-1 block">Type:</Label>
-          <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable}>
+          <Select value={patientType} onValueChange={onPatientTypeChange} disabled={!isEditable && !isAdding}>
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
@@ -64,11 +64,11 @@ export function PatientDetailsSection({
               id="patientId"
               value={patientID}
               onChange={(e) => setPatientId(e.target.value)}
-              disabled={!isEditable || !!selectedPatient}
+              disabled={(!isEditable && !isAdding) || !!selectedPatient}
               className="h-8"
               placeholder="Enter Patient ID"
             />
-            {isEditable && (
+            {(isEditable || isAdding) && (
               <button 
                 onClick={onSearchPatientClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
