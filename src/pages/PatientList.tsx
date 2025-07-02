@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
@@ -30,6 +31,14 @@ const PatientList = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFirstLetter, setSelectedFirstLetter] = useState("all");
+
+  const firstLetterOptions = [
+    { value: "all", label: "All Patients" },
+    { value: "T", label: "T" },
+    { value: "H", label: "H" },
+    { value: "S", label: "S" }
+  ];
 
   useEffect(() => {
     fetchPatients();
@@ -57,12 +66,37 @@ const PatientList = () => {
     }
   };
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const extractPostfixNumber = (patientId: string): number => {
+    const match = patientId.match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  const filteredPatients = patients
+    .filter(patient => {
+      // Filter out patient IDs that are only numbers
+      if (/^\d+$/.test(patient.patient_id)) {
+        return false;
+      }
+
+      // Filter by first letter
+      if (selectedFirstLetter !== "all" && !patient.patient_id.startsWith(selectedFirstLetter)) {
+        return false;
+      }
+
+      // Filter by search term
+      const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      // Sort by postfix number in ascending order
+      const postfixA = extractPostfixNumber(a.patient_id);
+      const postfixB = extractPostfixNumber(b.patient_id);
+      return postfixA - postfixB;
+    });
 
   const handleBackToDashboard = () => {
     navigate("/dashboard");
@@ -109,14 +143,31 @@ const PatientList = () => {
       <Card>
         <CardHeader>
           <CardTitle>All Patients</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Search className="w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search by name, ID, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2 flex-1">
+              <Search className="w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search by name, ID, phone, or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <Select value={selectedFirstLetter} onValueChange={setSelectedFirstLetter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by first letter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {firstLetterOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
