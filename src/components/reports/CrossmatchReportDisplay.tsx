@@ -48,14 +48,14 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
   return (
     <div className="bg-white">
       {data.map((record, index) => (
-        <div key={index} className="crossmatch-report-page bg-white p-8 min-h-screen mb-8" style={{ 
+        <div key={index} className="crossmatch-report-page bg-white p-4 min-h-screen mb-8" style={{ 
           pageBreakAfter: 'always',
           breakAfter: 'page',
           minHeight: '100vh',
           display: 'block'
         }}>
           {/* Header */}
-          <div className="border-b-2 border-black pb-4 mb-6">
+          <div className="border-b-2 border-black pb-2 mb-3">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
@@ -79,15 +79,15 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
           </div>
 
           {/* Report Title */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-3">
             <h2 className="text-lg font-bold">BLOOD GROUPING SCREENING AND CROSS MATCH REPORT</h2>
           </div>
 
           {/* Patient Information */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-center mb-4">Patient Information</h3>
+          <div className="mb-3">
+            <h3 className="text-lg font-bold text-center mb-2">Patient Information</h3>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-2">
               <div className="flex">
                 <span className="font-semibold w-32">Req. No.</span>
                 <span className="border-b border-black flex-1 ml-2">{record.crossmatch_no}</span>
@@ -98,7 +98,7 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="flex">
                 <span className="font-semibold w-32">Patient Name</span>
                 <span className="border-b border-black flex-1 ml-2">{record.patient_name}</span>
@@ -115,12 +115,12 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
               </div>
             </div>
 
-            <div className="flex mb-4">
+            <div className="flex mb-2">
               <span className="font-semibold w-32">Hospital/Clinic</span>
               <span className="border-b border-black flex-1 ml-2">{record.hospital}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <div className="flex">
                 <span className="font-semibold w-16">Bag No</span>
                 <span className="border-b border-black flex-1 ml-2">{record.bag_id || ''}</span>
@@ -137,10 +137,10 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
           </div>
 
           {/* Donor Information */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-center mb-4">Donor Information</h3>
+          <div className="mb-3">
+            <h3 className="text-lg font-bold text-center mb-2">Donor Information</h3>
             
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex mb-2">
                   <span className="font-semibold w-24">REG NO:</span>
@@ -169,49 +169,49 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
           </div>
 
           {/* Screening Report */}
-          <div className="mb-6">
+          <div className="mb-3">
             <div className="border-2 border-black">
-              <h3 className="text-lg font-bold text-center py-2 bg-gray-100">SCREENING REPORT</h3>
+              <h3 className="text-lg font-bold text-center py-1 bg-gray-100">SCREENING REPORT</h3>
               
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-black">
-                    <th className="border-r border-black p-2 font-bold text-center">Test</th>
-                    <th className="border-r border-black p-2 font-bold text-center">Donor/Patient<br/>Value</th>
-                    <th className="border-r border-black p-2 font-bold text-center">Cut Off<br/>Value</th>
-                    <th className="p-2 font-bold text-center">RESULT</th>
+                    <th className="border-r border-black p-1 font-bold text-center text-sm">Test</th>
+                    <th className="border-r border-black p-1 font-bold text-center text-sm">Donor/Patient<br/>Value</th>
+                    <th className="border-r border-black p-1 font-bold text-center text-sm">Cut Off<br/>Value</th>
+                    <th className="p-1 font-bold text-center text-sm">RESULT</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-b border-black">
-                    <td className="border-r border-black p-2">HBsAg (Hepatitis B)</td>
-                    <td className="border-r border-black p-2 text-center">{record.hbsag || ''}</td>
-                    <td className="border-r border-black p-2 text-center">1.00</td>
-                    <td className="p-2 text-center">{getScreeningResult(record.hbsag)}</td>
+                    <td className="border-r border-black p-1 text-sm">HBsAg (Hepatitis B)</td>
+                    <td className="border-r border-black p-1 text-center text-sm">{record.hbsag || ''}</td>
+                    <td className="border-r border-black p-1 text-center text-sm">1.00</td>
+                    <td className="p-1 text-center text-sm">{getScreeningResult(record.hbsag)}</td>
                   </tr>
                   <tr className="border-b border-black">
-                    <td className="border-r border-black p-2">Anti - HCV (Hepatitis C)</td>
-                    <td className="border-r border-black p-2 text-center">{record.hcv || ''}</td>
-                    <td className="border-r border-black p-2 text-center">1.00</td>
-                    <td className="p-2 text-center">{getScreeningResult(record.hcv)}</td>
+                    <td className="border-r border-black p-1 text-sm">Anti - HCV (Hepatitis C)</td>
+                    <td className="border-r border-black p-1 text-center text-sm">{record.hcv || ''}</td>
+                    <td className="border-r border-black p-1 text-center text-sm">1.00</td>
+                    <td className="p-1 text-center text-sm">{getScreeningResult(record.hcv)}</td>
                   </tr>
                   <tr className="border-b border-black">
-                    <td className="border-r border-black p-2">Anti - HIV</td>
-                    <td className="border-r border-black p-2 text-center">{record.hiv || ''}</td>
-                    <td className="border-r border-black p-2 text-center">1.00</td>
-                    <td className="p-2 text-center">{getScreeningResult(record.hiv)}</td>
+                    <td className="border-r border-black p-1 text-sm">Anti - HIV</td>
+                    <td className="border-r border-black p-1 text-center text-sm">{record.hiv || ''}</td>
+                    <td className="border-r border-black p-1 text-center text-sm">1.00</td>
+                    <td className="p-1 text-center text-sm">{getScreeningResult(record.hiv)}</td>
                   </tr>
                   <tr className="border-b border-black">
-                    <td className="border-r border-black p-2">V.D.R.L (Syphilis)</td>
-                    <td className="border-r border-black p-2 text-center">{record.vdrl || ''}</td>
-                    <td className="border-r border-black p-2 text-center">1.00</td>
-                    <td className="p-2 text-center">{getScreeningResult(record.vdrl)}</td>
+                    <td className="border-r border-black p-1 text-sm">V.D.R.L (Syphilis)</td>
+                    <td className="border-r border-black p-1 text-center text-sm">{record.vdrl || ''}</td>
+                    <td className="border-r border-black p-1 text-center text-sm">1.00</td>
+                    <td className="p-1 text-center text-sm">{getScreeningResult(record.vdrl)}</td>
                   </tr>
                   <tr>
-                    <td className="border-r border-black p-2">HB</td>
-                    <td className="border-r border-black p-2 text-center">{record.hb || ''}</td>
-                    <td className="border-r border-black p-2 text-center"></td>
-                    <td className="p-2 text-center"></td>
+                    <td className="border-r border-black p-1 text-sm">HB</td>
+                    <td className="border-r border-black p-1 text-center text-sm">{record.hb || ''}</td>
+                    <td className="border-r border-black p-1 text-center text-sm"></td>
+                    <td className="p-1 text-center text-sm"></td>
                   </tr>
                 </tbody>
               </table>
@@ -219,53 +219,51 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
           </div>
 
           {/* Crossmatch Results */}
-          <div className="mb-6">
+          <div className="mb-3">
             <table className="w-full border-2 border-black border-collapse">
               <thead>
                 <tr>
-                  <th className="border-r border-black p-2 font-bold">Reg No.</th>
-                  <th className="border-r border-black p-2 font-bold">Blood Group</th>
-                  <th className="border-r border-black p-2 font-bold">Saline</th>
-                  <th className="border-r border-black p-2 font-bold">Albumin</th>
-                  <th className="border-r border-black p-2 font-bold">Coomb's</th>
-                  <th className="p-2 font-bold">Result</th>
+                  <th className="border-r border-black p-1 font-bold text-sm">Reg No.</th>
+                  <th className="border-r border-black p-1 font-bold text-sm">Blood Group</th>
+                  <th className="border-r border-black p-1 font-bold text-sm">Saline</th>
+                  <th className="border-r border-black p-1 font-bold text-sm">Albumin</th>
+                  <th className="border-r border-black p-1 font-bold text-sm">Coomb's</th>
+                  <th className="p-1 font-bold text-sm">Result</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="border-r border-black p-2 h-12">{record.bag_id || ''}</td>
-                  <td className="border-r border-black p-2">{record.donor_blood_group || ''}{record.donor_rh || ''}</td>
-                  <td className="border-r border-black p-2 text-center">{record.saline}</td>
-                  <td className="border-r border-black p-2 text-center">{record.albumin}</td>
-                  <td className="border-r border-black p-2 text-center">{record.coomb}</td>
-                  <td className="p-2 text-center">{record.result}</td>
+                  <td className="border-r border-black p-1 h-8 text-sm">{record.bag_id || ''}</td>
+                  <td className="border-r border-black p-1 text-sm">{record.donor_blood_group || ''}{record.donor_rh || ''}</td>
+                  <td className="border-r border-black p-1 text-center text-sm">{record.saline}</td>
+                  <td className="border-r border-black p-1 text-center text-sm">{record.albumin}</td>
+                  <td className="border-r border-black p-1 text-center text-sm">{record.coomb}</td>
+                  <td className="p-1 text-center text-sm">{record.result}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Remarks */}
-          <div className="mb-8">
+          <div className="mb-4">
             <div className="flex">
               <span className="font-semibold">Remarks:</span>
               <div className="flex-1 ml-2">
                 <div className="border-b border-black min-h-[20px]">{record.remarks}</div>
-                <div className="border-b border-black min-h-[20px] mt-2"></div>
-                <div className="border-b border-black min-h-[20px] mt-2"></div>
               </div>
             </div>
           </div>
 
           {/* Signatures */}
-          <div className="mt-16">
+          <div className="mt-6">
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <span className="font-semibold">SIGNATURE: ( LAB-INCHARGE)</span>
-                <div className="border-b border-black mt-8"></div>
+                <div className="border-b border-black mt-4"></div>
               </div>
               <div>
                 <span className="font-semibold">SIGNATURE: ( LAB-ASSISTANT)</span>
-                <div className="border-b border-black mt-8"></div>
+                <div className="border-b border-black mt-4"></div>
               </div>
             </div>
           </div>
