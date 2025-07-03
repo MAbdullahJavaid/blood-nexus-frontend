@@ -7,7 +7,7 @@ import { Session, User } from '@supabase/supabase-js';
 type UserProfile = {
   id: string;
   username: string;
-  role: string;
+  roles: string[];
 };
 
 type AuthContextType = {
@@ -28,6 +28,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchUserProfileWithRoles = async (userId: string) => {
+    try {
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Get user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (rolesError) throw rolesError;
+
+      return {
+        id: profile.id,
+        username: profile.username,
+        roles: roles?.map(r => r.role) || []
+      };
+    } catch (error) {
+      console.error('Error fetching user profile with roles:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -35,23 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         
         if (session?.user) {
-          // Get user profile data
+          // Get user profile data with roles
           setTimeout(async () => {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('id, username, role')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (data) {
-              setUser({
-                id: data.id,
-                username: data.username,
-                role: data.role
-              });
-            } else if (error) {
-              console.error('Error fetching user profile:', error);
-            }
+            const userProfile = await fetchUserProfileWithRoles(session.user.id);
+            setUser(userProfile);
           }, 0);
         } else {
           setUser(null);
@@ -62,31 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       
       if (session?.user) {
-        // Get user profile data
-        supabase
-          .from('profiles')
-          .select('id, username, role')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (data) {
-              setUser({
-                id: data.id,
-                username: data.username,
-                role: data.role
-              });
-            } else if (error) {
-              console.error('Error fetching user profile:', error);
-            }
-            setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
+        const userProfile = await fetchUserProfileWithRoles(session.user.id);
+        setUser(userProfile);
       }
+      
+      setIsLoading(false);
     });
 
     return () => {

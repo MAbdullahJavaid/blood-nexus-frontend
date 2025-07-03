@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { toast } from "@/hooks/use-toast";
 
 export interface UserWithRoles {
@@ -11,7 +12,6 @@ export interface UserWithRoles {
   email: string;
   phone: string;
   status: string;
-  role: string;
   created_at: string;
   last_login: string;
   roles: string[];
@@ -21,11 +21,12 @@ type AppRole = "admin" | "bds" | "lab" | "reception";
 
 export const useUserManagement = () => {
   const { user: currentUser } = useAuth();
+  const { hasRole } = useRoleAccess();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const checkAdminAccess = () => {
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || !hasRole(['admin'])) {
       throw new Error('Admin access required');
     }
   };
@@ -44,7 +45,6 @@ export const useUserManagement = () => {
           email,
           phone,
           status,
-          role,
           created_at,
           last_login
         `)

@@ -13,7 +13,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 const UserManagement = () => {
   const { user } = useAuth();
-  const { canAccessUserManagement, isLoading: rolesLoading } = useRoleAccess();
+  const { hasRole, isLoading: rolesLoading } = useRoleAccess();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -30,13 +30,19 @@ const UserManagement = () => {
     );
   }
 
-  // Check if user has access to user management
-  if (!canAccessUserManagement()) {
+  // Check if user has admin role
+  if (!hasRole(['admin'])) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don't have permission to access this page.</p>
+          <Button 
+            onClick={() => navigate("/dashboard")}
+            className="mt-4"
+          >
+            Back to Dashboard
+          </Button>
         </div>
       </div>
     );

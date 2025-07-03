@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserManagement } from "@/hooks/useUserManagement";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface CreateUserModalProps {
@@ -24,7 +22,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   onUserCreated,
 }) => {
   const { createUser } = useUserManagement();
-  const { user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -35,8 +32,36 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     status: "active",
     roles: [] as string[],
   });
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
   const availableRoles = ["admin", "bds", "lab", "reception"];
+
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+    
+    if (!formData.username) {
+      errors.username = "Username is required";
+    }
+    
+    if (formData.roles.length === 0) {
+      errors.roles = "At least one role must be selected";
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleRoleChange = (role: string, checked: boolean) => {
     if (checked) {
@@ -50,50 +75,33 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         roles: prev.roles.filter(r => r !== role)
       }));
     }
+    // Clear roles validation error when user selects a role
+    if (validationErrors.roles) {
+      setValidationErrors(prev => ({
+        ...prev,
+        roles: ""
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      const newUser = await createUser(formData);
+      await createUser(formData);
 
       toast({
         title: "Success",
         description: "User created successfully",
       });
 
-      // Test login with new credentials
-      try {
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (loginError) {
-          console.error('Login test failed:', loginError);
-          toast({
-            title: "User created but login test failed",
-            description: "The user was created but couldn't be logged in automatically. Please check the credentials.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Login test successful",
-            description: "User can login with the provided credentials",
-          });
-          
-          // Sign out the test login to restore admin session
-          await supabase.auth.signOut();
-          
-          // Reload to restore admin session
-          window.location.reload();
-        }
-      } catch (loginTestError) {
-        console.error('Login test error:', loginTestError);
-      }
-
+      // Reset form
       setFormData({
         email: "",
         password: "",
@@ -103,6 +111,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         status: "active",
         roles: [],
       });
+      setValidationErrors({});
 
       onUserCreated();
     } catch (error: any) {
@@ -117,8 +126,22 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    setFormData({
+      email: "",
+      password: "",
+      username: "",
+      full_name: "",
+      phone: "",
+      status: "active",
+      roles: [],
+    });
+    setValidationErrors({});
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
@@ -128,37 +151,60 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           <ScrollArea className="h-[60vh] pr-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  required
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, email: e.target.value }));
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({ ...prev, email: "" }));
+                    }
+                  }}
+                  className={validationErrors.email ? "border-red-500" : ""}
                 />
+                {validationErrors.email && (
+                  <p className="text-sm text-red-500">{validationErrors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  minLength={6}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, password: e.target.value }));
+                    if (validationErrors.password) {
+                      setValidationErrors(prev => ({ ...prev, password: "" }));
+                    }
+                  }}
                   placeholder="Minimum 6 characters"
+                  className={validationErrors.password ? "border-red-500" : ""}
                 />
+                {validationErrors.password && (
+                  <p className="text-sm text-red-500">{validationErrors.password}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Username *</Label>
                 <Input
                   id="username"
                   value={formData.username}
-                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  required
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, username: e.target.value }));
+                    if (validationErrors.username) {
+                      setValidationErrors(prev => ({ ...prev, username: "" }));
+                    }
+                  }}
+                  className={validationErrors.username ? "border-red-500" : ""}
                 />
+                {validationErrors.username && (
+                  <p className="text-sm text-red-500">{validationErrors.username}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -194,7 +240,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Roles</Label>
+                <Label>Roles *</Label>
                 <div className="space-y-2">
                   {availableRoles.map((role) => (
                     <div key={role} className="flex items-center space-x-2">
@@ -207,10 +253,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     </div>
                   ))}
                 </div>
+                {validationErrors.roles && (
+                  <p className="text-sm text-red-500">{validationErrors.roles}</p>
+                )}
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={onClose}>
+                <Button type="button" variant="outline" onClick={handleClose}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
