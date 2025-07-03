@@ -249,15 +249,8 @@ export default function BloodDriveReport() {
         onExport={handleExportCSV}
         onExit={handleExit}
       />
-      {/* Title and Subtitle before the table */}
-      <div className="w-full max-w-4xl mb-2">
-        <h1 className="text-3xl font-extrabold mb-2 text-center">Blood Care Foundation</h1>
-        <h2 className="text-xl italic underline mb-6 text-center text-gray-700">
-          Blood Drive Report
-        </h2>
-      </div>
       {/* Export buttons - PDF, JPEG, CSV */}
-      <div className="w-full max-w-4xl flex justify-end gap-2 mb-2">
+      <div className="w-full max-w-4xl flex justify-end gap-2 mb-4">
         <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={handleExportCSV}>
           <Download className="w-4 h-4" />
           CSV
@@ -272,7 +265,7 @@ export default function BloodDriveReport() {
         </Button>
       </div>
       {/* Report Table for export */}
-      <div ref={reportRef} className="w-full max-w-4xl bg-white rounded shadow border mt-2 p-6">
+      <div ref={reportRef} className="w-full max-w-4xl bg-white rounded shadow border p-6">
         <Table>
           <TableCaption className="mb-4">
             {isFetching && <span>Loading blood drive requests...</span>}
