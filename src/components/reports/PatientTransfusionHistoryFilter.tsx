@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -62,9 +61,9 @@ const PatientTransfusionHistoryFilter = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 20;
 
-  // Fetch patients for search
+  // Fetch all patients for search
   const { data: patients } = useQuery({
-    queryKey: ['patients-search', patientSearchTerm],
+    queryKey: ['all-patients-search', patientSearchTerm],
     queryFn: async () => {
       let query = supabase
         .from('patients')
@@ -75,7 +74,7 @@ const PatientTransfusionHistoryFilter = () => {
         query = query.or(`patient_id.ilike.%${patientSearchTerm}%,name.ilike.%${patientSearchTerm}%,phone.ilike.%${patientSearchTerm}%`);
       }
 
-      const { data, error } = await query.limit(20);
+      const { data, error } = await query.limit(50);
       
       if (error) throw error;
       return data as Patient[];
@@ -131,7 +130,7 @@ const PatientTransfusionHistoryFilter = () => {
     }
   };
 
-  // Fetch patient transfusion history
+  // Fetch patient transfusion history using the selected patient_id
   const { data: transfusionHistory, isLoading, refetch } = useQuery({
     queryKey: ['patient-transfusion-history', selectedPatientId, fromDate, toDate],
     queryFn: async () => {
