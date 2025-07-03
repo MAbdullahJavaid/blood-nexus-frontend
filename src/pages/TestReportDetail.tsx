@@ -99,7 +99,7 @@ const TestReportDetail = () => {
   // Get gender-specific reference range
   const getGenderSpecificRange = (testId: number, gender: string | null) => {
     const testInfo = testInformation[testId];
-    if (!testInfo?.description) return "N/A";
+    if (!testInfo?.description) return { low: null, high: null, display: "N/A" };
 
     try {
       const metadata = JSON.parse(testInfo.description);
@@ -120,13 +120,17 @@ const TestReportDetail = () => {
       }
 
       if (lowValue !== undefined && highValue !== undefined && lowValue !== null && highValue !== null) {
-        return `${lowValue} - ${highValue}`;
+        return {
+          low: parseFloat(lowValue),
+          high: parseFloat(highValue),
+          display: `${lowValue} - ${highValue}`
+        };
       }
       
-      return "N/A";
+      return { low: null, high: null, display: "N/A" };
     } catch (error) {
       console.error("Error parsing test description:", error);
-      return "N/A";
+      return { low: null, high: null, display: "N/A" };
     }
   };
 
@@ -198,10 +202,33 @@ const TestReportDetail = () => {
     return new Date(dateString).toLocaleDateString("en-GB");
   };
 
-  const getResultStatus = (result: TestResult) => {
-    if (result.high_flag) return { status: "high", color: "destructive" };
-    if (result.low_flag) return { status: "low", color: "secondary" };
-    return { status: "normal", color: "default" };
+  const getResultStatus = (result: TestResult, referenceRange: { low: number | null; high: number | null }) => {
+    // If user value is not available, return default status
+    if (!result.user_value || result.user_value === "Not Available") {
+      return { status: "unknown", color: "secondary" };
+    }
+
+    // Try to parse the user value as a number
+    const userValueNum = parseFloat(result.user_value);
+    
+    // If user value is not a valid number, return default status
+    if (isNaN(userValueNum)) {
+      return { status: "unknown", color: "secondary" };
+    }
+
+    // If reference range is not available, return default status
+    if (referenceRange.low === null || referenceRange.high === null) {
+      return { status: "unknown", color: "secondary" };
+    }
+
+    // Compare user value with reference range
+    if (userValueNum < referenceRange.low) {
+      return { status: "low", color: "destructive" };
+    } else if (userValueNum > referenceRange.high) {
+      return { status: "high", color: "destructive" };
+    } else {
+      return { status: "normal", color: "default" };
+    }
   };
 
   const handleExportPDF = () => {
@@ -358,8 +385,8 @@ const TestReportDetail = () => {
                         </thead>
                         <tbody>
                           {results.map((result) => {
-                            const resultStatus = getResultStatus(result);
                             const referenceRange = getGenderSpecificRange(result.test_id, patientInfo?.gender);
+                            const resultStatus = getResultStatus(result, referenceRange);
                             
                             return (
                               <tr key={result.id} className="hover:bg-gray-50">
@@ -368,9 +395,9 @@ const TestReportDetail = () => {
                                 </td>
                                 <td className="border border-gray-200 px-4 py-3">
                                   <span className={`font-semibold ${
-                                    resultStatus.status === "high" ? "text-red-600" :
-                                    resultStatus.status === "low" ? "text-orange-600" :
-                                    "text-green-600"
+                                    resultStatus.status === "high" || resultStatus.status === "low" ? "text-red-600" :
+                                    resultStatus.status === "normal" ? "text-green-600" :
+                                    "text-gray-600"
                                   }`}>
                                     {result.user_value || "Not Available"}
                                   </span>
@@ -379,12 +406,20 @@ const TestReportDetail = () => {
                                   {result.measuring_unit || "N/A"}
                                 </td>
                                 <td className="border border-gray-200 px-4 py-3">
-                                  {referenceRange}
+                                  {referenceRange.display}
                                 </td>
                                 <td className="border border-gray-200 px-4 py-3">
-                                  <Badge variant={resultStatus.color as any}>
+                                  <Badge 
+                                    variant={resultStatus.status === "normal" ? "default" : "destructive"}
+                                    className={
+                                      resultStatus.status === "normal" 
+                                        ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200" 
+                                        : ""
+                                    }
+                                  >
                                     {resultStatus.status === "high" ? "High" :
-                                     resultStatus.status === "low" ? "Low" : "Normal"}
+                                     resultStatus.status === "low" ? "Low" : 
+                                     resultStatus.status === "normal" ? "Normal" : "Unknown"}
                                   </Badge>
                                 </td>
                               </tr>
