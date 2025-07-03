@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import VolunteerReportFilter from "@/components/reports/VolunteerReportFilter";
 import VolunteerReportTable from "@/components/reports/VolunteerReportTable";
 import { useVolunteerReportData } from "@/hooks/useVolunteerReportData";
@@ -13,6 +13,8 @@ const getDefaultFilter = () => {
 };
 
 const VolunteerReport = () => {
+  const navigate = useNavigate();
+  
   // State for selected filter date range
   const [filter, setFilter] = useState(getDefaultFilter());
   const { data = [], isLoading, isError, error, refetch } = useVolunteerReportData(filter);
@@ -36,7 +38,7 @@ const VolunteerReport = () => {
     });
   };
   const handleExit = () => {
-    toast({ title: "Exited filter" });
+    navigate('/dashboard');
   };
 
   return (
