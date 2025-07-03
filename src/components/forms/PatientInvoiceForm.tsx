@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject, InvoiceItem } from "./patient-invoice/types";
 import { PatientSearchModal } from "./patient-invoice/PatientSearchModal";
@@ -22,8 +21,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
     const [documentNo, setDocumentNo] = useState<string>("");
     const [bloodGroup, setBloodGroup] = useState<string>("N/A");
     const [rhType, setRhType] = useState<string>("N/A");
-    const [bloodCategory, setBloodCategory] = useState<string>("N/A");
-    const [bottleRequired, setBottleRequired] = useState<number>(0);
+    const [bloodCategory, setBloodCategory] = useState<string>("FWB");
+    const [bottleRequired, setBottleRequired] = useState<number>(1);
     const [bottleUnitType, setBottleUnitType] = useState<string>("bag");
     const [items, setItems] = useState<InvoiceItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -36,6 +35,7 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       new Date().toISOString().split('T')[0]
     );
     const [loading, setLoading] = useState(false);
+    const [shouldOpenDocumentSearch, setShouldOpenDocumentSearch] = useState(false);
     
     // Form fields for patient data
     const [patientID, setPatientID] = useState("");
@@ -53,8 +53,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       setDocumentNo("");
       setBloodGroup("N/A");
       setRhType("N/A");
-      setBloodCategory("N/A");
-      setBottleRequired(0);
+      setBloodCategory("FWB");
+      setBottleRequired(1);
       setBottleUnitType("bag");
       setItems([]);
       setDiscount(0);
@@ -155,12 +155,13 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isEditable]);
 
-    // Auto-open document search modal when in edit mode - FIXED LOGIC
+    // Only open document search modal when explicitly requested
     useEffect(() => {
-      if (isEditable && !!documentNo) {
+      if (shouldOpenDocumentSearch) {
         setIsDocumentSearchModalOpen(true);
+        setShouldOpenDocumentSearch(false);
       }
-    }, [isEditable, documentNo]);
+    }, [shouldOpenDocumentSearch]);
 
     const isAdding = !documentNo && isEditable;
     const isEditing = isEditable && !!documentNo;
@@ -581,8 +582,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           isAdding={isAdding}
           isEditing={isEditing}
           onPatientTypeChange={handlePatientTypeChange}
-          onSearchPatientClick={handleSearchPatient}
-          onSearchDocumentClick={() => setIsDocumentSearchModalOpen(true)}
+          onSearchPatientClick={() => setIsSearchModalOpen(true)}
+          onSearchDocumentClick={() => setShouldOpenDocumentSearch(true)}
           patientName={patientName}
           setPatientName={setPatientName}
           documentDate={documentDate}

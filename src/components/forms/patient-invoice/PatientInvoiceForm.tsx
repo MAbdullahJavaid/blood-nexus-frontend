@@ -1,4 +1,3 @@
-
 import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { PatientInvoiceFormProps, FormRefObject } from "./types";
 import { PatientSearchModal } from "./PatientSearchModal";
@@ -220,12 +219,8 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       }
     }, [isAdding]);
 
-    // Auto-open document search modal when in editing mode
-    useEffect(() => {
-      if (isEditing) {
-        setIsDocumentSearchModalOpen(true);
-      }
-    }, [isEditing]);
+    // Remove the auto-open document search modal effect - it should only open when explicitly requested
+    // The document search should only open when user clicks the search button, not during edit mode
     
     const shouldEnableEditing = isEditable && (patientType === "opd" || patientType === "regular");
     
