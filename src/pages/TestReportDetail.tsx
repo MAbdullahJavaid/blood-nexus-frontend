@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Calendar, User, Hospital, Download } from "lucide-react";
+import { Search, FileText, Calendar, User, Hospital, Download, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ interface PatientReport {
 }
 
 const TestReportDetail = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDocument, setSelectedDocument] = useState<string>("");
   const [patientInfo, setPatientInfo] = useState<PatientReport | null>(null);
@@ -247,6 +249,10 @@ const TestReportDetail = () => {
     exportToJPG("test-report-content");
   };
 
+  const handleExit = () => {
+    navigate('/dashboard');
+  };
+
   useEffect(() => {
     fetchAvailableReports();
   }, []);
@@ -288,6 +294,14 @@ const TestReportDetail = () => {
                 </Button>
               </>
             )}
+            <Button
+              onClick={handleExit}
+              variant="outline"
+              className="flex items-center gap-2 border-gray-400 text-gray-700 hover:bg-gray-50"
+            >
+              <X className="h-4 w-4" />
+              Exit
+            </Button>
           </div>
         </div>
 
