@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -46,17 +45,17 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
           )
         `);
 
-      // Filter by registration number range
-      if (fromRegistrationNo) {
-        query = query.gte('donors.donor_id', fromRegistrationNo);
-      }
-      if (toRegistrationNo) {
-        query = query.lte('donors.donor_id', toRegistrationNo);
-      }
-
-      // Filter by selected donor IDs if any
+      // If specific donors are selected, only fetch their latest bleeding record
       if (selectedDonorIds.length > 0) {
         query = query.in('donor_id', selectedDonorIds);
+      } else {
+        // Filter by registration number range only if no specific donors selected
+        if (fromRegistrationNo) {
+          query = query.gte('donors.donor_id', fromRegistrationNo);
+        }
+        if (toRegistrationNo) {
+          query = query.lte('donors.donor_id', toRegistrationNo);
+        }
       }
 
       const { data, error } = await query.order('bleeding_date', { ascending: false });
@@ -66,7 +65,17 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
         throw error;
       }
 
-      return data || [];
+      // Group by donor_id and keep only the latest record for each donor
+      const latestRecordsByDonor = new Map();
+      data?.forEach(record => {
+        const donorId = record.donor_id;
+        if (!latestRecordsByDonor.has(donorId) || 
+            new Date(record.bleeding_date) > new Date(latestRecordsByDonor.get(donorId).bleeding_date)) {
+          latestRecordsByDonor.set(donorId, record);
+        }
+      });
+
+      return Array.from(latestRecordsByDonor.values()) || [];
     },
     enabled: showResults
   });
@@ -169,6 +178,7 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
                     onChange={(e) => setFromRegistrationNo(e.target.value)}
                     placeholder="000000"
                     className="w-full"
+                    disabled={selectedDonorIds.length > 0}
                   />
                 </div>
                 <div className="p-3">
@@ -178,6 +188,7 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
                     onChange={(e) => setToRegistrationNo(e.target.value)}
                     placeholder="zzzzzz"
                     className="w-full"
+                    disabled={selectedDonorIds.length > 0}
                   />
                 </div>
               </div>
@@ -188,8 +199,14 @@ const DonorScreeningReportFilter = ({ title }: DonorScreeningReportFilterProps) 
               <div className="bg-blue-50 p-3 rounded border">
                 <Label className="font-medium">Selected Donors: {selectedDonorIds.length}</Label>
                 <div className="text-sm text-gray-600 mt-1">
-                  Click OK to generate screening reports for selected donors
+                  Latest screening report will be generated for each selected donor
                 </div>
+                <button
+                  onClick={() => setSelectedDonorIds([])}
+                  className="text-red-600 text-sm mt-2 hover:underline"
+                >
+                  Clear selection
+                </button>
               </div>
             )}
 
