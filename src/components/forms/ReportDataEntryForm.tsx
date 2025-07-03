@@ -74,6 +74,7 @@ const ReportDataEntryForm = forwardRef(({
   const [reports, setReports] = useState<PreReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const fetchReports = async () => {
     try {
@@ -102,6 +103,39 @@ const ReportDataEntryForm = forwardRef(({
       report.document_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Function to get gender-based values from test information
+  const getGenderBasedValues = (testInfo: any, gender: string | null) => {
+    if (!testInfo?.description) return { measuring_unit: "", low_value: "", high_value: "" };
+    
+    try {
+      const desc = JSON.parse(testInfo.description);
+      const genderKey = gender?.toLowerCase() || 'other';
+      
+      let low_value = "";
+      let high_value = "";
+      
+      // Gender-based approach for low and high values
+      if (genderKey === 'male') {
+        low_value = desc.male_low_value || desc.low_value || "";
+        high_value = desc.male_high_value || desc.high_value || "";
+      } else if (genderKey === 'female') {
+        low_value = desc.female_low_value || desc.low_value || "";
+        high_value = desc.female_high_value || desc.high_value || "";
+      } else {
+        low_value = desc.other_low_value || desc.low_value || "";
+        high_value = desc.other_high_value || desc.high_value || "";
+      }
+      
+      return {
+        measuring_unit: desc.measuring_unit || "",
+        low_value,
+        high_value
+      };
+    } catch {
+      return { measuring_unit: "", low_value: "", high_value: "" };
+    }
+  };
 
   // Load tests from invoice_items and existing results from test_report_results
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
@@ -176,18 +210,8 @@ const ReportDataEntryForm = forwardRef(({
 
         for (const test of testInfoRows) {
           if (test.id === fullTestId) continue;
-          let measuring_unit = "";
-          let low_value = "";
-          let high_value = "";
-          if (test.description) {
-            try {
-              const desc = JSON.parse(test.description);
-              measuring_unit = desc.measuring_unit || "";
-              low_value = desc.low_value || "";
-              high_value = desc.high_value || "";
-            } catch {}
-          }
-
+          
+          const genderValues = getGenderBasedValues(test, selectedReport?.gender);
           const compositeKey = `${test.id}___${categoryName}`;
           const existingResult = existingResultsMap.get(test.id);
           
@@ -195,9 +219,9 @@ const ReportDataEntryForm = forwardRef(({
             test_id: test.id,
             test_name: test.name,
             category: categoryName,
-            measuring_unit,
-            low_value,
-            high_value,
+            measuring_unit: genderValues.measuring_unit,
+            low_value: genderValues.low_value,
+            high_value: genderValues.high_value,
             user_value: existingResult?.user_value || "",
           };
         }
@@ -212,8 +236,8 @@ const ReportDataEntryForm = forwardRef(({
         if (loadedTestsMap[compositeKey]) continue;
         if (fullTestIdCategorySet.has(compositeKey)) continue;
 
-        let measuring_unit = "", low_value = "", high_value = "";
         let test_name = item.test_name || "";
+        let genderValues = { measuring_unit: "", low_value: "", high_value: "" };
         
         if (test_id != null) {
           const { data: testInfo, error: testInfoErr } = await supabase
@@ -222,16 +246,11 @@ const ReportDataEntryForm = forwardRef(({
             .eq("id", test_id)
             .maybeSingle();
 
-          if (testInfo && testInfo.description) {
-            try {
-              const desc = JSON.parse(testInfo.description);
-              measuring_unit = desc.measuring_unit || "";
-              low_value = desc.low_value || "";
-              high_value = desc.high_value || "";
-            } catch {}
-          }
-          if (testInfo && testInfo.name) {
-            test_name = testInfo.name;
+          if (testInfo) {
+            if (testInfo.name) {
+              test_name = testInfo.name;
+            }
+            genderValues = getGenderBasedValues(testInfo, selectedReport?.gender);
           }
 
           const existingResult = existingResultsMap.get(test_id);
@@ -240,9 +259,9 @@ const ReportDataEntryForm = forwardRef(({
             test_id,
             test_name,
             category,
-            measuring_unit,
-            low_value,
-            high_value,
+            measuring_unit: genderValues.measuring_unit,
+            low_value: genderValues.low_value,
+            high_value: genderValues.high_value,
             user_value: existingResult?.user_value || "",
           };
         }
@@ -358,6 +377,7 @@ const ReportDataEntryForm = forwardRef(({
       setLoadedTestResults([]);
       setTestResults([]);
       setSearchTerm("");
+      setIsAddMode(false);
     }
   }));
 
@@ -370,10 +390,17 @@ const ReportDataEntryForm = forwardRef(({
 
   // Add: when becoming "editing" and no report selected, show search modal
   useEffect(() => {
-    if (isEditable && !selectedReport && !isSearchModalOpen) {
+    if (isEditable && !selectedReport && !isSearchModalOpen && !isAddMode) {
       setIsSearchModalOpen(true);
     }
-  }, [isEditable, selectedReport, isSearchModalOpen]);
+  }, [isEditable, selectedReport, isSearchModalOpen, isAddMode]);
+
+  // Set add mode when isEditable becomes true and no report is selected
+  useEffect(() => {
+    if (isEditable && !selectedReport) {
+      setIsAddMode(true);
+    }
+  }, [isEditable, selectedReport]);
 
   // Update: Search Modal button disables in DELETE mode,
   // allow only selecting (not editing in place).
@@ -452,14 +479,16 @@ const ReportDataEntryForm = forwardRef(({
               <Input
                 id="documentNo"
                 value={selectedReport?.document_no || ""}
-                readOnly
-                className="bg-gray-50"
+                readOnly={!isAddMode}
+                disabled={!isAddMode}
+                className={isAddMode ? "bg-white" : "bg-gray-50"}
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSearchClick}
                 className="px-3"
+                disabled={isAddMode}
               >
                 <Search className="h-4 w-4" />
               </Button>
