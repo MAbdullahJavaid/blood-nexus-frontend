@@ -85,6 +85,57 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
       handleSave: async () => {
         return await handleSave();
       },
+      handleDelete: async () => {
+        if (!documentNo) {
+          return { success: false, error: "No document to delete" };
+        }
+        
+        try {
+          setLoading(true);
+          
+          // First get the invoice to find its ID
+          const { data: invoice, error: getError } = await supabase
+            .from('patient_invoices')
+            .select('id')
+            .eq('document_no', documentNo)
+            .single();
+          
+          if (getError) {
+            console.error("Error finding invoice:", getError);
+            return { success: false, error: getError.message };
+          }
+          
+          // Delete invoice items first
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .delete()
+            .eq('invoice_id', invoice.id);
+          
+          if (itemsError) {
+            console.error("Error deleting invoice items:", itemsError);
+            return { success: false, error: itemsError.message };
+          }
+          
+          // Delete the invoice
+          const { error: invoiceError } = await supabase
+            .from('patient_invoices')
+            .delete()
+            .eq('document_no', documentNo);
+          
+          if (invoiceError) {
+            console.error("Error deleting invoice:", invoiceError);
+            return { success: false, error: invoiceError.message };
+          }
+          
+          toast.success("Invoice deleted successfully");
+          return { success: true };
+        } catch (error) {
+          console.error("Error deleting invoice:", error);
+          return { success: false, error: (error as any)?.message || "Unknown error" };
+        } finally {
+          setLoading(false);
+        }
+      },
       clearForm: clearForm
     }));
 

@@ -27,6 +27,7 @@ interface TestInformationFormProps {
 interface FormRef {
   clearForm: () => void;
   handleSave?: () => Promise<{success: boolean, error?: any}>;
+  handleDelete?: () => Promise<{success: boolean, error?: any}>;
 }
 
 const TestInformationForm = forwardRef<FormRef, TestInformationFormProps>(({ 
@@ -68,6 +69,35 @@ const TestInformationForm = forwardRef<FormRef, TestInformationFormProps>(({
     clearForm,
     handleSave: async () => {
       return await handleSaveTest();
+    },
+    handleDelete: async () => {
+      if (!currentTestId) {
+        return { success: false, error: "No test selected" };
+      }
+      
+      try {
+        setLoading(true);
+        const { error } = await supabase
+          .from('test_information')
+          .delete()
+          .eq('id', currentTestId);
+        
+        if (error) {
+          console.error("Error deleting test:", error);
+          toast.error("Failed to delete test");
+          return { success: false, error: error.message };
+        }
+        
+        toast.success("Test deleted successfully");
+        clearForm();
+        return { success: true };
+      } catch (error) {
+        console.error("Error deleting test:", error);
+        toast.error("Failed to delete test");
+        return { success: false, error: (error as any)?.message || "Unknown error" };
+      } finally {
+        setLoading(false);
+      }
     }
   }));
   

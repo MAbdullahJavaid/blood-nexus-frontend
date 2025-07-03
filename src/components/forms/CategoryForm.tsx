@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -12,10 +12,54 @@ interface CategoryFormProps {
   isSearchEnabled?: boolean;
 }
 
-const CategoryForm = ({ isEditable = false, isSearchEnabled = false }: CategoryFormProps) => {
+interface FormRef {
+  clearForm: () => void;
+  handleSave?: () => Promise<{success: boolean, error?: any}>;
+  handleDelete?: () => Promise<{success: boolean, error?: any}>;
+}
+
+const CategoryForm = forwardRef<FormRef, CategoryFormProps>(({ isEditable = false, isSearchEnabled = false }, ref) => {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [newCategory, setNewCategory] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    clearForm: () => {
+      setNewCategory('');
+      setSelectedCategoryId(null);
+    },
+    handleDelete: async () => {
+      if (!selectedCategoryId) {
+        return { success: false, error: "No category selected" };
+      }
+      
+      try {
+        setLoading(true);
+        const { error } = await supabase
+          .from('test_categories')
+          .delete()
+          .eq('id', selectedCategoryId);
+        
+        if (error) {
+          console.error("Error deleting category:", error);
+          toast.error("Failed to delete category");
+          return { success: false, error: error.message };
+        }
+        
+        setCategories(categories.filter(cat => cat.id !== selectedCategoryId));
+        setSelectedCategoryId(null);
+        toast.success("Category deleted successfully");
+        return { success: true };
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        toast.error("Failed to delete category");
+        return { success: false, error: (error as any)?.message || "Unknown error" };
+      } finally {
+        setLoading(false);
+      }
+    }
+  }));
 
   useEffect(() => {
     fetchCategories();
@@ -100,7 +144,12 @@ const CategoryForm = ({ isEditable = false, isSearchEnabled = false }: CategoryF
             <>
               {categories.map((category) => (
                 <div key={category.id} className="mb-2">
-                  <Input value={category.name} readOnly className="bg-gray-50" />
+                  <Input 
+                    value={category.name} 
+                    readOnly 
+                    className={`bg-gray-50 cursor-pointer ${selectedCategoryId === category.id ? 'border-blue-500 bg-blue-50' : ''}`}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                  />
                 </div>
               ))}
               {categories.length === 0 && (
@@ -114,6 +163,8 @@ const CategoryForm = ({ isEditable = false, isSearchEnabled = false }: CategoryF
       </ScrollArea>
     </Card>
   );
-};
+});
+
+CategoryForm.displayName = "CategoryForm";
 
 export default CategoryForm;

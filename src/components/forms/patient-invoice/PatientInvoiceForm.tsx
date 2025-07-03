@@ -15,6 +15,7 @@ import { usePatientHandlers } from "./hooks/usePatientHandlers";
 import { useInvoiceHandlers } from "./hooks/useInvoiceHandlers";
 import { useDocumentHandlers } from "./hooks/useDocumentHandlers";
 import { useSaveInvoice } from "./hooks/useSaveInvoice";
+import { supabase } from "@/integrations/supabase/client";
 
 const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
   ({ isSearchEnabled = false, isEditable = false }, ref) => {
@@ -141,6 +142,44 @@ const PatientInvoiceForm = forwardRef<FormRefObject, PatientInvoiceFormProps>(
           items,
           setLoading
         );
+      },
+      handleDelete: async () => {
+        if (!documentNo) {
+          return { success: false, error: "No document to delete" };
+        }
+        
+        try {
+          setLoading(true);
+          
+          // Delete invoice items first
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .delete()
+            .eq('invoice_id', documentNo);
+          
+          if (itemsError) {
+            console.error("Error deleting invoice items:", itemsError);
+            return { success: false, error: itemsError.message };
+          }
+          
+          // Delete the invoice
+          const { error: invoiceError } = await supabase
+            .from('patient_invoices')
+            .delete()
+            .eq('document_no', documentNo);
+          
+          if (invoiceError) {
+            console.error("Error deleting invoice:", invoiceError);
+            return { success: false, error: invoiceError.message };
+          }
+          
+          return { success: true };
+        } catch (error) {
+          console.error("Error deleting invoice:", error);
+          return { success: false, error: (error as any)?.message || "Unknown error" };
+        } finally {
+          setLoading(false);
+        }
       },
       clearForm: () => {
         // Clear all form data

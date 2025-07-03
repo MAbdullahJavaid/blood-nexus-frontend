@@ -106,7 +106,7 @@ export function PatientDetailsSection({
               className="h-8 bg-green-100"
               placeholder="(Auto)"
             />
-            {isEditable && isEditing && (
+            {isEditable && (
               <button
                 onClick={onSearchDocumentClick}
                 className="bg-gray-200 ml-1 p-1 rounded hover:bg-gray-300"
