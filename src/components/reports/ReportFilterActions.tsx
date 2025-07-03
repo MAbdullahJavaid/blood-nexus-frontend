@@ -19,10 +19,31 @@ export default function ReportFilterActions({
   isLoading = false,
   isExportDisabled = false,
 }: ReportFilterActionsProps) {
+  
+  const handleOkClick = () => {
+    console.log('ReportFilterActions - OK button clicked');
+    onOk();
+  };
+
+  const handleCancelClick = () => {
+    console.log('ReportFilterActions - Cancel button clicked');
+    onCancel();
+  };
+
+  const handleExportClick = () => {
+    console.log('ReportFilterActions - Export button clicked');
+    onExport();
+  };
+
+  const handleExitClick = () => {
+    console.log('ReportFilterActions - Exit button clicked');
+    onExit();
+  };
+
   return (
     <div className="flex justify-center gap-4 pt-8">
       <Button
-        onClick={onOk}
+        onClick={handleOkClick}
         className="px-8 bg-red-600 hover:bg-red-700 text-white"
         type="button"
         disabled={isLoading}
@@ -31,14 +52,14 @@ export default function ReportFilterActions({
       </Button>
       <Button
         variant="outline"
-        onClick={onCancel}
+        onClick={handleCancelClick}
         className="px-8 border-gray-400 text-gray-700 hover:bg-gray-50"
         type="button"
       >
         Cancel
       </Button>
       <Button
-        onClick={onExport}
+        onClick={handleExportClick}
         className="px-8 bg-green-600 hover:bg-green-700 text-white"
         type="button"
         disabled={isExportDisabled}
@@ -47,7 +68,7 @@ export default function ReportFilterActions({
       </Button>
       <Button
         variant="outline"
-        onClick={onExit}
+        onClick={handleExitClick}
         className="px-8 border-gray-400 text-gray-700 hover:bg-gray-50"
         type="button"
       >

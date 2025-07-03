@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StandardizedFilterCard from "@/components/reports/StandardizedFilterCard";
-import StandardizedResultsCard from "@/components/reports/StandardizedResultsCard";
 import ReportFilterActions from "@/components/reports/ReportFilterActions";
+import { toast } from "@/hooks/use-toast";
 
 // UI date options
 const DATE_OPTIONS = [
@@ -77,7 +77,6 @@ export default function DonationsReportFilter({
   const [to, setTo] = useState<Date>(() => getDateRange("fiscal").to);
   const [openFrom, setOpenFrom] = useState(false);
   const [openTo, setOpenTo] = useState(false);
-  const [showResults, setShowResults] = useState(false);
 
   // Auto-update dates when dropdown changes
   useEffect(() => {
@@ -88,33 +87,59 @@ export default function DonationsReportFilter({
 
   // Allow date manual change
   const handleFromChange = (date?: Date) => {
-    if (date) setFrom(date);
+    if (date) {
+      setFrom(date);
+      console.log('From date changed to:', date);
+    }
     setOpenFrom(false);
   };
+  
   const handleToChange = (date?: Date) => {
-    if (date) setTo(date);
+    if (date) {
+      setTo(date);
+      console.log('To date changed to:', date);
+    }
     setOpenTo(false);
   };
 
+  // Button handlers with proper feedback
   const handleOk = () => {
-    setShowResults(true);
+    console.log('OK button clicked - Donations Report Filter');
+    toast({
+      title: "Filter Applied",
+      description: `Donations Report filtered from ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
+    });
     if (onOk) onOk(from, to);
   };
 
   const handleCancel = () => {
+    console.log('Cancel button clicked - Donations Report Filter');
     setDateOption("fiscal");
     const dr = getDateRange("fiscal");
     setFrom(dr.from);
     setTo(dr.to);
-    setShowResults(false);
+    toast({
+      title: "Filter Cancelled",
+      description: "Donations Report filter has been reset to fiscal year",
+    });
     if (onCancel) onCancel();
   };
 
   const handleExport = () => {
+    console.log('Export button clicked - Donations Report Filter');
+    toast({
+      title: "Export Started",
+      description: "Donations Report export has been initiated",
+    });
     if (onExport) onExport(from, to);
   };
 
   const handleExit = () => {
+    console.log('Exit button clicked - Donations Report Filter');
+    toast({
+      title: "Exiting Report",
+      description: "Leaving Donations Report",
+    });
     if (onExit) onExit();
   };
 

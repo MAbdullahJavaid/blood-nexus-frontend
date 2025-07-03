@@ -9,8 +9,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { FileText, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import StandardizedFilterCard from "@/components/reports/StandardizedFilterCard";
-import StandardizedResultsCard from "@/components/reports/StandardizedResultsCard";
 import ReportFilterActions from "@/components/reports/ReportFilterActions";
+import { toast } from "@/hooks/use-toast";
 
 interface BloodDriveReportFilterProps {
   onOk?: (from: Date, to: Date) => void;
@@ -62,7 +62,6 @@ export default function BloodDriveReportFilter({
   const [datePreset, setDatePreset] = useState("thisFiscalYear");
   const [fromDate, setFromDate] = useState<Date>(fiscalYearStart);
   const [toDate, setToDate] = useState<Date>(fiscalYearEnd);
-  const [showResults, setShowResults] = useState(false);
 
   // Handle preset select
   const handlePresetChange = (preset: string) => {
@@ -72,22 +71,43 @@ export default function BloodDriveReportFilter({
     setToDate(range.to);
   };
 
-  // Button handlers
+  // Button handlers with proper feedback
   const handleOk = () => {
-    setShowResults(true);
+    console.log('OK button clicked - Blood Drive Report Filter');
+    toast({
+      title: "Filter Applied",
+      description: `Blood Drive Report filtered from ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}`,
+    });
     if (onOk) onOk(fromDate, toDate);
   };
+
   const handleCancel = () => {
+    console.log('Cancel button clicked - Blood Drive Report Filter');
     setDatePreset("thisFiscalYear");
     setFromDate(fiscalYearStart);
     setToDate(fiscalYearEnd);
-    setShowResults(false);
+    toast({
+      title: "Filter Cancelled",
+      description: "Blood Drive Report filter has been reset to fiscal year",
+    });
     if (onCancel) onCancel();
   };
+
   const handleExport = () => {
+    console.log('Export button clicked - Blood Drive Report Filter');
+    toast({
+      title: "Export Started",
+      description: "Blood Drive Report export has been initiated",
+    });
     if (onExport) onExport();
   };
+
   const handleExit = () => {
+    console.log('Exit button clicked - Blood Drive Report Filter');
+    toast({
+      title: "Exiting Report",
+      description: "Leaving Blood Drive Report",
+    });
     if (onExit) onExit();
   };
 

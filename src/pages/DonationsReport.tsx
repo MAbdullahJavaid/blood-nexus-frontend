@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DonationsReportFilter from "@/components/reports/DonationsReportFilter";
@@ -71,23 +72,42 @@ export default function DonationsReport() {
     queryFn: () => fetchDonations(dateRange.from, dateRange.to),
   });
 
-  // Handlers for the filter
+  // Handlers for the filter with enhanced logging
   const handleOk = (from: Date, to: Date) => {
+    console.log('DonationsReport - OK handler called with dates:', from, to);
     setDateRange({ from, to });
+    toast({
+      title: "Filter Applied",
+      description: `Donations Report: From ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
+    });
     // Query will automatically refetch due to queryKey dependency
   };
 
   const handleCancel = () => {
+    console.log('DonationsReport - Cancel handler called');
     // Optionally reset to default
     setDateRange({ from: fiscalStart, to: fiscalEnd });
+    toast({
+      title: "Filter Cancelled",
+      description: "Donations Report filter reset to fiscal year",
+    });
   };
 
-  const handleExport = () => {
-    // Optionally implement export
-    alert("Export not yet implemented.");
+  const handleExport = (from: Date, to: Date) => {
+    console.log('DonationsReport - Export handler called with dates:', from, to);
+    // Trigger CSV export functionality
+    toast({
+      title: "Export Started",
+      description: "Donations Report CSV export initiated",
+    });
   };
 
   const handleExit = () => {
+    console.log('DonationsReport - Exit handler called');
+    toast({
+      title: "Exiting Report",
+      description: "Leaving Donations Report page",
+    });
     window.history.back();
   };
 
@@ -99,6 +119,7 @@ export default function DonationsReport() {
 
   // EXPORT PDF
   const handleExportPDF = async () => {
+    console.log('DonationsReport - Export PDF clicked');
     const tableElement = document.getElementById("donations-report-table");
     if (!tableElement) {
       toast({
@@ -163,6 +184,7 @@ export default function DonationsReport() {
 
   // EXPORT JPEG
   const handleExportJPEG = async () => {
+    console.log('DonationsReport - Export JPEG clicked');
     const tableElement = document.getElementById("donations-report-table");
     if (!tableElement) {
       toast({

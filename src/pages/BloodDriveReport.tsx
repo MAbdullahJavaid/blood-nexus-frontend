@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BloodDriveReportFilter from "@/components/reports/BloodDriveReportFilter";
@@ -214,30 +215,46 @@ export default function BloodDriveReport() {
     queryFn: () => fetchBloodDrives(dateRange.from, dateRange.to),
   });
 
-  // Filter callbacks
+  // Filter callbacks with enhanced logging
   function handleOk(from: Date, to: Date) {
+    console.log('BloodDriveReport - OK handler called with dates:', from, to);
     setDateRange({ from, to });
     toast({
       title: "Filter applied",
-      description: `From ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
+      description: `Blood Drive Report: From ${from.toLocaleDateString()} to ${to.toLocaleDateString()}`,
     });
   }
+
   function handleCancel() {
+    console.log('BloodDriveReport - Cancel handler called');
     setDateRange({ from: fiscalStart, to: fiscalEnd });
     toast({
-      title: "Filter cancelled"
+      title: "Filter cancelled",
+      description: "Blood Drive Report filter reset to fiscal year",
     });
   }
+
   function handleExportCSV() {
+    console.log('BloodDriveReport - Export CSV handler called');
     exportCsvWithHeadings(drives, dateRange.from, dateRange.to);
   }
+
   function handleExportPDF() {
+    console.log('BloodDriveReport - Export PDF handler called');
     exportPdf(reportRef, dateRange.from, dateRange.to);
   }
+
   function handleExportJPEG() {
+    console.log('BloodDriveReport - Export JPEG handler called');
     exportJpeg(reportRef, dateRange.from, dateRange.to);
   }
+
   function handleExit() {
+    console.log('BloodDriveReport - Exit handler called');
+    toast({
+      title: "Exiting Report",
+      description: "Leaving Blood Drive Report page",
+    });
     window.history.back();
   }
 
