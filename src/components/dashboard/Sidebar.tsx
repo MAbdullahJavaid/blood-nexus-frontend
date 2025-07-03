@@ -440,7 +440,7 @@ export function Sidebar({ onFormOpen }: SidebarProps) {
               {displayUsername}
             </p>
             <p className="text-xs text-muted-foreground">
-              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Staff'}
+              {user?.roles?.length ? user.roles[0].charAt(0).toUpperCase() + user.roles[0].slice(1) : 'Staff'}
             </p>
           </div>
         </div>
