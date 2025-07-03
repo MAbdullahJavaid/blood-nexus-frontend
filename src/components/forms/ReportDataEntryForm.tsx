@@ -103,7 +103,7 @@ const ReportDataEntryForm = forwardRef(({
       report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- New function to load tests from invoice_items ---
+  // Load tests from invoice_items and existing results from test_report_results
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
       const { data: invoiceData, error: invError } = await supabase
@@ -131,10 +131,22 @@ const ReportDataEntryForm = forwardRef(({
         return;
       }
 
-      // Map with composite key (test_id + category) for uniqueness
+      // Get existing test results from test_report_results
+      const { data: existingResults, error: resultsError } = await supabase
+        .from("test_report_results")
+        .select("*")
+        .eq("document_no", documentNo);
+
+      if (resultsError) throw resultsError;
+
+      // Create a map of existing results by test_id
+      const existingResultsMap = new Map(
+        (existingResults || []).map(result => [result.test_id, result])
+      );
+
       const loadedTestsMap: { [key: string]: LoadedTestResult } = {};
 
-      // Gather all full category tests for exclusion and lookup
+      // Handle full category tests
       const fullCategoryTests = invoiceItems
         .filter((item: any) => (item.type || '').toLowerCase() === "full" && item.category)
         .map((item: any) => ({
@@ -142,14 +154,12 @@ const ReportDataEntryForm = forwardRef(({
           category: item.category
         }));
 
-      // For quick exclusion: set of test_id+category
       const fullTestIdCategorySet = new Set(
         fullCategoryTests.map(t => `${t.test_id}___${t.category}`)
       );
 
-      // 1. Add all tests from full categories except the "full" test itself
+      // Add all tests from full categories except the "full" test itself
       for (const { test_id: fullTestId, category: categoryName } of fullCategoryTests) {
-        // Find category id by name
         const { data: categoryRow, error: catError } = await supabase
           .from("test_categories")
           .select("id")
@@ -157,7 +167,6 @@ const ReportDataEntryForm = forwardRef(({
           .maybeSingle();
         if (catError || !categoryRow?.id) continue;
 
-        // Fetch all tests for this category
         const { data: testInfoRows, error: testInfoError } = await supabase
           .from("test_information")
           .select("id, name, description, category_id")
@@ -166,7 +175,7 @@ const ReportDataEntryForm = forwardRef(({
         if (testInfoError || !testInfoRows) continue;
 
         for (const test of testInfoRows) {
-          if (test.id === fullTestId) continue; // SKIP the "full" test itself!
+          if (test.id === fullTestId) continue;
           let measuring_unit = "";
           let low_value = "";
           let high_value = "";
@@ -178,8 +187,10 @@ const ReportDataEntryForm = forwardRef(({
               high_value = desc.high_value || "";
             } catch {}
           }
-          // Key by both test_id and category to ensure uniqueness per context
+
           const compositeKey = `${test.id}___${categoryName}`;
+          const existingResult = existingResultsMap.get(test.id);
+          
           loadedTestsMap[compositeKey] = {
             test_id: test.id,
             test_name: test.name,
@@ -187,24 +198,23 @@ const ReportDataEntryForm = forwardRef(({
             measuring_unit,
             low_value,
             high_value,
-            user_value: "",
+            user_value: existingResult?.user_value || "",
           };
         }
       }
 
-      // 2. Add all other (non-full, or not already included) invoice items by composite key
+      // Add all other (non-full, or not already included) invoice items
       for (const item of invoiceItems) {
         const test_id = item.test_id;
         const category = item.category || "";
         const compositeKey = `${test_id}___${category}`;
-        // Skip if this was already added by above
+        
         if (loadedTestsMap[compositeKey]) continue;
-        // Also skip if this is a "full" test itself and handled already!
         if (fullTestIdCategorySet.has(compositeKey)) continue;
 
-        // Fetch full info for this test_id (some non-full tests might not have description)
         let measuring_unit = "", low_value = "", high_value = "";
         let test_name = item.test_name || "";
+        
         if (test_id != null) {
           const { data: testInfo, error: testInfoErr } = await supabase
             .from("test_information")
@@ -223,6 +233,9 @@ const ReportDataEntryForm = forwardRef(({
           if (testInfo && testInfo.name) {
             test_name = testInfo.name;
           }
+
+          const existingResult = existingResultsMap.get(test_id);
+          
           loadedTestsMap[compositeKey] = {
             test_id,
             test_name,
@@ -230,16 +243,13 @@ const ReportDataEntryForm = forwardRef(({
             measuring_unit,
             low_value,
             high_value,
-            user_value: "",
+            user_value: existingResult?.user_value || "",
           };
         }
       }
 
-      // Instead of setting loaded test results directly, we will
-      // group by category and insert category header objects
+      // Group by category and insert category headers
       const testsWithHeaders: LoadedTestResult[] = [];
-
-      // Group tests by category
       const testsArray = Object.values(loadedTestsMap);
       const grouped: Record<string, LoadedTestResult[]> = {};
 
@@ -249,11 +259,9 @@ const ReportDataEntryForm = forwardRef(({
         grouped[cat].push(test);
       }
 
-      // Insert a header row and its children for each category
       Object.entries(grouped).forEach(([categoryName, testsList]) => {
-        // Push a header row for this category
         testsWithHeaders.push({
-          test_id: -1, // dummy value, not to be shown
+          test_id: -1,
           test_name: categoryName,
           category: categoryName,
           measuring_unit: "",
@@ -262,7 +270,6 @@ const ReportDataEntryForm = forwardRef(({
           user_value: "",
           is_category_header: true,
         });
-        // Push all tests in that category
         testsList.forEach(test => testsWithHeaders.push(test));
       });
 
@@ -274,11 +281,9 @@ const ReportDataEntryForm = forwardRef(({
     }
   };
 
-  // --- Use this function in handleReportSelect ---
   const handleReportSelect = async (report: PreReport) => {
     setSelectedReport(report);
 
-    // Always fetch via invoice_items for this document
     if (report.document_no) {
       await loadTestsFromInvoiceItems(report.document_no);
     } else {
@@ -318,7 +323,6 @@ const ReportDataEntryForm = forwardRef(({
     setSaving(true);
     toast.loading("Saving report...");
     try {
-      // Only save actual test rows, not headers
       const rowsToSave = loadedTestResults
         .filter(r => !r.is_category_header)
         .map(r => ({
@@ -331,11 +335,11 @@ const ReportDataEntryForm = forwardRef(({
           high_value: r.high_value,
           user_value: r.user_value,
         }));
-      // Upsert so repeated saves don't create duplicate rows
-      // With new unique constraint, onConflict can safely target document_no,test_id
+
       const { data, error } = await supabase
         .from("test_report_results")
         .upsert(rowsToSave, { onConflict: "document_no,test_id" });
+      
       if (error) throw error;
       toast.success("Test results saved successfully!");
     } catch (err) {
@@ -437,9 +441,8 @@ const ReportDataEntryForm = forwardRef(({
         </div>
       )}
 
-      {/* Patient Information Section */}
+      {/* Patient Information Section - keeping existing code structure */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* First Column */}
         <div className="space-y-4">
           <div>
             <Label htmlFor="documentNo" className="text-sm font-medium">
@@ -512,7 +515,6 @@ const ReportDataEntryForm = forwardRef(({
           </div>
         </div>
 
-        {/* Second Column */}
         <div className="space-y-4">
           <div>
             <Label htmlFor="patientId" className="text-sm font-medium">
@@ -581,7 +583,6 @@ const ReportDataEntryForm = forwardRef(({
           </div>
         </div>
 
-        {/* Third Column */}
         <div className="space-y-4">
           <div>
             <Label htmlFor="documentDate" className="text-sm font-medium">
@@ -727,7 +728,7 @@ const ReportDataEntryForm = forwardRef(({
         </Table>
       </div>
 
-      {/* Save Button - show if editable and a report with results is loaded */}
+      {/* Save Button */}
       {isEditable && selectedReport?.document_no && loadedTestResults.length > 0 && (
         <div className="flex justify-end">
           <Button
