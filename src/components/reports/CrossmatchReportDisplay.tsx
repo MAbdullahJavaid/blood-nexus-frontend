@@ -48,7 +48,12 @@ const CrossmatchReportDisplay: React.FC<CrossmatchReportDisplayProps> = ({ data,
   return (
     <div className="bg-white">
       {data.map((record, index) => (
-        <div key={index} className="crossmatch-report-page bg-white p-8 min-h-screen" style={{ pageBreakAfter: 'always' }}>
+        <div key={index} className="crossmatch-report-page bg-white p-8 min-h-screen mb-8" style={{ 
+          pageBreakAfter: 'always',
+          breakAfter: 'page',
+          minHeight: '100vh',
+          display: 'block'
+        }}>
           {/* Header */}
           <div className="border-b-2 border-black pb-4 mb-6">
             <div className="flex justify-between items-start">
