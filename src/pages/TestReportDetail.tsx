@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Calendar, User, Hospital } from "lucide-react";
+import { Search, FileText, Calendar, User, Hospital, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { usePatientRequestSummaryExport } from "@/hooks/usePatientRequestSummaryExport";
 
 interface TestResult {
   id: string;
@@ -21,6 +21,12 @@ interface TestResult {
   user_value: string | null;
   low_flag: boolean | null;
   high_flag: boolean | null;
+}
+
+interface TestInformation {
+  id: number;
+  name: string;
+  description: string | null;
 }
 
 interface PatientReport {
@@ -45,6 +51,9 @@ const TestReportDetail = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [testInformation, setTestInformation] = useState<Record<number, TestInformation>>({});
+  
+  const { exportToPDF, exportToJPG } = usePatientRequestSummaryExport();
 
   // Fetch available reports for search
   const fetchAvailableReports = async () => {
@@ -62,6 +71,62 @@ const TestReportDetail = () => {
       toast.error("Failed to fetch available reports");
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  // Fetch test information for reference ranges
+  const fetchTestInformation = async (testIds: number[]) => {
+    if (testIds.length === 0) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("test_information")
+        .select("id, name, description")
+        .in("id", testIds);
+
+      if (error) throw error;
+      
+      const testInfoMap: Record<number, TestInformation> = {};
+      data?.forEach(test => {
+        testInfoMap[test.id] = test;
+      });
+      setTestInformation(testInfoMap);
+    } catch (error) {
+      console.error("Error fetching test information:", error);
+    }
+  };
+
+  // Get gender-specific reference range
+  const getGenderSpecificRange = (testId: number, gender: string | null) => {
+    const testInfo = testInformation[testId];
+    if (!testInfo?.description) return "N/A";
+
+    try {
+      const metadata = JSON.parse(testInfo.description);
+      const normalizedGender = (gender || "").toLowerCase();
+      
+      let lowValue, highValue;
+      
+      if (normalizedGender === "male" || normalizedGender === "m") {
+        lowValue = metadata.male_low_value;
+        highValue = metadata.male_high_value;
+      } else if (normalizedGender === "female" || normalizedGender === "f") {
+        lowValue = metadata.female_low_value;
+        highValue = metadata.female_high_value;
+      } else {
+        // Default to other gender or fallback
+        lowValue = metadata.other_low_value;
+        highValue = metadata.other_high_value;
+      }
+
+      if (lowValue !== undefined && highValue !== undefined && lowValue !== null && highValue !== null) {
+        return `${lowValue} - ${highValue}`;
+      }
+      
+      return "N/A";
+    } catch (error) {
+      console.error("Error parsing test description:", error);
+      return "N/A";
     }
   };
 
@@ -90,6 +155,10 @@ const TestReportDetail = () => {
 
       if (resultsError) throw resultsError;
       setTestResults(resultsData || []);
+
+      // Fetch test information for reference ranges
+      const testIds = (resultsData || []).map(result => result.test_id);
+      await fetchTestInformation(testIds);
 
     } catch (error) {
       console.error("Error fetching test results:", error);
@@ -135,6 +204,22 @@ const TestReportDetail = () => {
     return { status: "normal", color: "default" };
   };
 
+  const handleExportPDF = () => {
+    if (!selectedDocument) {
+      toast.error("Please select a document first");
+      return;
+    }
+    exportToPDF([], "test-report-content");
+  };
+
+  const handleExportJPG = () => {
+    if (!selectedDocument) {
+      toast.error("Please select a document first");
+      return;
+    }
+    exportToJPG("test-report-content");
+  };
+
   useEffect(() => {
     fetchAvailableReports();
   }, []);
@@ -148,173 +233,196 @@ const TestReportDetail = () => {
             <FileText className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">Test Report Detail</h1>
           </div>
-          <Button
-            onClick={() => setIsSearchModalOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Search className="h-4 w-4" />
-            Search Reports
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Search className="h-4 w-4" />
+              Search Reports
+            </Button>
+            {selectedDocument && (
+              <>
+                <Button
+                  onClick={handleExportPDF}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Export PDF
+                </Button>
+                <Button
+                  onClick={handleExportJPG}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Export JPG
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Patient Information Card */}
-        {patientInfo && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Patient Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Document No:</Label>
-                  <p className="font-semibold">{patientInfo.document_no}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Patient Name:</Label>
-                  <p className="font-semibold">{patientInfo.patient_name}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Patient ID:</Label>
-                  <p className="font-semibold">{patientInfo.patient_id || "N/A"}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Age:</Label>
-                  <p className="font-semibold">{patientInfo.age || "N/A"}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Gender:</Label>
-                  <p className="font-semibold">{patientInfo.gender || "N/A"}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Phone:</Label>
-                  <p className="font-semibold">{patientInfo.phone || "N/A"}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Hospital:</Label>
-                  <p className="font-semibold flex items-center gap-1">
-                    <Hospital className="h-4 w-4" />
-                    {patientInfo.hospital_name || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Blood Group:</Label>
-                  <p className="font-semibold">
-                    {patientInfo.blood_group && patientInfo.rh 
-                      ? `${patientInfo.blood_group} ${patientInfo.rh}` 
-                      : "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">Report Date:</Label>
-                  <p className="font-semibold flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {formatDate(patientInfo.created_at)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Test Results by Category */}
-        {loading ? (
-          <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading test results...</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : Object.keys(groupedResults).length > 0 ? (
-          <div className="space-y-6">
-            {Object.entries(groupedResults).map(([category, results]) => (
-              <Card key={category}>
-                <CardHeader>
-                  <CardTitle className="text-xl text-blue-600">{category}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-200">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="border border-gray-200 px-4 py-3 text-left font-medium">Test Name</th>
-                          <th className="border border-gray-200 px-4 py-3 text-left font-medium">Result</th>
-                          <th className="border border-gray-200 px-4 py-3 text-left font-medium">Unit</th>
-                          <th className="border border-gray-200 px-4 py-3 text-left font-medium">Reference Range</th>
-                          <th className="border border-gray-200 px-4 py-3 text-left font-medium">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {results.map((result) => {
-                          const resultStatus = getResultStatus(result);
-                          return (
-                            <tr key={result.id} className="hover:bg-gray-50">
-                              <td className="border border-gray-200 px-4 py-3 font-medium">
-                                {result.test_name}
-                              </td>
-                              <td className="border border-gray-200 px-4 py-3">
-                                <span className={`font-semibold ${
-                                  resultStatus.status === "high" ? "text-red-600" :
-                                  resultStatus.status === "low" ? "text-orange-600" :
-                                  "text-green-600"
-                                }`}>
-                                  {result.user_value || "Not Available"}
-                                </span>
-                              </td>
-                              <td className="border border-gray-200 px-4 py-3">
-                                {result.measuring_unit || "N/A"}
-                              </td>
-                              <td className="border border-gray-200 px-4 py-3">
-                                {result.low_value && result.high_value 
-                                  ? `${result.low_value} - ${result.high_value}`
-                                  : "N/A"
-                                }
-                              </td>
-                              <td className="border border-gray-200 px-4 py-3">
-                                <Badge variant={resultStatus.color as any}>
-                                  {resultStatus.status === "high" ? "High" :
-                                   resultStatus.status === "low" ? "Low" : "Normal"}
-                                </Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+        <div id="test-report-content">
+          {/* Patient Information Card */}
+          {patientInfo && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Patient Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Document No:</Label>
+                    <p className="font-semibold">{patientInfo.document_no}</p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : selectedDocument ? (
-          <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No test results found for this document.</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Test results may not have been entered yet.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Select a document to view test results</p>
-                <Button onClick={() => setIsSearchModalOpen(true)}>
-                  Search Reports
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Patient Name:</Label>
+                    <p className="font-semibold">{patientInfo.patient_name}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Patient ID:</Label>
+                    <p className="font-semibold">{patientInfo.patient_id || "N/A"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Age:</Label>
+                    <p className="font-semibold">{patientInfo.age || "N/A"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Gender:</Label>
+                    <p className="font-semibold">{patientInfo.gender || "N/A"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Phone:</Label>
+                    <p className="font-semibold">{patientInfo.phone || "N/A"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Hospital:</Label>
+                    <p className="font-semibold flex items-center gap-1">
+                      <Hospital className="h-4 w-4" />
+                      {patientInfo.hospital_name || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Blood Group:</Label>
+                    <p className="font-semibold">
+                      {patientInfo.blood_group && patientInfo.rh 
+                        ? `${patientInfo.blood_group} ${patientInfo.rh}` 
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">Report Date:</Label>
+                    <p className="font-semibold flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {formatDate(patientInfo.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Test Results by Category */}
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading test results...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : Object.keys(groupedResults).length > 0 ? (
+            <div className="space-y-6">
+              {Object.entries(groupedResults).map(([category, results]) => (
+                <Card key={category}>
+                  <CardHeader>
+                    <CardTitle className="text-xl text-blue-600">{category}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-gray-200">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="border border-gray-200 px-4 py-3 text-left font-medium">Test Name</th>
+                            <th className="border border-gray-200 px-4 py-3 text-left font-medium">Result</th>
+                            <th className="border border-gray-200 px-4 py-3 text-left font-medium">Unit</th>
+                            <th className="border border-gray-200 px-4 py-3 text-left font-medium">Reference Range</th>
+                            <th className="border border-gray-200 px-4 py-3 text-left font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {results.map((result) => {
+                            const resultStatus = getResultStatus(result);
+                            const referenceRange = getGenderSpecificRange(result.test_id, patientInfo?.gender);
+                            
+                            return (
+                              <tr key={result.id} className="hover:bg-gray-50">
+                                <td className="border border-gray-200 px-4 py-3 font-medium">
+                                  {result.test_name}
+                                </td>
+                                <td className="border border-gray-200 px-4 py-3">
+                                  <span className={`font-semibold ${
+                                    resultStatus.status === "high" ? "text-red-600" :
+                                    resultStatus.status === "low" ? "text-orange-600" :
+                                    "text-green-600"
+                                  }`}>
+                                    {result.user_value || "Not Available"}
+                                  </span>
+                                </td>
+                                <td className="border border-gray-200 px-4 py-3">
+                                  {result.measuring_unit || "N/A"}
+                                </td>
+                                <td className="border border-gray-200 px-4 py-3">
+                                  {referenceRange}
+                                </td>
+                                <td className="border border-gray-200 px-4 py-3">
+                                  <Badge variant={resultStatus.color as any}>
+                                    {resultStatus.status === "high" ? "High" :
+                                     resultStatus.status === "low" ? "Low" : "Normal"}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : selectedDocument ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No test results found for this document.</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Test results may not have been entered yet.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">Select a document to view test results</p>
+                  <Button onClick={() => setIsSearchModalOpen(true)}>
+                    Search Reports
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         {/* Search Modal */}
         <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
