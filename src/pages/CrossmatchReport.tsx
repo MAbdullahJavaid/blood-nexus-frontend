@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -159,36 +158,53 @@ const CrossmatchReport = () => {
 
   const handleExportPDF = async () => {
     try {
-      const element = document.getElementById('crossmatch-report');
-      if (!element) return;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
 
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Get all crossmatch report pages
+      const reportPages = document.querySelectorAll('.crossmatch-report-page');
+      
+      for (let i = 0; i < reportPages.length; i++) {
+        const pageElement = reportPages[i] as HTMLElement;
+        
+        if (i > 0) {
+          pdf.addPage(); // Add new page for each crossmatch record except the first
+        }
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        const canvas = await html2canvas(pageElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          height: pageElement.scrollHeight,
+          width: pageElement.scrollWidth
+        });
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // If image is taller than page, we need to split it
+        if (imgHeight <= pageHeight) {
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        } else {
+          // Handle case where single page content is too tall
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+        }
       }
 
       pdf.save('crossmatch-report.pdf');
@@ -201,20 +217,24 @@ const CrossmatchReport = () => {
 
   const handleExportJPEG = async () => {
     try {
-      const element = document.getElementById('crossmatch-report');
-      if (!element) return;
+      const reportPages = document.querySelectorAll('.crossmatch-report-page');
+      
+      for (let i = 0; i < reportPages.length; i++) {
+        const pageElement = reportPages[i] as HTMLElement;
+        
+        const canvas = await html2canvas(pageElement, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        });
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true
-      });
-
-      const link = document.createElement('a');
-      link.download = 'crossmatch-report.jpg';
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
-      link.click();
-      toast.success("JPEG exported successfully");
+        const link = document.createElement('a');
+        link.download = `crossmatch-report-${i + 1}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+      }
+      
+      toast.success("JPEG files exported successfully");
     } catch (error) {
       console.error("Error exporting JPEG:", error);
       toast.error("Failed to export JPEG");
