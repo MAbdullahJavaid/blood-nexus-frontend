@@ -189,8 +189,6 @@ export default function BloodDriveReportFilter({
           onExit={handleExit}
         />
       </StandardizedFilterCard>
-
-      <StandardizedResultsCard showResults={showResults} />
     </div>
   );
 }

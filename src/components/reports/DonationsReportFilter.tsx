@@ -208,8 +208,6 @@ export default function DonationsReportFilter({
           onExit={handleExit}
         />
       </StandardizedFilterCard>
-
-      <StandardizedResultsCard showResults={showResults} />
     </div>
   );
 }
