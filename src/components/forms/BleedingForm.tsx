@@ -1,5 +1,5 @@
 
-import React, { forwardRef, useImperativeHandle } from "react";
+import React, { forwardRef, useImperativeHandle, useEffect } from "react";
 import { BleedingFormProvider, useBleedingForm } from "./bleeding/BleedingFormContext";
 import { BleedingFormProps } from "./bleeding/types";
 import DonorInfoSection from "./bleeding/DonorInfoSection";
@@ -24,6 +24,13 @@ interface BleedingFormRef {
 const BleedingFormContent = forwardRef<BleedingFormRef, ExtendedBleedingFormProps>(
   ({ isSearchEnabled = true, isEditable = true, isDeleting = false }, ref) => {
     const { clearForm, handleSubmit, handleDelete } = useBleedingForm();
+
+    // Clear form when entering add, edit, or delete mode
+    useEffect(() => {
+      if (isEditable || isDeleting) {
+        clearForm();
+      }
+    }, [isEditable, isDeleting, clearForm]);
 
     useImperativeHandle(ref, () => ({
       clearForm,

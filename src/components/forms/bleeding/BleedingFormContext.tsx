@@ -293,8 +293,8 @@ export const BleedingFormProvider: React.FC<{
         description: "Bleeding record saved successfully",
       });
 
-      // Clear form after successful submission
-      clearForm();
+      // Don't clear form after successful submission - this was the issue
+      // clearForm(); // REMOVED - form should not be cleared on save
       
     } catch (error) {
       console.error("BleedingFormContext: Error saving bleeding record:", error);
