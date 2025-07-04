@@ -60,7 +60,6 @@ interface ReportDataEntryFormProps {
   isDeleting?: boolean;
 }
 
-// Add Ref Forwarding for clearing the form from parent
 const ReportDataEntryForm = forwardRef(({
   isSearchEnabled = true,
   isEditable = false,
@@ -104,7 +103,6 @@ const ReportDataEntryForm = forwardRef(({
       report.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Function to get gender-based values from test information
   const getGenderBasedValues = (testInfo: any, gender: string | null) => {
     if (!testInfo?.description) return { measuring_unit: "", low_value: "", high_value: "" };
     
@@ -115,7 +113,6 @@ const ReportDataEntryForm = forwardRef(({
       let low_value = "";
       let high_value = "";
       
-      // Gender-based approach for low and high values
       if (genderKey === 'male') {
         low_value = desc.male_low_value || desc.low_value || "";
         high_value = desc.male_high_value || desc.high_value || "";
@@ -137,7 +134,6 @@ const ReportDataEntryForm = forwardRef(({
     }
   };
 
-  // Load tests from invoice_items and existing results from test_report_results
   const loadTestsFromInvoiceItems = async (documentNo: string) => {
     try {
       const { data: invoiceData, error: invError } = await supabase
@@ -165,7 +161,6 @@ const ReportDataEntryForm = forwardRef(({
         return;
       }
 
-      // Get existing test results from test_report_results
       const { data: existingResults, error: resultsError } = await supabase
         .from("test_report_results")
         .select("*")
@@ -173,14 +168,12 @@ const ReportDataEntryForm = forwardRef(({
 
       if (resultsError) throw resultsError;
 
-      // Create a map of existing results by test_id
       const existingResultsMap = new Map(
         (existingResults || []).map(result => [result.test_id, result])
       );
 
       const loadedTestsMap: { [key: string]: LoadedTestResult } = {};
 
-      // Handle full category tests
       const fullCategoryTests = invoiceItems
         .filter((item: any) => (item.type || '').toLowerCase() === "full" && item.category)
         .map((item: any) => ({
@@ -192,7 +185,6 @@ const ReportDataEntryForm = forwardRef(({
         fullCategoryTests.map(t => `${t.test_id}___${t.category}`)
       );
 
-      // Add all tests from full categories except the "full" test itself
       for (const { test_id: fullTestId, category: categoryName } of fullCategoryTests) {
         const { data: categoryRow, error: catError } = await supabase
           .from("test_categories")
@@ -227,7 +219,6 @@ const ReportDataEntryForm = forwardRef(({
         }
       }
 
-      // Add all other (non-full, or not already included) invoice items
       for (const item of invoiceItems) {
         const test_id = item.test_id;
         const category = item.category || "";
@@ -267,7 +258,6 @@ const ReportDataEntryForm = forwardRef(({
         }
       }
 
-      // Group by category and insert category headers
       const testsWithHeaders: LoadedTestResult[] = [];
       const testsArray = Object.values(loadedTestsMap);
       const grouped: Record<string, LoadedTestResult[]> = {};
@@ -333,7 +323,6 @@ const ReportDataEntryForm = forwardRef(({
     return date.toLocaleString("en-GB");
   };
 
-  // Handler to save test results into Supabase
   const handleSaveReportResults = async () => {
     if (!selectedReport?.document_no || loadedTestResults.length === 0) {
       toast.error("No report or test results to save");
@@ -370,7 +359,6 @@ const ReportDataEntryForm = forwardRef(({
     }
   };
 
-  // Expose a clearForm method to parent so "Add" or "Edit" can reset this form
   useImperativeHandle(ref, () => ({
     clearForm: () => {
       setSelectedReport(null);
@@ -381,29 +369,24 @@ const ReportDataEntryForm = forwardRef(({
     }
   }));
 
-  // Add: when becoming "deleting", automatically show search for select
   useEffect(() => {
     if (isDeleting && !isSearchModalOpen) {
       setIsSearchModalOpen(true);
     }
   }, [isDeleting]);
 
-  // Add: when becoming "editing" and no report selected, show search modal
   useEffect(() => {
     if (isEditable && !selectedReport && !isSearchModalOpen && !isAddMode) {
       setIsSearchModalOpen(true);
     }
   }, [isEditable, selectedReport, isSearchModalOpen, isAddMode]);
 
-  // Set add mode when isEditable becomes true and no report is selected
   useEffect(() => {
     if (isEditable && !selectedReport) {
       setIsAddMode(true);
     }
   }, [isEditable, selectedReport]);
 
-  // Update: Search Modal button disables in DELETE mode,
-  // allow only selecting (not editing in place).
   function handleSearchClick() {
     setIsSearchModalOpen(true);
     if (reports.length === 0) {
@@ -411,7 +394,6 @@ const ReportDataEntryForm = forwardRef(({
     }
   }
 
-  // Add: Handle delete after report selected
   const handleDeleteReportResult = async () => {
     if (!selectedReport?.document_no) {
       toast.error("Select a report to delete.");
@@ -420,7 +402,6 @@ const ReportDataEntryForm = forwardRef(({
     if (!confirm("Are you sure you want to delete all test results for this document?")) return;
 
     try {
-      // Delete all rows for the selected document_no
       const { error } = await supabase
         .from("test_report_results")
         .delete()
@@ -439,10 +420,8 @@ const ReportDataEntryForm = forwardRef(({
 
   return (
     <div className="bg-white p-6 rounded-md space-y-6">
-      {/* Header */}
       <div className="border-b pb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Test Result</h2>
-        {/* Only show Delete button if isDeleting and a report is selected */}
         {isDeleting && selectedReport?.document_no && (
           <Button variant="destructive" onClick={handleDeleteReportResult}>
             Delete Report Results
@@ -450,7 +429,6 @@ const ReportDataEntryForm = forwardRef(({
         )}
       </div>
 
-      {/* Test Categories and Type Blue Bar */}
       {(selectedReport?.category || selectedReport?.type) && (
         <div className="bg-blue-500 text-white p-3 rounded-md space-y-1">
           {selectedReport.category && (
@@ -468,7 +446,6 @@ const ReportDataEntryForm = forwardRef(({
         </div>
       )}
 
-      {/* Patient Information Section - keeping existing code structure */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-4">
           <div>
@@ -691,7 +668,6 @@ const ReportDataEntryForm = forwardRef(({
         </div>
       </div>
 
-      {/* Test Results Table */}
       <div className="space-y-2">
         <Table>
           <TableHeader>
@@ -757,7 +733,6 @@ const ReportDataEntryForm = forwardRef(({
         </Table>
       </div>
 
-      {/* Save Button */}
       {isEditable && selectedReport?.document_no && loadedTestResults.length > 0 && (
         <div className="flex justify-end">
           <Button
@@ -770,7 +745,6 @@ const ReportDataEntryForm = forwardRef(({
         </div>
       )}
 
-      {/* Search Modal */}
       <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
